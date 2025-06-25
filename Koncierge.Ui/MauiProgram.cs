@@ -1,5 +1,7 @@
 ﻿using Koncierge.Core.K8s;
 using Koncierge.Core.K8s.Namespaces;
+using Koncierge.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 
@@ -24,6 +26,7 @@ namespace Koncierge.Ui
 
             builder.Services.AddMudServices();
 
+            builder.Services.AddDbContext<KonciergeDbContext>();
 
             builder.Services.AddSingleton<IKubernetesClientManager, KubernetesClientManager>();
             builder.Services.AddTransient<IKonciergeNamespaceService, KonciergeNamespaceService>();
@@ -34,9 +37,24 @@ namespace Koncierge.Ui
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
+
+            AppDomain.CurrentDomain.FirstChanceException += (s, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine("********** FE Exception **********");
+                System.Diagnostics.Debug.WriteLine(e.Exception);
+            };
 #endif
 
-            return builder.Build();
+
+
+            var app= builder.Build();
+
+            var ctx=app.Services.GetService<KonciergeDbContext>();
+
+            ctx.Database.Migrate();
+
+
+            return app;
         }
     }
 }

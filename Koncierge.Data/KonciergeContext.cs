@@ -1,0 +1,69 @@
+﻿using Koncierge.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using static System.Environment;
+
+namespace Koncierge.Data
+{
+    public class KonciergeDbContext : DbContext
+    {
+
+        // remove-migration -StartUpProject Koncierge.Data
+        // add-migration <Nome> -StartUpProject Koncierge.Data -o Migrations
+        // add-migration InitialMigration -StartUpProject Koncierge.Data -o Migrations
+
+
+        public DbSet<KonciergeKubeConfig> KubeConfigs { get; set; }
+        public DbSet<KonciergeContextConfig> Contexts { get; set; }
+        public DbSet<KonciergeNamespaceConfig> NameSpaces { get; set; }
+        public DbSet<KonciergeForward> Forwards { get; set; }
+        public DbSet<KonciergeForwardAdditionalConfig> ForwardLinkedConfigs { get; set; }
+
+
+
+        public KonciergeDbContext() : base()
+        {
+
+            //Initialize();
+
+        }
+        public KonciergeDbContext(DbContextOptions<KonciergeDbContext> options) : base(options)
+        {
+            Initialize();
+        }
+
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            string AppPath = Path.Combine(GetFolderPath(SpecialFolder.LocalApplicationData, SpecialFolderOption.DoNotVerify), "koncierge");
+
+            Directory.CreateDirectory(AppPath);
+
+
+            optionsBuilder.UseSqlite($"Data Source={Path.Combine(AppPath, "koncierge_ui.db")}");
+
+
+
+        }
+
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+
+
+
+
+        }
+
+        public void Initialize()
+        {
+            Database.Migrate();
+           
+        }
+    }
+}
