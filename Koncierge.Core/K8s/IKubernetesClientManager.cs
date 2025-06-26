@@ -13,5 +13,8 @@ namespace Koncierge.Core.K8s
         IKubernetes GetClient(string kubeconfigPath);
         void RemoveClient(string kubeconfigPath);
 
+        IKubernetes GetClient(string kubeconfigPath, string context);
+        void RemoveClient(string kubeconfigPath, string context);
+
     }
 }

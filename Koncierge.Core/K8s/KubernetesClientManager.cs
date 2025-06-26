@@ -20,9 +20,18 @@ namespace Koncierge.Core.K8s
 
         public IKubernetes GetClient(string kubeconfigPath)
         {
-            return _clients.GetOrAdd(kubeconfigPath, path =>
+            return _clients.GetOrAdd($"{kubeconfigPath}", path =>
             {
                 var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(path);
+                return new Kubernetes(config);
+            });
+        }
+
+        public IKubernetes GetClient(string kubeconfigPath, string context)
+        {
+            return _clients.GetOrAdd($"{kubeconfigPath}_{context}", path =>
+            {
+                var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(path, context);
                 return new Kubernetes(config);
             });
         }
@@ -30,6 +39,14 @@ namespace Koncierge.Core.K8s
         public void RemoveClient(string kubeconfigPath)
         {
             if (_clients.TryRemove(kubeconfigPath, out var client))
+            {
+                (client as IDisposable)?.Dispose();
+            }
+        }
+
+        public void RemoveClient(string kubeconfigPath, string context)
+        {
+            if (_clients.TryRemove($"{kubeconfigPath}_{context}", out var client))
             {
                 (client as IDisposable)?.Dispose();
             }

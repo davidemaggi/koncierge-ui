@@ -26,6 +26,6 @@ namespace Koncierge.Core.K8s.Namespaces
             return namespaces.Items.Select(ns => ns.Metadata.Name).ToList();
         }
 
-      
+       
     }
 }

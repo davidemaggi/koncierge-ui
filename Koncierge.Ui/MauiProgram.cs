@@ -1,6 +1,8 @@
 ﻿using Koncierge.Core.K8s;
 using Koncierge.Core.K8s.Namespaces;
 using Koncierge.Data;
+using Koncierge.Data.Repositories.Implementations;
+using Koncierge.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -28,8 +30,12 @@ namespace Koncierge.Ui
 
             builder.Services.AddDbContext<KonciergeDbContext>();
 
+
+            builder.Services.AddScoped<IKubeConfigRepository, KubeConfigRepository>();
+
             builder.Services.AddSingleton<IKubernetesClientManager, KubernetesClientManager>();
             builder.Services.AddTransient<IKonciergeNamespaceService, KonciergeNamespaceService>();
+            builder.Services.AddTransient<IKonciergeKubeConfigService, KonciergeKubeConfigService>();
 
 
 

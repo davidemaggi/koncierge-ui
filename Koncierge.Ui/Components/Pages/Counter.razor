@@ -1,13 +1,12 @@
-﻿@page "/pick"
+﻿@page "/forwards"
 @using Koncierge.Core.K8s
 @using Koncierge.Core.K8s.Namespaces
 
 @inject IKonciergeNamespaceService _nameSpace;
 
-<h1>Pick</h1>
+<h1>Forwards</h1>
 
 
-<button class="btn btn-primary" @onclick="PickKubeconfigFile">Pick</button>
 @code {
     private string _selectedKubeconfigPath;
     private List<string> _namespaces = new();
