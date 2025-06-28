@@ -11,4 +11,14 @@ namespace Koncierge.Domain.Enums
     POD,
     SERVICE
     }
+
+
+
+    public enum KonciergeActionResult
+    {
+        PENDING,
+        SUCCESS,
+        FAILURE,
+        WARNING
+    }
 }

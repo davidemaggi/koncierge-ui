@@ -16,8 +16,8 @@ namespace Koncierge.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Path = table.Column<string>(type: "TEXT", nullable: false),
-                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Name = table.Column<string>(type: "TEXT", nullable: true),
+                    Path = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -25,7 +25,7 @@ namespace Koncierge.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Contexts",
+                name: "ForwardContexts",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -34,29 +34,29 @@ namespace Koncierge.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Contexts", x => x.Id);
+                    table.PrimaryKey("PK_ForwardContexts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Contexts_KubeConfigs_KonciergeKubeConfigId",
+                        name: "FK_ForwardContexts_KubeConfigs_KonciergeKubeConfigId",
                         column: x => x.KonciergeKubeConfigId,
                         principalTable: "KubeConfigs",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "NameSpaces",
+                name: "ForwardNameSpaces",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
-                    KonciergeContextConfigId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    KonciergeForwardContextId = table.Column<Guid>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NameSpaces", x => x.Id);
+                    table.PrimaryKey("PK_ForwardNameSpaces", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_NameSpaces_Contexts_KonciergeContextConfigId",
-                        column: x => x.KonciergeContextConfigId,
-                        principalTable: "Contexts",
+                        name: "FK_ForwardNameSpaces_ForwardContexts_KonciergeForwardContextId",
+                        column: x => x.KonciergeForwardContextId,
+                        principalTable: "ForwardContexts",
                         principalColumn: "Id");
                 });
 
@@ -66,15 +66,15 @@ namespace Koncierge.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     TargetType = table.Column<int>(type: "INTEGER", nullable: false),
-                    KonciergeNamespaceConfigId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    KonciergeForwardNamespaceId = table.Column<Guid>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Forwards", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Forwards_NameSpaces_KonciergeNamespaceConfigId",
-                        column: x => x.KonciergeNamespaceConfigId,
-                        principalTable: "NameSpaces",
+                        name: "FK_Forwards_ForwardNameSpaces_KonciergeForwardNamespaceId",
+                        column: x => x.KonciergeForwardNamespaceId,
+                        principalTable: "ForwardNameSpaces",
                         principalColumn: "Id");
                 });
 
@@ -96,8 +96,8 @@ namespace Koncierge.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Contexts_KonciergeKubeConfigId",
-                table: "Contexts",
+                name: "IX_ForwardContexts_KonciergeKubeConfigId",
+                table: "ForwardContexts",
                 column: "KonciergeKubeConfigId");
 
             migrationBuilder.CreateIndex(
@@ -106,14 +106,14 @@ namespace Koncierge.Data.Migrations
                 column: "KonciergeForwardId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Forwards_KonciergeNamespaceConfigId",
-                table: "Forwards",
-                column: "KonciergeNamespaceConfigId");
+                name: "IX_ForwardNameSpaces_KonciergeForwardContextId",
+                table: "ForwardNameSpaces",
+                column: "KonciergeForwardContextId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_NameSpaces_KonciergeContextConfigId",
-                table: "NameSpaces",
-                column: "KonciergeContextConfigId");
+                name: "IX_Forwards_KonciergeForwardNamespaceId",
+                table: "Forwards",
+                column: "KonciergeForwardNamespaceId");
         }
 
         /// <inheritdoc />
@@ -126,10 +126,10 @@ namespace Koncierge.Data.Migrations
                 name: "Forwards");
 
             migrationBuilder.DropTable(
-                name: "NameSpaces");
+                name: "ForwardNameSpaces");
 
             migrationBuilder.DropTable(
-                name: "Contexts");
+                name: "ForwardContexts");
 
             migrationBuilder.DropTable(
                 name: "KubeConfigs");

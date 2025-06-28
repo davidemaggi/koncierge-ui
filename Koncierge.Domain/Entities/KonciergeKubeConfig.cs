@@ -10,10 +10,10 @@ namespace Koncierge.Domain.Entities
     public class KonciergeKubeConfig : BaseEntity
     {
 
+        public string? Name { get; set; }
         public required string Path { get; set; }
-        public bool IsDefault { get; set; } = false;
 
-        public ICollection<KonciergeContextConfig> Contexts { get; set; } = new List<KonciergeContextConfig>();
+        public ICollection<KonciergeForwardContext> Contexts { get; set; } = new List<KonciergeForwardContext>();
 
 
     }

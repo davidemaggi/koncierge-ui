@@ -1,0 +1,140 @@
+﻿@using Koncierge.Core.K8s.Contexts
+@using Koncierge.Domain.Enums
+@using MudBlazor
+
+
+
+@inject IKonciergeContextService _ctxService
+@inject ISnackbar _snackbar
+
+
+@if(!_loading){
+
+
+    <MudChipSet T="string" SelectedValue="_currentCtx" SelectionMode="SelectionMode.SingleSelection" CheckMark="_checkMark" Variant="Variant.Text" Color="Color.Info" SelectedValueChanged="ChangeCurrentContextForConfig">
+
+
+        @if (!_hasError) {
+
+        @foreach (var ctx in _contexts)
+        {
+            <MudChip Text="@ctx"></MudChip>
+            }
+        } else
+        {
+            <MudTooltip Text="@_errorMsg">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error"/>
+            </MudTooltip>
+}
+
+    </MudChipSet>
+
+
+        
+}
+else
+{
+    
+    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+
+}
+
+
+@code {
+
+    [Parameter]
+    public string _kubeconfigPath {get;set;}
+
+    public bool _loading = true;
+    public bool _hasError = false;
+    public string _errorMsg = "";
+    private List<string> _contexts = new();
+
+    private string _currentCtx;
+    private bool _checkMark = true;
+
+    protected override async Task OnInitializedAsync(){
+        {
+
+            await LoadData();
+
+        }
+    }
+
+
+    private async Task LoadData()
+
+    {
+
+        _loading = true;
+        _hasError = false;
+
+        var contextsResult = await _ctxService.GetAllContexts(_kubeconfigPath);
+
+        if (!contextsResult.IsSuccess())
+        {
+            if (contextsResult.Result == KonciergeActionResult.FAILURE)
+            {
+                _snackbar.Add(contextsResult.Message, Severity.Error);
+                _hasError = true;
+                _errorMsg = contextsResult.Message;
+
+            }
+            if (contextsResult.Result == KonciergeActionResult.WARNING)
+            {
+                _snackbar.Add(contextsResult.Message, Severity.Warning);
+            }
+
+        }
+        else
+        {
+            _contexts = contextsResult.Data!;
+        }
+
+        var currentCtxResult = await _ctxService.GetCurrentContext(_kubeconfigPath);
+
+
+        if (!contextsResult.IsSuccess())
+        {
+            _snackbar.Add("Error Retrieving current context", Severity.Error);
+
+        }
+        else
+
+        {
+
+            _currentCtx = currentCtxResult.Data;
+        }
+
+
+
+        _loading = false;
+
+
+    }
+
+
+    private async Task ChangeCurrentContextForConfig(string newCtx)
+    {
+
+
+        var changeCtx = await _ctxService.SetCurrentContext(_kubeconfigPath, newCtx);
+
+        if (changeCtx.IsSuccess())
+        {
+            _snackbar.Add("Context Changed", Severity.Success);
+            _currentCtx = newCtx;
+        }
+        else
+        {
+            _snackbar.Add(changeCtx.Message, Severity.Error);
+
+        }
+
+
+        await LoadData();
+
+    }
+
+    
+}

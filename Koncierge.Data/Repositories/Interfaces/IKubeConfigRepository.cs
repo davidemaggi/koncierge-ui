@@ -11,8 +11,9 @@ namespace Koncierge.Data.Repositories.Interfaces
 
     public interface IKubeConfigRepository : IGenericRepository<KonciergeKubeConfig>
     {
-        bool DefaultExists();
-        Task<KonciergeKubeConfig?> getDefaultKubeconfig(bool asReadonly= false);
+        //bool DefaultExists();
+      //  Task<KonciergeKubeConfig?> getDefaultKubeconfig(bool asReadonly= false);
+        Task<KonciergeKubeConfig> Rename(Guid id, string newname);
 
 
 

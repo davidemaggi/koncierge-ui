@@ -14,4 +14,8 @@
     <PackageReference Include="KubernetesClient" Version="17.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Koncierge.Domain\Koncierge.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

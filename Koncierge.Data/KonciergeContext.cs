@@ -18,8 +18,8 @@ namespace Koncierge.Data
 
 
         public DbSet<KonciergeKubeConfig> KubeConfigs { get; set; }
-        public DbSet<KonciergeContextConfig> Contexts { get; set; }
-        public DbSet<KonciergeNamespaceConfig> NameSpaces { get; set; }
+        public DbSet<KonciergeForwardContext> ForwardContexts { get; set; }
+        public DbSet<KonciergeForwardNamespace> ForwardNameSpaces { get; set; }
         public DbSet<KonciergeForward> Forwards { get; set; }
         public DbSet<KonciergeForwardAdditionalConfig> ForwardLinkedConfigs { get; set; }
 
@@ -44,7 +44,9 @@ namespace Koncierge.Data
             Directory.CreateDirectory(AppPath);
 
 
-            optionsBuilder.UseSqlite($"Data Source={Path.Combine(AppPath, "koncierge_ui.db")}");
+
+
+            optionsBuilder.UseSqlite($"Data Source={Path.Combine(AppPath, "koncierge.db")};");
 
 
 

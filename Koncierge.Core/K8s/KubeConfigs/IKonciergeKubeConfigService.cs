@@ -9,6 +9,8 @@ namespace Koncierge.Core.K8s.Namespaces
     public interface IKonciergeKubeConfigService
     {
         string GetDefaultKubeConfigPath();
+        string SetDefaultKubeConfigPath(string newPath);
+        bool IsDefault(string path);
 
 
     }

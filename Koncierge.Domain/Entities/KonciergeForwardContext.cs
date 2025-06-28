@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 
 namespace Koncierge.Domain.Entities
 {
-    public class KonciergeNamespaceConfig : BaseEntity
+    public class KonciergeForwardContext: BaseEntity
     {
+
         public required string Name { get; set; }
 
-        public ICollection<KonciergeForward> Forwards { get; set; } = new List<KonciergeForward>();
+
+        public ICollection<KonciergeForwardNamespace> Namespaces { get; set; } = new List<KonciergeForwardNamespace>();
 
     }
 }

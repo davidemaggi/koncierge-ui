@@ -19,10 +19,29 @@ namespace Koncierge.Data.Repositories.Implementations
             _ctx = ctx;
         }
 
-        public  bool DefaultExists() => _ctx.KubeConfigs.Any(x=>x.IsDefault);
+        //public  bool DefaultExists() => _ctx.KubeConfigs.Any(x=>x.IsDefault);
         
 
-        public Task<KonciergeKubeConfig?> getDefaultKubeconfig(bool asReadonly = false) => asReadonly ? _ctx.KubeConfigs.AsNoTracking().Where(x=>x.IsDefault).FirstOrDefaultAsync() : _ctx.KubeConfigs.Where(x => x.IsDefault).FirstOrDefaultAsync();
+       // public Task<KonciergeKubeConfig?> getDefaultKubeconfig(bool asReadonly = false) => asReadonly ? _ctx.KubeConfigs.AsNoTracking().Where(x=>x.IsDefault).FirstOrDefaultAsync() : _ctx.KubeConfigs.Where(x => x.IsDefault).FirstOrDefaultAsync();
+
+
+        public async Task<KonciergeKubeConfig> Rename(Guid id, string newname) {
+
+
+            var toReaname = await GetById(id);
+
+            if (toReaname != null) {
+
+                toReaname.Name = newname;
+
+               await  Update(toReaname);
+            
+            }
+            return toReaname;
+
+
+        }
+
 
 
     }

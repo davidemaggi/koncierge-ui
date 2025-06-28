@@ -1,4 +1,5 @@
 ﻿using Koncierge.Core.K8s;
+using Koncierge.Core.K8s.Contexts;
 using Koncierge.Core.K8s.Namespaces;
 using Koncierge.Data;
 using Koncierge.Data.Repositories.Implementations;
@@ -36,6 +37,7 @@ namespace Koncierge.Ui
             builder.Services.AddSingleton<IKubernetesClientManager, KubernetesClientManager>();
             builder.Services.AddTransient<IKonciergeNamespaceService, KonciergeNamespaceService>();
             builder.Services.AddTransient<IKonciergeKubeConfigService, KonciergeKubeConfigService>();
+            builder.Services.AddTransient<IKonciergeContextService, KonciergeContextService>();
 
 
 
@@ -55,9 +57,9 @@ namespace Koncierge.Ui
 
             var app= builder.Build();
 
-            var ctx=app.Services.GetService<KonciergeDbContext>();
+           // var ctx=app.Services.GetService<KonciergeDbContext>();
 
-            ctx.Database.Migrate();
+            // sctx.Initialize();
 
 
             return app;

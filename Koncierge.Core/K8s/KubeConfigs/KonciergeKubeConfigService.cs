@@ -1,6 +1,7 @@
 ﻿using k8s;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace Koncierge.Core.K8s.Namespaces
         public  string GetDefaultKubeConfigPath()
         {
             // Check if the KUBECONFIG environment variable is set
-            var kubeConfigEnv = Environment.GetEnvironmentVariable("KUBECONFIG");
+            var kubeConfigEnv = Environment.GetEnvironmentVariable("KUBECONFIG", EnvironmentVariableTarget.User);
             if (!string.IsNullOrWhiteSpace(kubeConfigEnv))
             {
                 // If multiple paths, return the first one (same as kubectl behavior)
@@ -36,6 +37,13 @@ namespace Koncierge.Core.K8s.Namespaces
             string kubeConfigPath = Path.Combine(homeDir, ".kube", "config");
             return kubeConfigPath;
         }
+
+        public string SetDefaultKubeConfigPath(string newPath)
+        {
+            Environment.SetEnvironmentVariable("KUBECONFIG", newPath, EnvironmentVariableTarget.User);
+            return newPath;
+        }
+        public bool IsDefault(string path) => GetDefaultKubeConfigPath().Equals(path, StringComparison.InvariantCultureIgnoreCase);
 
 
     }
