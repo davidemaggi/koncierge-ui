@@ -8,7 +8,8 @@ namespace Koncierge.Core.K8s.Namespaces
 {
     public interface IKonciergeNamespaceService
     {
-        Task<List<string>> GetNamespacesAsync(string kubeconfigPath);
+        Task<List<string>> GetNamespacesAsync(Guid cfgId);
+        Task<List<string>> GetNamespacesAsync(Guid cfgId, string ctx);
 
 
     }

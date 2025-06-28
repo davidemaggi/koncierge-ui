@@ -1,5 +1,6 @@
 ﻿using k8s;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,11 +11,12 @@ namespace Koncierge.Core.K8s
     public interface IKubernetesClientManager
     {
 
-        IKubernetes GetClient(string kubeconfigPath);
-        void RemoveClient(string kubeconfigPath);
+        ConcurrentBag<KonciergeClient> GetAllClients();
+        Task<KonciergeClient> GetClient(Guid cfgId);
+        //void RemoveClient(string kubeconfigPath);
 
-        IKubernetes GetClient(string kubeconfigPath, string context);
-        void RemoveClient(string kubeconfigPath, string context);
+        Task<KonciergeClient> GetClient(Guid cfgId, string context);
+      //  void RemoveClient(string kubeconfigPath, string context);
 
     }
 }

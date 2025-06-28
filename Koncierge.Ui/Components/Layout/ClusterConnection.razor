@@ -1,0 +1,51 @@
+﻿@using Koncierge.Core.K8s
+@using Koncierge.Core.K8s.Namespaces
+@inject IKubernetesClientManager _kubeClients
+@inject IKonciergeNamespaceService _namespaces
+
+@if (!_loading){
+
+    @foreach (var n in ns)
+
+    {
+        <MudText>@n</MudText>
+    }
+
+} else { 
+
+    <MudProgressCircular Indeterminate="true" />
+
+}
+
+
+
+@code {
+
+    [Parameter]
+    public Guid cfgId { get; set; }
+
+    [Parameter]
+    public string? context { get; set; }
+
+    private bool _loading { get; set; }
+
+    private KonciergeClient _kc { get; set; }
+
+    private List<string> ns=new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+
+        _kc = await _kubeClients.GetClient(cfgId, context);
+
+        ns = await _namespaces.GetNamespacesAsync(cfgId, context);
+
+
+
+        _loading = false;
+
+       
+    }
+
+}

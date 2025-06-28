@@ -47,7 +47,7 @@
     {
         if (!string.IsNullOrEmpty(_selectedKubeconfigPath))
         {
-            _namespaces = await _nameSpace.GetNamespacesAsync(_selectedKubeconfigPath);
+            _namespaces = await _nameSpace.GetNamespacesAsync(Guid.NewGuid());
             StateHasChanged();
         }
     }

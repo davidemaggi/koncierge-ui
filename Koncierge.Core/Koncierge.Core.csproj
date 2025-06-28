@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Koncierge.Data\Koncierge.Data.csproj" />
     <ProjectReference Include="..\Koncierge.Domain\Koncierge.Domain.csproj" />
   </ItemGroup>
 
