@@ -1,4 +1,5 @@
-﻿using k8s;
+﻿using AutoMapper;
+using k8s;
 using Koncierge.Core.K8s.Contexts;
 using Koncierge.Core.K8s.Namespaces;
 using Koncierge.Data.Repositories.Interfaces;
@@ -19,11 +20,13 @@ namespace Koncierge.Core.K8s
 
         private readonly IKubeConfigRepository _kubeConfigRepository;
         private readonly IKonciergeContextService _kcService;
+        private readonly IMapper _mapper;
 
-        public KubernetesClientManager(IKubeConfigRepository kubeConfigRepository, IKonciergeContextService kcService)
+        public KubernetesClientManager(IKubeConfigRepository kubeConfigRepository, IKonciergeContextService kcService, IMapper mapper)
         {
-            _kubeConfigRepository=kubeConfigRepository;
+            _kubeConfigRepository = kubeConfigRepository;
             _kcService = kcService;
+            _mapper = mapper;
         }
 
         public ConcurrentBag<KonciergeClient> GetAllClients() => _clients;
@@ -67,31 +70,33 @@ namespace Koncierge.Core.K8s
 
 
         }
+
+        public Task<KonciergeClient?> GetClientById(Guid clientId) => Task.FromResult(_clients.FirstOrDefault(x => x.Id == clientId));
         /*
-        public void RemoveClient(string kubeconfigPath)
-        {
-            if (_clients.TryRemove(kubeconfigPath, out var client))
-            {
-                (client as IDisposable)?.Dispose();
-            }
-        }
+public void RemoveClient(string kubeconfigPath)
+{
+   if (_clients.TryRemove(kubeconfigPath, out var client))
+   {
+       (client as IDisposable)?.Dispose();
+   }
+}
 
-        public void RemoveClient(string kubeconfigPath, string context)
-        {
-            if (_clients.TryRemove($"{kubeconfigPath}_{context}", out var client))
-            {
-                (client as IDisposable)?.Dispose();
-            }
-        }
+public void RemoveClient(string kubeconfigPath, string context)
+{
+   if (_clients.TryRemove($"{kubeconfigPath}_{context}", out var client))
+   {
+       (client as IDisposable)?.Dispose();
+   }
+}
 
-        public void Dispose()
-        {
-            foreach (var client in _clients)
-            {
-                (client as IDisposable)?.Dispose();
-            }
-            _clients.Clear();
-        }
-        */
+public void Dispose()
+{
+   foreach (var client in _clients)
+   {
+       (client as IDisposable)?.Dispose();
+   }
+   _clients.Clear();
+}
+*/
     }
 }

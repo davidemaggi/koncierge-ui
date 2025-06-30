@@ -1,0 +1,58 @@
+﻿@using Koncierge.Core.K8s
+@using Koncierge.Core.K8s.Forwards
+@using Koncierge.Core.K8s.Namespaces
+@using Koncierge.Core.K8s.Extensions
+@using Koncierge.Domain.DTOs
+
+@inject IKubernetesClientManager _kubeClients
+@inject IKonciergeForwardManager _fwd
+
+
+    @if (!_loading)
+{
+    <MudSelect T="KonciergeNamespaceDto" Label="Namespaces" MultiSelection="false" @bind-Value="selectedNs">
+
+    @foreach (var ns in namespaces)
+    {
+            <MudSelectItem T="KonciergeNamespaceDto" Value="@ns">@ns.Name</MudSelectItem>
+        }
+    </MudSelect>
+    }
+    else
+    {
+    <MudSelect T="string"  Label="Namespaces" MultiSelection="false">
+        <MudSelectItem T="string" Disabled="true">Loading<MudProgressCircular Indeterminate="true"/></MudSelectItem>
+        </MudSelect>
+    }
+
+
+
+@code {
+
+
+    [Parameter]
+    public KonciergeClient _kc { get; set; }
+
+
+    private bool _loading { get; set; }
+    private List<KonciergeNamespaceDto> namespaces { get; set; } = new();
+
+    private KonciergeNamespaceDto selectedNs { get; set; } = null;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+
+
+        namespaces = await _kc.GetNamespacesAsync();
+
+
+
+        _loading = false;
+
+
+    }
+
+
+}

@@ -1,4 +1,5 @@
-﻿using k8s;
+﻿using AutoMapper;
+using k8s;
 using k8s.KubeConfigModels;
 using Koncierge.Domain.Entities;
 using System;
@@ -19,7 +20,6 @@ namespace Koncierge.Core.K8s
         public Guid Id { get; set; }
         public KonciergeKubeConfig KubeConfig { get; set; }
         public string Context { get; set; }
-
 
         public KonciergeClient(KonciergeKubeConfig cfg, string ctxName) {
 

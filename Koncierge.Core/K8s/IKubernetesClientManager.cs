@@ -12,6 +12,7 @@ namespace Koncierge.Core.K8s
     {
 
         ConcurrentBag<KonciergeClient> GetAllClients();
+        Task<KonciergeClient> GetClientById(Guid clientId);
         Task<KonciergeClient> GetClient(Guid cfgId);
         //void RemoveClient(string kubeconfigPath);
 

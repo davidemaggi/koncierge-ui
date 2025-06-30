@@ -2,7 +2,6 @@
 @using Koncierge.Core.K8s
 @using Koncierge.Core.K8s.Namespaces
 
-@inject IKonciergeNamespaceService _nameSpace;
 
 <h1>Forwards</h1>
 
@@ -38,19 +37,10 @@
         */
 
         _selectedKubeconfigPath = "C:\\Users\\david\\.kube\\config";
-        await LoadNamespacesAsync();
 
     }
 
 
-    private async Task LoadNamespacesAsync()
-    {
-        if (!string.IsNullOrEmpty(_selectedKubeconfigPath))
-        {
-            _namespaces = await _nameSpace.GetNamespacesAsync(Guid.NewGuid());
-            StateHasChanged();
-        }
-    }
-
+    
 
 }
