@@ -33,9 +33,10 @@ namespace Koncierge.Ui
 
             builder.Services.AddDbContext<KonciergeDbContext>();
 
-            builder.Services.AddAutoMapper(typeof(KonciergeK8sProfile));
+            builder.Services.AddAutoMapper(typeof(KonciergeDbToDtoProfile));
 
             builder.Services.AddScoped<IKubeConfigRepository, KubeConfigRepository>();
+            builder.Services.AddScoped<IKubeForwardRepository, KubeForwardRepository>();
 
             builder.Services.AddSingleton<IKubernetesClientManager, KubernetesClientManager>();
             builder.Services.AddTransient<IKonciergeKubeConfigService, KonciergeKubeConfigService>();
@@ -60,9 +61,11 @@ namespace Koncierge.Ui
 
             var app= builder.Build();
 
-           // var ctx=app.Services.GetService<KonciergeDbContext>();
-
-            // sctx.Initialize();
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<KonciergeDbContext>();
+                db.Database.Migrate();
+            }
 
 
             return app;

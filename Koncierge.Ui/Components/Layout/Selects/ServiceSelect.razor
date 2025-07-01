@@ -1,0 +1,83 @@
+﻿@using Koncierge.Core.K8s
+@using Koncierge.Core.K8s.Forwards
+@using Koncierge.Core.K8s.Namespaces
+@using Koncierge.Core.K8s.Extensions
+@using Koncierge.Domain.DTOs
+
+@inject IKubernetesClientManager _kubeClients
+@inject IKonciergeForwardManager _fwd
+
+
+    @if (!_loading)
+{
+    <MudSelect T="KonciergeServiceDto" Label="Services" MultiSelection="false" @bind-Value="selectedService">
+
+    @foreach (var s in services)
+    {
+            <MudSelectItem T="KonciergeServiceDto" Value="@s">@s.Name</MudSelectItem>
+        }
+    </MudSelect>
+    }
+    else
+    {
+    <MudSelect T="string"  Label="Pods" MultiSelection="false">
+        <MudSelectItem T="string" Disabled="true">Loading<MudProgressCircular Indeterminate="true"/></MudSelectItem>
+        </MudSelect>
+    }
+
+
+
+@code {
+
+
+    [Parameter]
+    public KonciergeClient _kc { get; set; }
+
+    [Parameter]
+    public KonciergeNamespaceDto _filterNs { get; set; }
+
+
+    private bool _loading { get; set; }
+    private List<KonciergeServiceDto> services { get; set; } = new();
+
+    private KonciergeServiceDto selectedService { get; set; } = null;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadData();
+
+
+    }
+
+    private async Task LoadData()
+    
+    {
+    
+
+        _loading = true;
+
+
+        services = await _kc.GetServicesAsync(_filterNs?.Name);
+
+
+
+        _loading = false;
+
+        StateHasChanged();
+    
+    }
+    public async Task RefreshView()
+
+    {
+
+
+        LoadData();
+
+
+        StateHasChanged();
+
+    }
+
+
+}

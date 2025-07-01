@@ -1,0 +1,61 @@
+﻿@page "/forwards"
+@using Koncierge.Core.K8s
+@using Koncierge.Core.K8s.Mappers
+@using Koncierge.Data.Repositories.Interfaces
+@using Koncierge.Domain.DTOs
+@using Koncierge.Domain.Entities
+@using Koncierge.Ui.Components.Layout
+@using Koncierge.Ui.Components.Layout.Stepper
+
+
+@inject IKubernetesClientManager _kubeClient
+@inject IKubeForwardRepository _fwdRepo
+
+@inject IDialogService DialogService
+
+
+<MudButton  @onclick="OpenDialogAsync" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add PortForward</MudButton>
+
+
+
+
+@code {
+
+
+    private bool _loading = true;
+
+    private List<KonciergeKubeConfigDto> _forwards = new List<KonciergeKubeConfigDto>();
+
+    private Guid? _cfgFilter;
+    private string? _nsFilter;
+    private string? _ctxFilter;
+    private int? _portFilter=0;
+    private string? _txtFilter;
+
+
+
+
+   protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+
+        var tmp = _fwdRepo.GetAllWithInclude(_cfgFilter, _ctxFilter, _nsFilter, _txtFilter, _portFilter);
+
+
+                    _forwards= KonciergeDbToDtoProfile.GetAsmapper().Map<List<KonciergeKubeConfigDto>>(tmp.ToList());
+
+
+        _loading = false;
+
+    }
+
+
+     private Task OpenDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        return DialogService.ShowAsync<CreateForward>("Add Forward", options);
+    }
+
+
+}

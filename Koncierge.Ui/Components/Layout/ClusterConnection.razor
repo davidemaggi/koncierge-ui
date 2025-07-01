@@ -2,13 +2,20 @@
 @using Koncierge.Core.K8s.Forwards
 @using Koncierge.Core.K8s.Namespaces
 @using Koncierge.Core.K8s
+@using Koncierge.Domain.DTOs
 @using Koncierge.Ui.Components.Layout.Selects
+
+@using Koncierge.Core.K8s.Extensions
+
+
 @inject IKubernetesClientManager _kubeClients
 @inject IKonciergeForwardManager _fwd
 
 @if (!_loading){
 
-    <NameSpaceSelect _kc="_kc" />
+    <NameSpaceSelect _kc="_kc" OnNameSpaceSelection="OnNamespaceSelection" />
+    <PodSelect @ref="podSelect"  _kc="_kc" _filterNs="_selectedNs" />
+    <ServiceSelect @ref="svcSelect"  _kc="_kc" _filterNs="_selectedNs" />
 
 
 } else { 
@@ -33,6 +40,11 @@
 
     private List<string> ns=new();
 
+    private KonciergeNamespaceDto _selectedNs = null;
+
+    private PodSelect podSelect { get; set; }
+    private ServiceSelect svcSelect { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
@@ -40,13 +52,31 @@
 
         _kc = await _kubeClients.GetClient(cfgId, context);
 
+        var secrets = await _kc.GetSecretsAsync(_selectedNs?.Name);
+        var maps = await _kc.GetConfigMapsAsync(_selectedNs?.Name);
 
         _loading = false;
 
 
     }
 
+    private async Task OnNamespaceSelection(KonciergeNamespaceDto sel)
+    {
 
+        _selectedNs = sel;
+        StateHasChanged();
+        var refreshPod= podSelect.RefreshView();
+        var refreshService = svcSelect.RefreshView();
+
+
+        var secrets = await _kc.GetSecretsAsync(_selectedNs?.Name);
+        var maps = await _kc.GetConfigMapsAsync(_selectedNs?.Name);
+
+
+        await Task.WhenAll(refreshPod,refreshService);
+
+
+    }
   
 
 }

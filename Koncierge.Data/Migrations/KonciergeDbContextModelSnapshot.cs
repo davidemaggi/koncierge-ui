@@ -26,6 +26,16 @@ namespace Koncierge.Data.Migrations
                     b.Property<Guid?>("KonciergeForwardNamespaceId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("LocalPort")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TargetName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TargetPort")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("TargetType")
                         .HasColumnType("INTEGER");
 
@@ -45,11 +55,42 @@ namespace Koncierge.Data.Migrations
                     b.Property<Guid?>("KonciergeForwardId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("KonciergeForwardId");
 
                     b.ToTable("ForwardLinkedConfigs");
+                });
+
+            modelBuilder.Entity("Koncierge.Domain.Entities.KonciergeForwardAdditionalConfigItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("KonciergeForwardAdditionalConfigId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KonciergeForwardAdditionalConfigId");
+
+                    b.ToTable("ForwardLinkedConfigItems");
                 });
 
             modelBuilder.Entity("Koncierge.Domain.Entities.KonciergeForwardContext", b =>
@@ -124,6 +165,13 @@ namespace Koncierge.Data.Migrations
                         .HasForeignKey("KonciergeForwardId");
                 });
 
+            modelBuilder.Entity("Koncierge.Domain.Entities.KonciergeForwardAdditionalConfigItem", b =>
+                {
+                    b.HasOne("Koncierge.Domain.Entities.KonciergeForwardAdditionalConfig", null)
+                        .WithMany("Items")
+                        .HasForeignKey("KonciergeForwardAdditionalConfigId");
+                });
+
             modelBuilder.Entity("Koncierge.Domain.Entities.KonciergeForwardContext", b =>
                 {
                     b.HasOne("Koncierge.Domain.Entities.KonciergeKubeConfig", null)
@@ -141,6 +189,11 @@ namespace Koncierge.Data.Migrations
             modelBuilder.Entity("Koncierge.Domain.Entities.KonciergeForward", b =>
                 {
                     b.Navigation("AdditionalConfigs");
+                });
+
+            modelBuilder.Entity("Koncierge.Domain.Entities.KonciergeForwardAdditionalConfig", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Koncierge.Domain.Entities.KonciergeForwardContext", b =>

@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace Koncierge.Domain.DTOs
 {
-    public class KonciergeNamespaceDto: KonciergeBaseK8sDto, IKonciergeBaseK8sDto
+    public class KonciergeBaseK8sDto: IKonciergeBaseK8sDto
     {
 
-        
+        public string Name { get; set; }
+
+
 
     }
 }

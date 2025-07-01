@@ -10,7 +10,7 @@
 
     @if (!_loading)
 {
-    <MudSelect T="KonciergeNamespaceDto" Label="Namespaces" MultiSelection="false" @bind-Value="selectedNs">
+    <MudSelect T="KonciergeNamespaceDto" Label="Namespaces" MultiSelection="false" ValueChanged="NameSpaceChanged">
 
     @foreach (var ns in namespaces)
     {
@@ -33,11 +33,15 @@
     [Parameter]
     public KonciergeClient _kc { get; set; }
 
+    [Parameter]
+    public EventCallback<KonciergeNamespaceDto> OnNameSpaceSelection { get; set; }
+
 
     private bool _loading { get; set; }
     private List<KonciergeNamespaceDto> namespaces { get; set; } = new();
 
-    private KonciergeNamespaceDto selectedNs { get; set; } = null;
+    [Parameter]
+    public KonciergeNamespaceDto selectedNs { get; set; } = null;
 
 
     protected override async Task OnInitializedAsync()
@@ -52,6 +56,14 @@
         _loading = false;
 
 
+    }
+
+    private async Task NameSpaceChanged(KonciergeNamespaceDto selected)
+
+    {
+        selectedNs = selected;
+        await OnNameSpaceSelection.InvokeAsync(selectedNs);
+    
     }
 
 

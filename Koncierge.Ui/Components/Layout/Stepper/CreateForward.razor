@@ -1,0 +1,100 @@
+﻿@using Koncierge.Core.K8s.Contexts
+@using Koncierge.Core.K8s.Mappers
+@using Koncierge.Core.K8s.Namespaces
+@using Koncierge.Data.Repositories.Interfaces
+@using Koncierge.Domain.DTOs
+@using Koncierge.Domain.Entities
+@inject IKonciergeKubeConfigService _kcService;
+@inject IKubeConfigRepository _kcRepository;
+@inject IKonciergeContextService _ctx
+
+<MudDialog>
+    <TitleContent>
+        Add Forward
+    </TitleContent>
+ <DialogContent>
+    <MudStepper ShowResetButton>
+        <MudStep Title="Cluster">
+            <MudSelect T="KonciergeKubeConfigDto" Label="Configs" MultiSelection="false" ValueChanged="KubeConfigChanged">
+
+                @foreach (var cfg in _configs)
+                {
+                        <MudSelectItem T="KonciergeKubeConfigDto" Value="@cfg">@(cfg.Name ?? cfg.Path)</MudSelectItem>
+                }
+            </MudSelect>
+
+                
+
+                    <MudSelect T="string" Label="Contexts" MultiSelection="false" @bind-Value="selectedContext">
+                    @if (selectedConfig != null)
+
+                    {
+                        @foreach (var ctx in _contexts)
+                        {
+                            <MudSelectItem T="string" Value="@ctx">@ctx</MudSelectItem>
+                        }
+                    }
+                    </MudSelect>
+                
+             
+
+            
+            </MudStep>
+        <MudStep Title="Namespace" SecondaryText="Optional" Skippable="true">Create an ad group content</MudStep>
+        <MudStep Title="Target">Create an ad content</MudStep>
+    </MudStepper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
+
+
+
+    private List<KonciergeKubeConfigDto> _configs = new();
+    private List<string> _contexts = new();
+    private KonciergeKubeConfigDto selectedConfig =null;
+
+
+    private bool _loadingKc = true;
+    private string selectedContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        _loadingKc = true;
+        var tmp= _kcRepository.GetAll().ToList();
+
+        _configs = KonciergeDbToDtoProfile.GetAsmapper().Map<List<KonciergeKubeConfigDto>>(tmp);
+        _loadingKc = false;
+
+
+
+    }
+
+
+    private async Task KubeConfigChanged(KonciergeKubeConfigDto sel)
+
+    {
+        selectedConfig = sel;
+
+        var allCtx = await _ctx.GetAllContexts(sel.Path);
+
+        _contexts = allCtx.Data;
+
+        StateHasChanged();
+
+    }
+
+
+}

@@ -65,6 +65,9 @@ namespace Koncierge.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LocalPort = table.Column<int>(type: "INTEGER", nullable: false),
+                    TargetPort = table.Column<int>(type: "INTEGER", nullable: false),
+                    TargetName = table.Column<string>(type: "TEXT", nullable: false),
                     TargetType = table.Column<int>(type: "INTEGER", nullable: false),
                     KonciergeForwardNamespaceId = table.Column<Guid>(type: "TEXT", nullable: true)
                 },
@@ -83,6 +86,8 @@ namespace Koncierge.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Type = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
                     KonciergeForwardId = table.Column<Guid>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
@@ -95,10 +100,34 @@ namespace Koncierge.Data.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ForwardLinkedConfigItems",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Value = table.Column<string>(type: "TEXT", nullable: false),
+                    KonciergeForwardAdditionalConfigId = table.Column<Guid>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ForwardLinkedConfigItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ForwardLinkedConfigItems_ForwardLinkedConfigs_KonciergeForwardAdditionalConfigId",
+                        column: x => x.KonciergeForwardAdditionalConfigId,
+                        principalTable: "ForwardLinkedConfigs",
+                        principalColumn: "Id");
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_ForwardContexts_KonciergeKubeConfigId",
                 table: "ForwardContexts",
                 column: "KonciergeKubeConfigId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ForwardLinkedConfigItems_KonciergeForwardAdditionalConfigId",
+                table: "ForwardLinkedConfigItems",
+                column: "KonciergeForwardAdditionalConfigId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ForwardLinkedConfigs_KonciergeForwardId",
@@ -119,6 +148,9 @@ namespace Koncierge.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "ForwardLinkedConfigItems");
+
             migrationBuilder.DropTable(
                 name: "ForwardLinkedConfigs");
 

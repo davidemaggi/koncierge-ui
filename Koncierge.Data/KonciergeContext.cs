@@ -22,18 +22,19 @@ namespace Koncierge.Data
         public DbSet<KonciergeForwardNamespace> ForwardNameSpaces { get; set; }
         public DbSet<KonciergeForward> Forwards { get; set; }
         public DbSet<KonciergeForwardAdditionalConfig> ForwardLinkedConfigs { get; set; }
+        public DbSet<KonciergeForwardAdditionalConfigItem> ForwardLinkedConfigItems { get; set; }
 
-
+        
 
         public KonciergeDbContext() : base()
         {
 
-            //Initialize();
+          // Initialize();
 
         }
         public KonciergeDbContext(DbContextOptions<KonciergeDbContext> options) : base(options)
         {
-            Initialize();
+            //Initialize();
         }
 
 
@@ -43,7 +44,7 @@ namespace Koncierge.Data
 
             Directory.CreateDirectory(AppPath);
 
-
+            VerifyDirectoryPermissions(AppPath);
 
 
             optionsBuilder.UseSqlite($"Data Source={Path.Combine(AppPath, "koncierge.db")};");
@@ -62,10 +63,18 @@ namespace Koncierge.Data
 
         }
 
-        public void Initialize()
+        private void VerifyDirectoryPermissions(string path)
         {
-            Database.Migrate();
-           
+            try
+            {
+                var testFile = Path.Combine(path, "write_test.tmp");
+                File.WriteAllText(testFile, "test");
+                File.Delete(testFile);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"No write permissions to {path}. Error: {ex.Message}");
+            }
         }
     }
 }

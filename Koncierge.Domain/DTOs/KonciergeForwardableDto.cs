@@ -1,0 +1,28 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Koncierge.Domain.DTOs
+{
+    public interface IForwardableDto
+    {
+
+        public List<KonciergePortDto> Ports { get; set; }
+
+    }
+
+
+
+    public class KonciergePortDto { 
+    
+        public int ContainerPort { get; set; }
+        public int HostPort { get; set; }
+        public string Protocol { get; set; } = "";
+
+
+
+
+    }
+}
