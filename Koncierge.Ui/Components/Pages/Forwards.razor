@@ -52,7 +52,7 @@
 
      private Task OpenDialogAsync()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraLarge };
 
         return DialogService.ShowAsync<CreateForward>("Add Forward", options);
     }

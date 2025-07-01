@@ -3,18 +3,21 @@
 @using Koncierge.Core.K8s.Namespaces
 @using Koncierge.Data.Repositories.Interfaces
 @using Koncierge.Domain.DTOs
+@using Koncierge.Domain.DTOs.Models
 @using Koncierge.Domain.Entities
 @inject IKonciergeKubeConfigService _kcService;
 @inject IKubeConfigRepository _kcRepository;
 @inject IKonciergeContextService _ctx
+@inject IDialogService _dialogs
 
 <MudDialog>
     <TitleContent>
         Add Forward
     </TitleContent>
  <DialogContent>
-    <MudStepper ShowResetButton>
-        <MudStep Title="Cluster">
+        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors" Model="_creeteFwd">
+            <MudStepper ShowResetButton OnPreviewInteraction="OnPreviewInteraction">
+                <MudStep Title="Cluster" HasError="@(!isClusterStep1Complete())">
             <MudSelect T="KonciergeKubeConfigDto" Label="Configs" MultiSelection="false" ValueChanged="KubeConfigChanged">
 
                 @foreach (var cfg in _configs)
@@ -25,7 +28,7 @@
 
                 
 
-                    <MudSelect T="string" Label="Contexts" MultiSelection="false" @bind-Value="selectedContext">
+                    <MudSelect T="string" Label="Contexts" MultiSelection="false" @bind-Value="_creeteFwd.Namespace">
                     @if (selectedConfig != null)
 
                     {
@@ -40,22 +43,37 @@
 
             
             </MudStep>
-        <MudStep Title="Namespace" SecondaryText="Optional" Skippable="true">Create an ad group content</MudStep>
-        <MudStep Title="Target">Create an ad content</MudStep>
+        <MudStep Title="Namespace" >Create an ad group content</MudStep>
+                <MudStep Title="Target">Create an ad content</MudStep>
+                <MudStep Title="Additional Config" Skippable="true" SecondaryText="Optional">Create an ad content</MudStep>
     </MudStepper>
+    </MudForm>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
     </DialogActions>
-</MudDialog>
+
+    </MudDialog>
 @code {
 
+    private CreateForwardDto _creeteFwd { get; set; } = new();
+
+
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    private void Submit() {
+
+        var xxx = _creeteFwd.KubeConfigId;
+
+         MudDialog.Close(DialogResult.Ok(true));
+    }
 
     private void Cancel() => MudDialog.Cancel();
 
@@ -87,6 +105,7 @@
 
     {
         selectedConfig = sel;
+        _creeteFwd.KubeConfigId = sel.Id;
 
         var allCtx = await _ctx.GetAllContexts(sel.Path);
 
@@ -97,4 +116,54 @@
     }
 
 
+
+    private async Task OnPreviewInteraction(StepperInteractionEventArgs arg)
+    {
+        if (arg.Action == StepAction.Complete)
+        {
+            // occurrs when clicking next
+            await ControlStepCompletion(arg);
+        }
+        else if (arg.Action == StepAction.Activate)
+        {
+            // occurrs when clicking a step header with the mouse
+            await ControlStepNavigation(arg);
+        }
+    }
+
+
+    private async Task ControlStepCompletion(StepperInteractionEventArgs arg)
+    {
+        switch (arg.StepIndex)
+        {
+            case 0:
+                if (!isClusterStep1Complete())
+                {
+                    await _dialogs.ShowMessageBox("Error", "You have not flipped the switch in step 1");
+                    arg.Cancel = true;
+                }
+                break;
+
+        }
+    }
+
+    private async Task ControlStepNavigation(StepperInteractionEventArgs arg)
+    {
+        switch (arg.StepIndex)
+        {
+            case 1:
+                if (!isClusterStep1Complete())
+                {
+                    await _dialogs.ShowMessageBox("Error", "Finish step 1 first");
+                    arg.Cancel = true;
+                }
+                break;
+
+        }
+    }
+
+
+    private bool isClusterStep1Complete() => (_creeteFwd.KubeConfigId != Guid.Empty && _creeteFwd.Namespace is not null);
+
+    
 }
