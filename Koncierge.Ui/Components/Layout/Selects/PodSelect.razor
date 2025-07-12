@@ -10,7 +10,7 @@
 
     @if (!_loading)
 {
-    <MudSelect T="KonciergePodDto" Label="Pods" MultiSelection="false" @bind-Value="selectedPod">
+    <MudSelect T="KonciergePodDto" Label="Pods" MultiSelection="false" Value="selectedPod" ValueChanged="PodSelectionChanged">
 
     @foreach (var p in pods)
     {
@@ -43,7 +43,7 @@
     private KonciergePodDto selectedPod { get; set; } = null;
 
         [Parameter]
-    public EventCallback<KonciergeNamespaceDto> OnPodSelected { get; set; }
+    public EventCallback<KonciergePodDto> OnPodSelected { get; set; }
 
 
     protected override async Task OnInitializedAsync()
@@ -81,6 +81,15 @@
         StateHasChanged();
 
     }
+    public async Task PodSelectionChanged(KonciergePodDto sel)
 
+    {
+
+
+        selectedPod = sel;
+
+        await OnPodSelected.InvokeAsync(selectedPod);
+
+    }
 
 }

@@ -11,9 +11,9 @@ namespace Koncierge.Core.K8s.Contexts
     {
 
 
-        public Task<KonciergeActionDataResultDto<List<string>>> GetAllContexts(string kubeConfigPath);
+        public Task<KonciergeActionDataResultDto<List<KonciergeContextDto>>> GetAllContexts(string kubeConfigPath);
         public Task<KonciergeActionResultDto> SetCurrentContext(string kubeConfigPath, string contextName);
-        public Task<KonciergeActionDataResultDto<string>> GetCurrentContext(string kubeConfigPath);
+        public Task<KonciergeActionDataResultDto<KonciergeContextDto>> GetCurrentContext(string kubeConfigPath);
 
     }
 }

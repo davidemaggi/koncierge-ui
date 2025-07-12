@@ -23,18 +23,25 @@ namespace Koncierge.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("ContainerPort")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HostPort")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid?>("KonciergeForwardNamespaceId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("LocalPort")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("TargetName")
+                    b.Property<string>("Protocol")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("TargetPort")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("TargetName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("TargetType")
                         .HasColumnType("INTEGER");

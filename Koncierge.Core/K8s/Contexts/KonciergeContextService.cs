@@ -1,6 +1,7 @@
 ﻿using k8s;
 using k8s.KubeConfigModels;
 using Koncierge.Domain.DTOs;
+using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace Koncierge.Core.K8s.Contexts
     public class KonciergeContextService : IKonciergeContextService
     {
 
-        public async Task<KonciergeActionDataResultDto<List<string>>> GetAllContexts(string kubeConfigPath)
+        public async Task<KonciergeActionDataResultDto<List<KonciergeContextDto>>> GetAllContexts(string kubeConfigPath)
         {
 
 
@@ -24,7 +25,7 @@ namespace Koncierge.Core.K8s.Contexts
                 {
 
 
-                    return KonciergeActionDataResultDto<List<string>>.Fail($"KubeConfig '{kubeConfigPath}' Not found", new List<string>());
+                    return KonciergeActionDataResultDto<List<KonciergeContextDto>>.Fail($"KubeConfig '{kubeConfigPath}' Not found", new List<KonciergeContextDto>());
 
                 }
 
@@ -33,16 +34,23 @@ namespace Koncierge.Core.K8s.Contexts
 
                 // Extract context names
 
-                var contexts = config.Contexts?.Select(c => c.Name).ToList() ?? new List<string>();
+                var contexts = new List<KonciergeContextDto>();
+
+                foreach (var c in config.Contexts) {
+
+                    contexts.Add(new KonciergeContextDto { Name=c.Name, DefaultNamespace=c.ContextDetails.Namespace });
+
+
+                }
 
                 return contexts.Count > 0 ?
-                     KonciergeActionDataResultDto<List<string>>.Success(contexts)
-                     : KonciergeActionDataResultDto<List<string>>.Fail($"No Context found", contexts);
+                     KonciergeActionDataResultDto<List<KonciergeContextDto>>.Success(contexts)
+                     : KonciergeActionDataResultDto<List<KonciergeContextDto>>.Fail($"No Context found", contexts);
             }
             catch (Exception ex)
             {
 
-                return KonciergeActionDataResultDto<List<string>>.Fail($"Error Retrieving Contexts", new List<string>());
+                return KonciergeActionDataResultDto<List<KonciergeContextDto>>.Fail($"Error Retrieving Contexts", new List<KonciergeContextDto>());
 
             }
         }
@@ -81,23 +89,25 @@ namespace Koncierge.Core.K8s.Contexts
         }
 
 
-        public async Task<KonciergeActionDataResultDto<string>> GetCurrentContext(string kubeConfigPath)
+        public async Task<KonciergeActionDataResultDto<KonciergeContextDto>> GetCurrentContext(string kubeConfigPath)
         {
             try
             {
                 if (!File.Exists(kubeConfigPath))
-                    return KonciergeActionDataResultDto<string>.Fail($"KubeConfig '{kubeConfigPath}' Not found", "");
+                    return KonciergeActionDataResultDto<KonciergeContextDto>.Fail($"KubeConfig '{kubeConfigPath}' Not found", new KonciergeContextDto());
 
                 // Load kubeconfig
                 var config = await KubernetesClientConfiguration.LoadKubeConfigAsync(kubeConfigPath);
 
+                var current=config.Contexts.First(x=>x.Name== config.CurrentContext);
+
                 // Return current context
-                return KonciergeActionDataResultDto<string>.Success(config.CurrentContext);
+                return KonciergeActionDataResultDto<KonciergeContextDto>.Success(new KonciergeContextDto { Name = current.Name, DefaultNamespace = current.ContextDetails.Namespace });
 
             }
             catch (Exception ex)
             {
-                return KonciergeActionDataResultDto<string>.Fail($"Error Retrieving Default Context", "");
+                return KonciergeActionDataResultDto<KonciergeContextDto>.Fail($"Error Retrieving Default Context", new KonciergeContextDto());
 
             }
 

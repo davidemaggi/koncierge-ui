@@ -10,7 +10,7 @@
 
     @if (!_loading)
 {
-    <MudSelect T="KonciergeServiceDto" Label="Services" MultiSelection="false" @bind-Value="selectedService">
+    <MudSelect T="KonciergeServiceDto" Label="Services" MultiSelection="false" Value="selectedService" ValueChanged="ServiceSelectionChanged">
 
     @foreach (var s in services)
     {
@@ -20,7 +20,7 @@
     }
     else
     {
-    <MudSelect T="string"  Label="Pods" MultiSelection="false">
+    <MudSelect T="string"  Label="Services" MultiSelection="false">
         <MudSelectItem T="string" Disabled="true">Loading<MudProgressCircular Indeterminate="true"/></MudSelectItem>
         </MudSelect>
     }
@@ -41,7 +41,8 @@
     private List<KonciergeServiceDto> services { get; set; } = new();
 
     private KonciergeServiceDto selectedService { get; set; } = null;
-
+    [Parameter]
+    public EventCallback<KonciergeServiceDto> OnServiceSelected { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -51,9 +52,9 @@
     }
 
     private async Task LoadData()
-    
+
     {
-    
+
 
         _loading = true;
 
@@ -65,7 +66,7 @@
         _loading = false;
 
         StateHasChanged();
-    
+
     }
     public async Task RefreshView()
 
@@ -78,6 +79,15 @@
         StateHasChanged();
 
     }
+    public async Task ServiceSelectionChanged(KonciergeServiceDto sel)
 
+    {
+
+
+        selectedService = sel;
+
+        await OnServiceSelected.InvokeAsync(selectedService);
+
+    }
 
 }

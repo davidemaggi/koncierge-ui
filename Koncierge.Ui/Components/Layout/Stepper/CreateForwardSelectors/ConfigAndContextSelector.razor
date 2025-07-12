@@ -1,0 +1,129 @@
+﻿@using Koncierge.Core.K8s.Contexts
+@using Koncierge.Core.K8s.Mappers
+@using Koncierge.Core.K8s.Namespaces
+@using Koncierge.Data.Repositories.Interfaces
+@using Koncierge.Domain.DTOs
+
+
+@inject IKonciergeContextService _ctx
+@inject IKonciergeKubeConfigService _kcService;
+@inject IKubeConfigRepository _kcRepository;
+
+@if (_loadingKc)
+{
+
+    <MudSkeleton Width="100%" Height="42px;" />
+
+} else { 
+<MudSelect T="KonciergeKubeConfigDto" Value="selectedConfig" Label="Configs" MultiSelection="false" ValueChanged="KubeConfigChanged">
+
+    @foreach (var cfg in _configs)
+    {
+        <MudSelectItem T="KonciergeKubeConfigDto" Value="@cfg">@(cfg.Name ?? cfg.Path)</MudSelectItem>
+    }
+</MudSelect>
+}
+
+@if (selectedConfig == null)
+
+{
+    <MudSelect Disabled="true" T="KonciergeContextDto" Label="Contexts" MultiSelection="false">
+
+        
+            <MudSelectItem T="string">Select a KubeConfig First...</MudSelectItem>
+        
+
+    </MudSelect>
+
+} else { 
+
+@if (_loadingCtx)
+{
+
+    <MudSkeleton Width="100%" Height="42px;" />
+
+} else {
+
+
+
+<MudSelect T="KonciergeContextDto" Label="Contexts" MultiSelection="false" ValueChanged="ContextChanged">
+
+        @foreach (var ctx in _contexts)
+        {
+            <MudSelectItem T="KonciergeContextDto" Value="@ctx">@ctx.Name</MudSelectItem>
+        }
+    
+</MudSelect>
+}
+}
+
+@code {
+    [Parameter]
+    public EventCallback<(KonciergeKubeConfigDto, KonciergeContextDto)> OnSelectionChange { get; set; }
+
+
+
+    [Parameter]
+    public KonciergeContextDto selectedContext { get; set; } = null;
+
+    private List<KonciergeKubeConfigDto> _configs = new();
+    private List<KonciergeContextDto> _contexts = new();
+    private KonciergeKubeConfigDto selectedConfig = null;
+
+    private bool _loadingKc = true;
+    private bool _loadingCtx = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        _loadingKc = true;
+        var tmp = _kcRepository.GetAll().ToList();
+
+        _configs = KonciergeDbToDtoProfile.GetAsmapper().Map<List<KonciergeKubeConfigDto>>(tmp);
+        if (_configs.Count==1)
+        {
+          
+            await KubeConfigChanged(_configs.First());
+        }
+        _loadingKc = false;
+
+
+
+    }
+
+    private async Task KubeConfigChanged(KonciergeKubeConfigDto sel)
+
+    {
+        selectedConfig = sel;
+        _loadingCtx = true;
+
+        var allCtx = await _ctx.GetAllContexts(sel.Path);
+        var currentCtx= await _ctx.GetCurrentContext(sel.Path);
+        _contexts = allCtx.Data;
+        _loadingCtx = false;
+
+     
+        selectedContext = currentCtx.Data;
+
+        
+        
+        
+        
+        
+        
+        await OnSelectionChange.InvokeAsync((selectedConfig, selectedContext));
+
+        StateHasChanged();
+
+    }
+
+    private async Task ContextChanged(KonciergeContextDto sel)
+
+    {
+        selectedContext = sel;
+        await OnSelectionChange.InvokeAsync((selectedConfig, selectedContext));
+
+        StateHasChanged();
+
+    }
+}

@@ -5,6 +5,7 @@ using Koncierge.Domain.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -41,11 +42,11 @@ namespace Koncierge.Core.K8s.Mappers
                ;
 
             CreateMap<V1ServicePort, KonciergePortDto>()
-              .ForMember(dest => dest.ContainerPort, opt => opt.MapFrom(src => src.TargetPort))
+
+              .ForMember(dest => dest.ContainerPort, opt => opt.MapFrom(src => ConvertIntstrIntOrStringToInt(src.TargetPort)))
               .ForMember(dest => dest.HostPort, opt => opt.MapFrom(src => src.Port))
               .ForMember(dest => dest.Protocol, opt => opt.MapFrom(src => src.Protocol))
               ;
-
             CreateMap<V1Secret, KonciergeAdditionalConfigDto>()
              .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name()))
              .ForMember(dest => dest.Namespace, opt => opt.MapFrom(src => src.Namespace()))
@@ -77,8 +78,36 @@ namespace Koncierge.Core.K8s.Mappers
 
         }
 
+        private int ConvertIntstrIntOrStringToInt(IntstrIntOrString value)
+        {
+            object val = value.Value;
+            if (val is int port)
+            {
+                return port;
+            }
+            if (val is string str)
+            {
+                if (int.TryParse(str, out int parsedPort))
+                    return parsedPort;
 
+                // Handle named ports, e.g., "http" => 80
+                var namedPorts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        {
+            {"http", 80},
+            {"https", 443},
+            {"ftp", 21},
+            {"ssh", 22},
+            {"smtp", 25},
+            {"dns", 53}
+            // Add more as needed
+        };
+                if (namedPorts.TryGetValue(str, out int mappedPort))
+                    return mappedPort;
 
+                return 0;
+            }
+            throw new ArgumentException("Invalid IntstrIntOrString value");
+        }
         public static IMapper GetAsmapper() {
 
             var config = new MapperConfiguration(cfg =>
@@ -93,6 +122,9 @@ namespace Koncierge.Core.K8s.Mappers
 
 
         }
+
+
+
 
 
     }

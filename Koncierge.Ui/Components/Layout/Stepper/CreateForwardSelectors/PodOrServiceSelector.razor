@@ -1,0 +1,124 @@
+﻿@using Koncierge.Core.K8s
+@using Koncierge.Domain.DTOs
+@using Koncierge.Domain.Enums
+@using Koncierge.Ui.Components.Layout.Selects
+
+
+<MudRadioGroup T="FwdTargetType" @bind-Value="ForwardType">
+    <MudRadio Value="FwdTargetType.SERVICE" Color="Color.Primary" Dense="true">Service</MudRadio>
+    <MudRadio Value="FwdTargetType.POD" Color="Color.Secondary" Dense="false">Pod</MudRadio>
+</MudRadioGroup>
+
+@if (ForwardType == FwdTargetType.SERVICE)
+{
+
+    <ServiceSelect _kc="_kc" _filterNs="selectedNs" OnServiceSelected="ServiceSelectionChanged" />
+
+
+} else
+
+{
+    <PodSelect _kc="_kc" _filterNs="selectedNs" OnPodSelected="PodSelectionChanged" />
+}
+
+@if (portList.Count>0) 
+{
+    <MudDataGrid T="KonciergePortDto" ReadOnly="false" Items="@portList" Filterable="false" SortMode="@SortMode.None" Groupable="false" CommittedItemChanges="@PortChanged">
+    <Columns>
+            <PropertyColumn Property="x => x.Protocol" Title="Protocol" Editable="false" />
+            <PropertyColumn Property="x => x.ContainerPort" Title="Container Port" Editable="false" />
+            <PropertyColumn Property="x => x.HostPort" Title="Host Port" Editable="false" />
+                
+            <PropertyColumn Property="x => x.LocalPort" Title="Local Port" />
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudStack Row>
+                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@(context.Item.LocalPort is null ? Color.Primary : Color.Secondary)" OnClick="@context.Actions.StartEditingItemAsync">Forward</MudButton>
+                </MudStack>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+</MudDataGrid>
+}
+
+
+
+
+@code {
+
+
+    [Parameter]
+    public KonciergeClient _kc { get; set; }
+
+    private bool isService { get; set; } = true;
+
+    [Parameter]
+    public KonciergeNamespaceDto selectedNs { get; set; }
+
+    [Parameter]
+    public EventCallback<KonciergePodDto> OnPodSelection { get; set; }
+
+    [Parameter]
+    public EventCallback<KonciergeServiceDto> OnServiceSelection { get; set; }
+
+    [Parameter]
+    public EventCallback<List<KonciergePortDto>> OnPortSelection { get; set; }
+
+    [Parameter]
+    public KonciergeServiceDto selectedService { get; set; }
+
+    [Parameter]
+    public KonciergePodDto selectedPod { get; set; }
+
+    public List<KonciergePortDto> portList { get; set; } = new();
+
+
+
+    private FwdTargetType ForwardType = FwdTargetType.SERVICE;
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (selectedService is not null) { ForwardType = FwdTargetType.SERVICE; }
+        if (selectedPod is not null) { ForwardType = FwdTargetType.POD; }
+
+
+
+    }
+
+
+
+    public async Task ServiceSelectionChanged(KonciergeServiceDto sel)
+
+    {
+        selectedService = sel;
+
+        portList = selectedService.Ports;
+
+        await OnServiceSelection.InvokeAsync(selectedService);
+
+    }
+
+    public async Task PodSelectionChanged(KonciergePodDto sel)
+
+    {
+
+        selectedPod = sel;
+
+        portList = selectedPod.Ports;
+        await OnPodSelection.InvokeAsync(selectedPod);
+
+    }
+
+
+    public async Task PortChanged(KonciergePortDto port)
+    {
+
+
+       await OnPortSelection.InvokeAsync(portList);
+
+    }
+}

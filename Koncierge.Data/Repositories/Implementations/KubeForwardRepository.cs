@@ -44,7 +44,7 @@ namespace Koncierge.Data.Repositories.Implementations
             var ret = _ctx.KubeConfigs
                   .Include(x => x.Contexts.Where(c => ctx == null || c.Name == ctx || c.Name == freeTxt))
                   .ThenInclude(x => x.Namespaces.Where(c => ns == null || c.Name == ns || c.Name == freeTxt))
-                  .ThenInclude(x => x.Forwards.Where(c => port == 0 || c.TargetName == freeTxt || c.TargetPort == port || c.LocalPort == port))
+                  .ThenInclude(x => x.Forwards.Where(c => port == 0 || c.TargetName == freeTxt || c.HostPort == port || c.ContainerPort == port || c.LocalPort == port))
                   .ThenInclude(x => x.AdditionalConfigs)
                   .ThenInclude(x => x.Items)
                   .Where(x => cfgId == null || x.Id == cfgId)

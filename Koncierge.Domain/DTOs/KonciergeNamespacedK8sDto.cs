@@ -12,6 +12,14 @@ namespace Koncierge.Domain.DTOs
         public string Name { get; set; }
 
 
+        public override int GetHashCode() => Name.GetHashCode();
+        public override string ToString() => Name;
+
+        public override bool Equals(object obj)
+        => Equals(obj as KonciergeBaseK8sDto);
+
+        public bool Equals(KonciergeBaseK8sDto other)
+            => other != null && string.Equals(Name, other.Name, StringComparison.Ordinal);
 
     }
 }

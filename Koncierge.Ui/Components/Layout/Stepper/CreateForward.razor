@@ -1,13 +1,18 @@
-﻿@using Koncierge.Core.K8s.Contexts
+﻿@using Koncierge.Core.K8s
+@using Koncierge.Core.K8s.Contexts
 @using Koncierge.Core.K8s.Mappers
 @using Koncierge.Core.K8s.Namespaces
 @using Koncierge.Data.Repositories.Interfaces
 @using Koncierge.Domain.DTOs
 @using Koncierge.Domain.DTOs.Models
 @using Koncierge.Domain.Entities
+@using Koncierge.Ui.Components.Layout.Selects
+@using Koncierge.Ui.Components.Layout.Stepper.CreateForwardSelectors
+
 @inject IKonciergeKubeConfigService _kcService;
 @inject IKubeConfigRepository _kcRepository;
 @inject IKonciergeContextService _ctx
+@inject IKubernetesClientManager _kcm
 @inject IDialogService _dialogs
 
 <MudDialog>
@@ -15,36 +20,27 @@
         Add Forward
     </TitleContent>
  <DialogContent>
-        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors" Model="_creeteFwd">
+        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors" Model="_createFwd">
             <MudStepper ShowResetButton OnPreviewInteraction="OnPreviewInteraction">
                 <MudStep Title="Cluster" HasError="@(!isClusterStep1Complete())">
-            <MudSelect T="KonciergeKubeConfigDto" Label="Configs" MultiSelection="false" ValueChanged="KubeConfigChanged">
-
-                @foreach (var cfg in _configs)
-                {
-                        <MudSelectItem T="KonciergeKubeConfigDto" Value="@cfg">@(cfg.Name ?? cfg.Path)</MudSelectItem>
-                }
-            </MudSelect>
-
-                
-
-                    <MudSelect T="string" Label="Contexts" MultiSelection="false" @bind-Value="_creeteFwd.Namespace">
-                    @if (selectedConfig != null)
-
-                    {
-                        @foreach (var ctx in _contexts)
-                        {
-                            <MudSelectItem T="string" Value="@ctx">@ctx</MudSelectItem>
-                        }
-                    }
-                    </MudSelect>
-                
-             
+            
+                    
+                    <ConfigAndContextSelector OnSelectionChange="OnConfigOrContextChange" />
 
             
             </MudStep>
-        <MudStep Title="Namespace" >Create an ad group content</MudStep>
-                <MudStep Title="Target">Create an ad content</MudStep>
+        <MudStep Title="Namespace">
+
+                    <NameSpaceSelect selectedNs="_createFwd.Namespace" _kc="_kc" OnNameSpaceSelection="OnNameSpaceChange" />
+
+
+
+        </MudStep>
+                <MudStep Title="Target">
+
+                    <PodOrServiceSelector selectedNs="_createFwd.Namespace" _kc="_kc" OnServiceSelection="OnServiceChange" OnPodSelection="OnPodChange" OnPortSelection="OnPortsChange" />
+
+                </MudStep>
                 <MudStep Title="Additional Config" Skippable="true" SecondaryText="Optional">Create an ad content</MudStep>
     </MudStepper>
     </MudForm>
@@ -57,7 +53,9 @@
     </MudDialog>
 @code {
 
-    private CreateForwardDto _creeteFwd { get; set; } = new();
+    private CreateForwardDto _createFwd { get; set; } = new();
+
+    private KonciergeClient _kc { get; set; }
 
 
 
@@ -70,52 +68,64 @@
 
     private void Submit() {
 
-        var xxx = _creeteFwd.KubeConfigId;
+        var xxx = _createFwd.KubeConfig;
 
-         MudDialog.Close(DialogResult.Ok(true));
+        MudDialog.Close(DialogResult.Ok(true));
     }
 
     private void Cancel() => MudDialog.Cancel();
 
 
-
-    private List<KonciergeKubeConfigDto> _configs = new();
-    private List<string> _contexts = new();
-    private KonciergeKubeConfigDto selectedConfig =null;
-
-
-    private bool _loadingKc = true;
-    private string selectedContext { get; set; }
-
     protected override async Task OnInitializedAsync()
     {
 
-        _loadingKc = true;
-        var tmp= _kcRepository.GetAll().ToList();
-
-        _configs = KonciergeDbToDtoProfile.GetAsmapper().Map<List<KonciergeKubeConfigDto>>(tmp);
-        _loadingKc = false;
 
 
 
     }
 
 
-    private async Task KubeConfigChanged(KonciergeKubeConfigDto sel)
-
+    private async Task OnConfigOrContextChange((KonciergeKubeConfigDto kubeConfig, KonciergeContextDto context) data)
     {
-        selectedConfig = sel;
-        _creeteFwd.KubeConfigId = sel.Id;
+        _createFwd.KubeConfig = data.kubeConfig;
 
-        var allCtx = await _ctx.GetAllContexts(sel.Path);
 
-        _contexts = allCtx.Data;
+        _createFwd.Context = data.context;
+        _createFwd.Namespace = new KonciergeNamespaceDto { Name = data.context.DefaultNamespace };
 
-        StateHasChanged();
+
+        _kc = await _kcm.GetClient(_createFwd.KubeConfig.Id, _createFwd.Context.Name);
+
+
+        
+
+        await Task.FromResult(Task.CompletedTask);
+    }
+
+    private void OnNameSpaceChange(KonciergeNamespaceDto ns)
+    {
+        _createFwd.Namespace = ns;
+    }
+
+    private void OnPodChange(KonciergePodDto pod)
+    {
+        _createFwd.Pod = pod;
+        _createFwd.Service = null;
 
     }
 
+    private void OnServiceChange(KonciergeServiceDto svc)
+    {
+        _createFwd.Service = svc;
+        _createFwd.Pod = null;
 
+    }
+
+    private void OnPortsChange(List<KonciergePortDto> ports)
+    {
+        _createFwd.ToForward = ports;
+
+    }
 
     private async Task OnPreviewInteraction(StepperInteractionEventArgs arg)
     {
@@ -139,7 +149,14 @@
             case 0:
                 if (!isClusterStep1Complete())
                 {
-                    await _dialogs.ShowMessageBox("Error", "You have not flipped the switch in step 1");
+                    await _dialogs.ShowMessageBox("Error", "Plese, select A KubeConfig and a Cluster");
+                    arg.Cancel = true;
+                }
+                break;
+            case 1:
+                if (!isNamespaceStep2Complete())
+                {
+                    await _dialogs.ShowMessageBox("Error", "You must select a namespace");
                     arg.Cancel = true;
                 }
                 break;
@@ -158,12 +175,20 @@
                     arg.Cancel = true;
                 }
                 break;
+            case 2:
+                if (!isNamespaceStep2Complete())
+                {
+                    await _dialogs.ShowMessageBox("Error", "Finish step 2 first");
+                    arg.Cancel = true;
+                }
+                break;
 
         }
     }
 
 
-    private bool isClusterStep1Complete() => (_creeteFwd.KubeConfigId != Guid.Empty && _creeteFwd.Namespace is not null);
+    private bool isClusterStep1Complete() => (_createFwd.KubeConfig is not null && _createFwd.Context is not null);
+    private bool isNamespaceStep2Complete() => (_createFwd.Namespace is not null);
 
     
 }

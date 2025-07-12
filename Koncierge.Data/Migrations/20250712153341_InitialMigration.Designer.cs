@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Koncierge.Data.Migrations
 {
     [DbContext(typeof(KonciergeDbContext))]
-    [Migration("20250701151825_InitialMigration")]
+    [Migration("20250712153341_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -26,18 +26,25 @@ namespace Koncierge.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("ContainerPort")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HostPort")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid?>("KonciergeForwardNamespaceId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("LocalPort")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("TargetName")
+                    b.Property<string>("Protocol")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("TargetPort")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("TargetName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("TargetType")
                         .HasColumnType("INTEGER");

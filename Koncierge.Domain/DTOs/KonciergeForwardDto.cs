@@ -13,7 +13,8 @@ namespace Koncierge.Domain.DTOs
         public Guid Id { get; set; }
 
         public int LocalPort { get; set; }
-        public int TargetPort { get; set; }
+        public int HostPort { get; set; }
+        public int ContainerPort { get; set; }
         public string TargetName { get; set; }
 
         public required FwdTargetType TargetType { get; set; } = FwdTargetType.POD;

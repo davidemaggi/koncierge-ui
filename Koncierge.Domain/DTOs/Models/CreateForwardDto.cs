@@ -9,8 +9,14 @@ namespace Koncierge.Domain.DTOs.Models
     public class CreateForwardDto
     {
 
-        public Guid KubeConfigId { get; set; } = Guid.Empty;
-        public string Namespace { get; set; }
+        public KonciergeKubeConfigDto KubeConfig { get; set; }
+        public KonciergeContextDto Context { get; set; }
+        public KonciergeNamespaceDto Namespace { get; set; }
+        public KonciergePodDto Pod { get; set; }
+        public KonciergeServiceDto Service { get; set; }
+        public List<KonciergePortDto> ToForward { get; set; }=new List<KonciergePortDto>();
+
+        
 
 
     }

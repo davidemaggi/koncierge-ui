@@ -19,6 +19,7 @@ namespace Koncierge.Domain.DTOs
     
         public int ContainerPort { get; set; }
         public int HostPort { get; set; }
+        public int? LocalPort { get; set; }
         public string Protocol { get; set; } = "";
 
 

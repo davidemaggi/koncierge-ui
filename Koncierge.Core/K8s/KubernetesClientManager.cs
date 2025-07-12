@@ -37,7 +37,7 @@ namespace Koncierge.Core.K8s
 
             var ctx = await _kcService.GetCurrentContext(cfg.Path);
 
-            return await GetClient(cfgId, ctx.Data);
+            return await GetClient(cfgId, ctx.Data.Name);
 
         }
 

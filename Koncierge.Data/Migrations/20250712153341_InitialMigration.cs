@@ -65,8 +65,10 @@ namespace Koncierge.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Protocol = table.Column<string>(type: "TEXT", nullable: false),
+                    ContainerPort = table.Column<int>(type: "INTEGER", nullable: false),
+                    HostPort = table.Column<int>(type: "INTEGER", nullable: false),
                     LocalPort = table.Column<int>(type: "INTEGER", nullable: false),
-                    TargetPort = table.Column<int>(type: "INTEGER", nullable: false),
                     TargetName = table.Column<string>(type: "TEXT", nullable: false),
                     TargetType = table.Column<int>(type: "INTEGER", nullable: false),
                     KonciergeForwardNamespaceId = table.Column<Guid>(type: "TEXT", nullable: true)

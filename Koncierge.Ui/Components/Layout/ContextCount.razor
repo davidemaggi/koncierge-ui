@@ -1,4 +1,5 @@
 ﻿@using Koncierge.Core.K8s.Contexts
+@using Koncierge.Domain.DTOs
 @using Koncierge.Domain.Enums
 @using MudBlazor
 
@@ -11,14 +12,14 @@
 @if(!_loading){
 
 
-    <MudChipSet T="string" SelectedValue="_currentCtx" SelectionMode="SelectionMode.SingleSelection" CheckMark="_checkMark" Variant="Variant.Text" Color="Color.Info" SelectedValueChanged="ChangeCurrentContextForConfig">
+    <MudChipSet T="KonciergeContextDto" SelectedValue="_currentCtx" SelectionMode="SelectionMode.SingleSelection" CheckMark="_checkMark" Variant="Variant.Text" Color="Color.Info" SelectedValueChanged="ChangeCurrentContextForConfig">
 
 
         @if (!_hasError) {
 
         @foreach (var ctx in _contexts)
         {
-            <MudChip Text="@ctx"></MudChip>
+                <MudChip Value="@ctx" Text="@ctx.Name"></MudChip>
             }
         } else
         {
@@ -48,9 +49,9 @@ else
     public bool _loading = true;
     public bool _hasError = false;
     public string _errorMsg = "";
-    private List<string> _contexts = new();
+    private List<KonciergeContextDto> _contexts = new();
 
-    private string _currentCtx;
+    private KonciergeContextDto _currentCtx { get; set; }
     private bool _checkMark = true;
 
     protected override async Task OnInitializedAsync(){
@@ -94,7 +95,7 @@ else
         var currentCtxResult = await _ctxService.GetCurrentContext(_kubeconfigPath);
 
 
-        if (!contextsResult.IsSuccess())
+        if (!currentCtxResult.IsSuccess())
         {
             _snackbar.Add("Error Retrieving current context", Severity.Error);
 
@@ -110,15 +111,14 @@ else
 
         _loading = false;
 
-
     }
 
 
-    private async Task ChangeCurrentContextForConfig(string newCtx)
+    private async Task ChangeCurrentContextForConfig(KonciergeContextDto newCtx)
     {
 
 
-        var changeCtx = await _ctxService.SetCurrentContext(_kubeconfigPath, newCtx);
+        var changeCtx = await _ctxService.SetCurrentContext(_kubeconfigPath, newCtx.Name);
 
         if (changeCtx.IsSuccess())
         {
