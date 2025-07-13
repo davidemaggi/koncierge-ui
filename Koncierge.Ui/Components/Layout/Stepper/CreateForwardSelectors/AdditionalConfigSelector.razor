@@ -1,0 +1,80 @@
+﻿@using Koncierge.Core.K8s
+@using Koncierge.Domain.DTOs
+@using Koncierge.Domain.Enums
+@using Koncierge.Ui.Components.Layout.Selects
+@using Koncierge.Core.K8s.Extensions
+
+
+<MudRadioGroup T="AdditionalConfigType" @bind-Value="cfgType">
+    <MudRadio Value="AdditionalConfigType.Secret" Color="Color.Primary" Dense="true">Secret</MudRadio>
+    <MudRadio Value="AdditionalConfigType.ConfigMap" Color="Color.Secondary" Dense="false">ConfigMap</MudRadio>
+</MudRadioGroup>
+
+<AdditionalConfigSelect cfgType="cfgType" _kc="_kc" selectedNs="selectedNs" />
+
+
+
+@code {
+
+
+    [Parameter]
+    public KonciergeClient _kc { get; set; }
+
+
+    [Parameter]
+    public KonciergeNamespaceDto selectedNs { get; set; }
+
+    [Parameter]
+    public EventCallback<List<KonciergeAdditionalConfigDto>> OnConfigSelection { get; set; }
+
+
+    [Parameter]
+    public List<KonciergeAdditionalConfigDto> selectedAdditionalConfigs { get; set; }
+
+    public AdditionalConfigType cfgType = AdditionalConfigType.Secret;
+
+    public List<KonciergePortDto> portList { get; set; } = new();
+
+    private List<KonciergeAdditionalConfigDto> secrets = new();
+    private List<KonciergeAdditionalConfigDto> configMaps = new();
+    private bool _loading =true;
+
+
+
+    private HashSet<KonciergeAdditionalConfigItemDto> selectedLeaves = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        configMaps = await _kc.GetConfigMapsAsync(selectedNs.Name);
+        secrets = await _kc.GetSecretsAsync(selectedNs.Name);
+
+        _loading = false;
+
+    }
+
+
+
+
+
+    public async Task ConfigSelection(HashSet<KonciergeAdditionalConfigItemDto> selected)
+    {
+        // Set all to false first
+        foreach (var node in configMaps.SelectMany(a => a.Items))
+            node.Selected = false;
+
+        // Set selected to true
+
+        foreach (var x in selected)
+            x.Selected = true;
+
+
+
+
+        await OnConfigSelection.InvokeAsync(new());
+
+    }
+
+   
+}

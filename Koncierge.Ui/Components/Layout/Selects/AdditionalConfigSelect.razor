@@ -1,0 +1,96 @@
+﻿@using Koncierge.Core.K8s
+@using Koncierge.Core.K8s.Forwards
+@using Koncierge.Core.K8s.Namespaces
+@using Koncierge.Core.K8s.Extensions
+@using Koncierge.Domain.DTOs
+
+@inject IKubernetesClientManager _kubeClients
+@inject IKonciergeForwardManager _fwd
+
+
+@if (!_loading)
+{
+    <MudSelect T="KonciergeAdditionalConfigDto" @bind-Value="selectedParent" Label="Config" MultiSelection="false">
+
+        @foreach (var cfg in AdditionalConfigs)
+        {
+            <MudSelectItem T="KonciergeAdditionalConfigDto" Value="@cfg">@cfg.Name</MudSelectItem>
+        }
+    </MudSelect>
+    @if (selectedParent is not null)
+    {
+        <MudSelect T="KonciergeAdditionalConfigItemDto" SelectedValuesChanged="ConfigItemChanged" Label="Items" MultiSelection="true">
+
+            @foreach (var item in selectedParent.Items)
+        {
+                <MudSelectItem T="KonciergeAdditionalConfigItemDto" Value="@item">@item.Name</MudSelectItem>
+        }
+        </MudSelect>
+    }
+    else
+    {
+        
+    
+    }
+}
+else
+{
+    <MudSkeleton Width="100%" Height="42px;" />
+
+
+}
+
+
+
+@code {
+
+
+    [Parameter]
+    public KonciergeClient _kc { get; set; }
+
+    [Parameter]
+    public EventCallback<KonciergeAdditionalConfigDto> OnAdditonalConfigSelection { get; set; }
+
+
+    private bool _loading { get; set; }
+    private List<KonciergeAdditionalConfigDto> AdditionalConfigs { get; set; } = new();
+    private KonciergeAdditionalConfigDto selectedParent { get; set; } = new() { Name="none" };
+
+    
+
+    [Parameter]
+    public KonciergeNamespaceDto selectedNs { get; set; } = null;
+    [Parameter]
+    public AdditionalConfigType cfgType { get; set; } = AdditionalConfigType.Secret;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        switch (cfgType)
+
+        {
+            case AdditionalConfigType.ConfigMap:
+                AdditionalConfigs = await _kc.GetConfigMapsAsync(selectedNs.Name);
+                break;
+            case AdditionalConfigType.Secret:
+                AdditionalConfigs = await _kc.GetSecretsAsync(selectedNs.Name);
+                break;
+
+
+        }
+
+        _loading = false;
+
+    }
+
+    private async Task ConfigItemChanged(IEnumerable<KonciergeAdditionalConfigItemDto> selected)
+
+    {
+        var xxx = selected;
+        //await OnNameSpaceSelection.InvokeAsync(selected);
+
+    }
+
+
+}

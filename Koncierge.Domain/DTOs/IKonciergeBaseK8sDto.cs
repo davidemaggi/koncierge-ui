@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Koncierge.Domain.DTOs
 {
-    internal interface IKonciergeBaseK8sDto
+    public interface IKonciergeBaseK8sDto
     {
         public string Name { get; set; }
 

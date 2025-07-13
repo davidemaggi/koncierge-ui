@@ -20,6 +20,7 @@ namespace Koncierge.Domain.DTOs
     {
 
         public string Value { get; set; }
+        public bool Selected { get; set; } = false;
 
 
 

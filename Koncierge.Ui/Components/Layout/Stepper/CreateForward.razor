@@ -41,7 +41,12 @@
                     <PodOrServiceSelector selectedNs="_createFwd.Namespace" _kc="_kc" OnServiceSelection="OnServiceChange" OnPodSelection="OnPodChange" OnPortSelection="OnPortsChange" />
 
                 </MudStep>
-                <MudStep Title="Additional Config" Skippable="true" SecondaryText="Optional">Create an ad content</MudStep>
+                <MudStep Title="Additional Config" Skippable="true" SecondaryText="Optional">
+
+<AdditionalConfigSelector  _kc="_kc" selectedNs="_createFwd.Namespace" OnConfigSelection="OnConfigChange"/>
+
+
+                </MudStep>
     </MudStepper>
     </MudForm>
     </DialogContent>
@@ -126,6 +131,14 @@
         _createFwd.ToForward = ports;
 
     }
+
+      private void OnConfigChange(List<KonciergeAdditionalConfigDto> additionalConfigs)
+    {
+        _createFwd.AdditionalConfig = additionalConfigs;
+
+    }
+
+    
 
     private async Task OnPreviewInteraction(StepperInteractionEventArgs arg)
     {
