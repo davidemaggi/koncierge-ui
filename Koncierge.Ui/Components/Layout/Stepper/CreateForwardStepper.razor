@@ -15,11 +15,7 @@
 @inject IKubernetesClientManager _kcm
 @inject IDialogService _dialogs
 
-<MudDialog>
-    <TitleContent>
-        Add Forward
-    </TitleContent>
- <DialogContent>
+
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors" Model="_createFwd">
             <MudStepper ShowResetButton OnPreviewInteraction="OnPreviewInteraction">
                 <MudStep Title="Cluster" HasError="@(!isClusterStep1Complete())">
@@ -41,21 +37,15 @@
                     <PodOrServiceSelector selectedNs="_createFwd.Namespace" _kc="_kc" OnServiceSelection="OnServiceChange" OnPodSelection="OnPodChange" OnPortSelection="OnPortsChange" />
 
                 </MudStep>
-                <MudStep Title="Additional Config" Skippable="true" SecondaryText="Optional">
+                <MudStep Title="Final Review" Skippable="true" SecondaryText="Optional">
 
-<AdditionalConfigSelector  _kc="_kc" selectedNs="_createFwd.Namespace" OnConfigSelection="OnConfigChange"/>
+            <FinalReview _payload="_createFwd" _kc="_kc"/>
 
 
                 </MudStep>
     </MudStepper>
     </MudForm>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
-    </DialogActions>
 
-    </MudDialog>
 @code {
 
     private CreateForwardDto _createFwd { get; set; } = new();
@@ -71,14 +61,6 @@
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
 
-    private void Submit() {
-
-        var xxx = _createFwd.KubeConfig;
-
-        MudDialog.Close(DialogResult.Ok(true));
-    }
-
-    private void Cancel() => MudDialog.Cancel();
 
 
     protected override async Task OnInitializedAsync()
@@ -134,7 +116,7 @@
 
       private void OnConfigChange(List<KonciergeAdditionalConfigDto> additionalConfigs)
     {
-        _createFwd.AdditionalConfig = additionalConfigs;
+      //  _createFwd.AdditionalConfig = additionalConfigs;
 
     }
 

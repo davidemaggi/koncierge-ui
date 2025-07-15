@@ -22,6 +22,7 @@ namespace Koncierge.Domain.DTOs
         public int? LocalPort { get; set; }
         public string Protocol { get; set; } = "";
 
+        public List<KonciergeAdditionalConfigDto> AdditionalConfig { get; set; } = new List<KonciergeAdditionalConfigDto>();
 
 
 

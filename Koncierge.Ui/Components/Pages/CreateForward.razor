@@ -1,0 +1,27 @@
+﻿@page "/CreateForward"
+@using Koncierge.Core.K8s
+@using Koncierge.Core.K8s.Mappers
+@using Koncierge.Data.Repositories.Interfaces
+@using Koncierge.Domain.DTOs
+@using Koncierge.Domain.Entities
+@using Koncierge.Ui.Components.Layout
+@using Koncierge.Ui.Components.Layout.Stepper
+
+
+@inject IKubernetesClientManager _kubeClient
+@inject IKubeForwardRepository _fwdRepo
+
+@inject IDialogService DialogService
+
+
+<CreateForwardStepper />
+
+
+
+@code {
+
+
+    
+
+
+}

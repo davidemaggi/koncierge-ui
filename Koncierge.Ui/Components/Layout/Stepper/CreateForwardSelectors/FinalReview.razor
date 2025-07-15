@@ -1,0 +1,56 @@
+﻿@using Koncierge.Core.K8s
+@using Koncierge.Domain.DTOs
+@using Koncierge.Domain.DTOs.Models
+@using Koncierge.Domain.Enums
+@using Koncierge.Ui.Components.Layout.Selects
+@using Koncierge.Core.K8s.Extensions
+
+@inject IDialogService DialogService
+
+
+@foreach (var fwd in _payload.ToForward)
+{
+
+    <MudText>@fwd.Protocol : @fwd.LocalPort <MudIcon Icon="@Icons.Material.Filled.ArrowLeft"></MudIcon>  @fwd.HostPort</MudText>
+
+
+
+    <MudStack Row >
+        @foreach (var ac in fwd.AdditionalConfig)
+        {
+            <MudChip Value="ac.Name" Icon="@(ac.Type == AdditionalConfigType.Secret ? Icons.Material.Filled.Security : Icons.Material.Filled.Settings)">@ac.Name</MudChip>
+        }
+
+        <MudChip T="string" OnClick="@(e=>AddNewConfig(fwd))" Icon="@(Icons.Material.Filled.Add)"> Add New</MudChip>
+
+    </MudStack>
+
+
+   
+}
+
+@code {
+
+    [Parameter]
+    public KonciergeClient _kc { get; set; }
+
+    [Parameter]
+    public CreateForwardDto _payload { get; set; }
+
+
+    private async Task AddNewConfig(KonciergePortDto fwd)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var parameters = new DialogParameters<AdditionalConfigSelector>
+        {
+            { x => x.selectedNs, _payload.Namespace },
+            { x => x._kc, _kc },
+            { x => x.selectedAdditionalConfigs, fwd.AdditionalConfig },
+
+        };
+
+        await DialogService.ShowAsync<AdditionalConfigSelector>("Simple Dialog", parameters, options);
+    }
+
+}

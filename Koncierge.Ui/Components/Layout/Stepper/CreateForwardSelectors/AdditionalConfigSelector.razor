@@ -4,17 +4,29 @@
 @using Koncierge.Ui.Components.Layout.Selects
 @using Koncierge.Core.K8s.Extensions
 
-
-<MudRadioGroup T="AdditionalConfigType" @bind-Value="cfgType">
+<MudDialog>
+    <TitleContent>
+        Dialog Title
+    </TitleContent>
+    <DialogContent>
+<MudRadioGroup T="AdditionalConfigType" ValueChanged="OnTypeChange">
     <MudRadio Value="AdditionalConfigType.Secret" Color="Color.Primary" Dense="true">Secret</MudRadio>
     <MudRadio Value="AdditionalConfigType.ConfigMap" Color="Color.Secondary" Dense="false">ConfigMap</MudRadio>
 </MudRadioGroup>
 
-<AdditionalConfigSelect cfgType="cfgType" _kc="_kc" selectedNs="selectedNs" />
-
+        <AdditionalConfigSelect OnAdditonalConfigSelection="ConfigSelection" @ref="tmppppppp" cfgType="cfgType" _kc="_kc" selectedNs="selectedNs" />
+    </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
+        </DialogActions>
+</MudDialog>
 
 
 @code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
 
 
     [Parameter]
@@ -37,9 +49,9 @@
 
     private List<KonciergeAdditionalConfigDto> secrets = new();
     private List<KonciergeAdditionalConfigDto> configMaps = new();
-    private bool _loading =true;
+    private bool _loading = true;
 
-
+    AdditionalConfigSelect tmppppppp;
 
     private HashSet<KonciergeAdditionalConfigItemDto> selectedLeaves = new();
 
@@ -55,26 +67,36 @@
     }
 
 
-
-
-
-    public async Task ConfigSelection(HashSet<KonciergeAdditionalConfigItemDto> selected)
+    public async Task OnTypeChange(AdditionalConfigType selected)
     {
-        // Set all to false first
-        foreach (var node in configMaps.SelectMany(a => a.Items))
-            node.Selected = false;
+        cfgType = selected;
 
-        // Set selected to true
+        await tmppppppp.Refresh();
 
-        foreach (var x in selected)
-            x.Selected = true;
-
-
-
-
-        await OnConfigSelection.InvokeAsync(new());
 
     }
 
-   
+
+    public async Task ConfigSelection(KonciergeAdditionalConfigDto selected)
+    {
+       
+
+
+
+
+
+
+
+    }
+
+    private async Task Submit() {
+    
+                await OnConfigSelection.InvokeAsync(new ());
+                MudDialog.Close(DialogResult.Ok(true));
+    
+    } 
+
+    private void Cancel() => MudDialog.Cancel();
+
+
 }

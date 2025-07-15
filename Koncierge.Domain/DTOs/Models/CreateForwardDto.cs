@@ -15,7 +15,6 @@ namespace Koncierge.Domain.DTOs.Models
         public KonciergePodDto Pod { get; set; }
         public KonciergeServiceDto Service { get; set; }
         public List<KonciergePortDto> ToForward { get; set; }=new List<KonciergePortDto>();
-        public List<KonciergeAdditionalConfigDto> AdditionalConfig { get; set; }=new List<KonciergeAdditionalConfigDto>();
 
 
 
