@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:KonciergeUi.Client"
              xmlns:components="clr-namespace:KonciergeUi.Client.Components"
-             x:Class="KonciergeUi.Client.MainPage">
+             x:Class="KonciergeUi.Client.MainPage"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
 
     <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
         <BlazorWebView.RootComponents>

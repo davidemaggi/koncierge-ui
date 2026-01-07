@@ -2,6 +2,16 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KonciergeUi.Client", "KonciergeUi.Client\KonciergeUi.Client.csproj", "{DA930885-9BC6-4DA9-8045-C52B6EA04DBA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KonciergeUI.Core", "KonciergeUI.Core\KonciergeUI.Core.csproj", "{A1132043-3FE1-42C9-8686-81880C6AD6BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KonciergeUI.Kube", "KonciergeUI.Kube\KonciergeUI.Kube.csproj", "{639B4A4D-D70C-4040-9B9A-32727C12CF62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KonciergeUI.Models", "KonciergeUI.Models\KonciergeUI.Models.csproj", "{ABDB7658-981E-45E7-9C00-131C41A7ED90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KonciergeUI.Translations", "KonciergeUI.Translations\KonciergeUI.Translations.csproj", "{7A104C39-9896-4203-B633-76BD97B49098}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KonciergeUI.Data", "KonciergeUI.Data\KonciergeUI.Data.csproj", "{4A78C5C5-D53D-48E7-BE0B-B6A21D93198C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +22,25 @@ Global
 		{DA930885-9BC6-4DA9-8045-C52B6EA04DBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA930885-9BC6-4DA9-8045-C52B6EA04DBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA930885-9BC6-4DA9-8045-C52B6EA04DBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1132043-3FE1-42C9-8686-81880C6AD6BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1132043-3FE1-42C9-8686-81880C6AD6BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1132043-3FE1-42C9-8686-81880C6AD6BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1132043-3FE1-42C9-8686-81880C6AD6BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{639B4A4D-D70C-4040-9B9A-32727C12CF62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{639B4A4D-D70C-4040-9B9A-32727C12CF62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{639B4A4D-D70C-4040-9B9A-32727C12CF62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{639B4A4D-D70C-4040-9B9A-32727C12CF62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABDB7658-981E-45E7-9C00-131C41A7ED90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABDB7658-981E-45E7-9C00-131C41A7ED90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABDB7658-981E-45E7-9C00-131C41A7ED90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABDB7658-981E-45E7-9C00-131C41A7ED90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A104C39-9896-4203-B633-76BD97B49098}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A104C39-9896-4203-B633-76BD97B49098}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A104C39-9896-4203-B633-76BD97B49098}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A104C39-9896-4203-B633-76BD97B49098}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A78C5C5-D53D-48E7-BE0B-B6A21D93198C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A78C5C5-D53D-48E7-BE0B-B6A21D93198C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A78C5C5-D53D-48E7-BE0B-B6A21D93198C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A78C5C5-D53D-48E7-BE0B-B6A21D93198C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

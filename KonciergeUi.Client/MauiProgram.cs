@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using KonciergeUi.Client.Extensions;
+using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 
 namespace KonciergeUi.Client;
 
@@ -18,6 +20,15 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
+        // MudBlazor
+        builder.Services.AddMudServices();
+
+        // Localization
+        builder.Services.AddLocalization();
+
+        // Register app services
+        builder.Services.RegisterKonciergeServices();
+        
         return builder.Build();
     }
 }
