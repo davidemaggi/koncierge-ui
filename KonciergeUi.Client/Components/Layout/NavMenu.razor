@@ -1,31 +1,80 @@
-﻿@using KonciergeUI.Translations.Services
+﻿@using KonciergeUi.Client.State
+@using KonciergeUI.Translations.Services
+@inherits LayoutComponentBase
+
+@inject UiState Ui;
 @inject ILocalizationService L
 
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">KonciergeUi.Client @L.Navigation["Test"]</a>
-    </div>
-</div>
+<MudAppBar Elevation="1">
+        <!-- Left: logo + name -->
+        <MudIconButton Icon="@Icons.Material.Filled.Star"
+                       Color="Color.Secondary"
+                       Edge="Edge.Start"
+                       Class="mr-2" />
+        <MudText Typo="Typo.h6" Class="mud-appbar-title">
+            @L.Navigation["AppName"]
+        </MudText>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
+        <!-- Center: navigation -->
+        <MudSpacer />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            
+            <MudNavLink Href="/resources">@L.Navigation["NavResources"]</MudNavLink>
+            <MudNavLink Href="/templates">@L.Navigation["NavTemplates"]</MudNavLink>
+            <MudNavLink Href="/forwards">@L.Navigation["NavForwards"]</MudNavLink>
+           
+        </MudStack>
+        <MudSpacer />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+        <!-- Right: language selector + theme switch -->
+        <MudIconButton Icon="@Icons.Material.Filled.Language"
+                       Color="Color.Inherit"
+                       OnClick="ToggleLanguageMenu"
+                       
+                       @ref="_langButtonRef" />
+        <MudMenu AnchorOrigin="Origin.BottomRight"
+                 TransformOrigin="Origin.TopRight"
+                 Open="@_langMenuOpen"
+                 CloseMenuOnItemClick="true"
+                 OnClose="() => _langMenuOpen = false"
+                 ActivatorContent="@(builder => builder.AddContent(0, string.Empty))"
+                 AnchorEl="@_langButtonRef">
+            <MudMenuItem OnClick="@(() => ChangeLanguage("en"))"><img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg" height="14" class="mr-1" />English</MudMenuItem>
+            <MudMenuItem OnClick="@(() => ChangeLanguage("it"))"><img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg" height="14" class="mr-1" />Italiano</MudMenuItem>
+        </MudMenu>
+
+        <MudIconButton Icon="@(_isDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                       Color="Color.Inherit"
+                       OnClick="@ToggleTheme" />
+    </MudAppBar>
+
+@code {
+    private bool _isDark;
+    private bool _langMenuOpen;
+    private MudIconButton _langButtonRef = default!;
+
+    protected override void OnInitialized()
+    {
+        _isDark = Ui.CurrentTheme == "Dark";
+    }
+
+    private void ToggleTheme()
+    {
+        _isDark = !_isDark;
+        Ui.CurrentTheme = _isDark ? "Dark" : "Light";
+    }
+
+    private void ToggleLanguageMenu()
+    {
+        _langMenuOpen = !_langMenuOpen;
+    }
+
+    private void ChangeLanguage(string culture)
+    {
+        L.SetCulture(culture);
+        Ui.CurrentLanguage = culture;
+        _langMenuOpen = false;
+        StateHasChanged();
+    }
+}

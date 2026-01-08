@@ -1,5 +1,6 @@
 using KonciergeUi.Client.State;
 using KonciergeUI.Translations.Services;
+using MudBlazor.Services;
 
 namespace KonciergeUi.Client.Extensions;
 
@@ -7,13 +8,26 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection RegisterKonciergeServices(this IServiceCollection services)
     {
+        
+        services.AddMauiBlazorWebView();
+
+       
+        
+       
+        // MudBlazor
+        services.AddMudServices();
+
+        // Localization
+        services.AddLocalization();
+        
         // State
         services.AddSingleton<UiState>();
         services.AddSingleton<ForwardSessionState>();
 
         // Translations
         services.AddSingleton<ILocalizationService, LocalizationService>();
-
+        
+        
         // Data layer
         //services.AddSingleton<ISecureStore, SecureStore>();
         //services.AddSingleton<IPreferencesStorage, PreferencesStorage>();

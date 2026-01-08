@@ -13,22 +13,23 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .ConfigureFonts(fonts => { fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"); });
 
-        builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
+        AppDomain.CurrentDomain.FirstChanceException += (_, args) =>
+        {
+            var xxx = args.Exception;
+        };
+
 #endif
-
-        // MudBlazor
-        builder.Services.AddMudServices();
-
-        // Localization
-        builder.Services.AddLocalization();
+        
 
         // Register app services
         builder.Services.RegisterKonciergeServices();
         
-        return builder.Build();
+        var app= builder.Build();
+        
+        return app;
     }
 }

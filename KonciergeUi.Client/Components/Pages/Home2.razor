@@ -1,0 +1,36 @@
+﻿@page "/resources"
+@using KonciergeUi.Client.State
+@using KonciergeUI.Models.Kube
+@inject UiState UiState
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="ma-4">
+    <MudStack >
+        <MudText>Test</MudText>
+        <MudText>Test</MudText>
+        <MudText>Test</MudText>
+        <MudText>Test</MudText>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudText>Test dropdown:</MudText>
+            
+            <!-- FIXED: Add Label + Variant -->
+            <MudSelect T="string" 
+                       Label="Select number" 
+                       @bind-Value="Value"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+                <MudSelectItem Value="1">Option 1</MudSelectItem>
+                <MudSelectItem Value="2">Option 2</MudSelectItem>
+                <MudSelectItem Value="3">Option 3</MudSelectItem>
+                <MudSelectItem Value="4">Option 4</MudSelectItem>
+            </MudSelect>
+            
+            <MudText>Selected: @Value</MudText>
+        </MudStack>
+            
+        </MudStack>
+
+</MudContainer>
+
+@code {
+    private string? Value { get; set; } = "1";
+}

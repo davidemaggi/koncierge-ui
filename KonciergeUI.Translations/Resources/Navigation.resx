@@ -120,4 +120,16 @@
   <data name="NavHome" xml:space="preserve">
     <value>Home</value>
   </data>
+  <data name="AppName" xml:space="preserve">
+    <value>Koncierge</value>
+  </data>
+  <data name="NavResources" xml:space="preserve">
+    <value>Resources</value>
+  </data>
+  <data name="NavTemplates" xml:space="preserve">
+    <value>Templates</value>
+  </data>
+  <data name="NavForwards" xml:space="preserve">
+    <value>Active Forwards</value>
+  </data>
 </root>

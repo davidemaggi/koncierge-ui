@@ -1,7 +1,8 @@
 ﻿@using KonciergeUi.Client.State
+@using KonciergeUI.Translations.Services
 @inherits LayoutComponentBase
 
-@inject UiState _uiState;
+
 
 @* Required *@
 <MudThemeProvider />
@@ -12,56 +13,19 @@
 
 @* Needed for snackbars *@
 <MudSnackbarProvider />
+<ErrorBoundary>
+    <ChildContent>
+        <MudLayout>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
+            <!-- TOP APP BAR -->
+            <NavMenu/>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+            <!-- MAIN CONTENT -->
+            <MudMainContent Class="pa-0">
+                @Body
+            </MudMainContent>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
-
-
-@code {
-    private MudThemeProvider? _mudThemeProvider;
-    private MudTheme _theme = new MudTheme();
-    private bool _isDarkMode = false;
-
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && _mudThemeProvider != null)
-        {
-            _isDarkMode = await _mudThemeProvider.GetSystemDarkModeAsync();
-            await UpdateTheme(_uiState.CurrentTheme);
-            StateHasChanged();
-        }
-    }
-
-    protected override void OnInitialized()
-    {
-        _uiState.ThemeChanged += async (sender, theme) => await UpdateTheme(theme);
-    }
-
-    private async Task UpdateTheme(string theme)
-    {
-        if (_mudThemeProvider == null) return;
-
-        _isDarkMode = theme switch
-        {
-            "Dark" => true,
-            "Light" => false,
-            _ => await _mudThemeProvider.GetSystemPreference()
-        };
-        
-        StateHasChanged();
-    }
-}
+        </MudLayout>
+    </ChildContent>
+    
+</ErrorBoundary>

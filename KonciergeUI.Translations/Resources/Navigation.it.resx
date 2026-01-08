@@ -118,6 +118,18 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="NavHome" xml:space="preserve">
-    <value>Home</value>
+    <value>Principale</value>
+  </data>
+  <data name="AppName" xml:space="preserve">
+    <value>Koncierge (it)</value>
+  </data>
+  <data name="NavResources" xml:space="preserve">
+    <value>Risorse</value>
+  </data>
+  <data name="NavTemplates" xml:space="preserve">
+    <value>Modelli</value>
+  </data>
+  <data name="NavForwards" xml:space="preserve">
+    <value>Forward Attivi</value>
   </data>
 </root>
