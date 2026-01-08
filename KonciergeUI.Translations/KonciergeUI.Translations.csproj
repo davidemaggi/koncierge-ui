@@ -9,14 +9,8 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="9.0.1" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <EmbeddedResource Update="Resources\Navigation.resx">
-        <Generator>ResXFileCodeGenerator</Generator>
-        <LastGenOutput>Navigation.Designer.cs</LastGenOutput>
-      </EmbeddedResource>
-    </ItemGroup>
-
+	
+	<!-- Designer file configuration -->
     <ItemGroup>
       <Compile Update="Resources\Navigation.Designer.cs">
         <DesignTime>True</DesignTime>
@@ -24,6 +18,19 @@
         <DependentUpon>Navigation.resx</DependentUpon>
       </Compile>
     </ItemGroup>
+
+	<!-- Navigation resources -->
+	<ItemGroup>
+		<EmbeddedResource Update="Resources\Navigation.resx">
+			<Generator>PublicResXFileCodeGenerator</Generator>
+			<LastGenOutput>Navigation.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Navigation.it.resx">
+			<DependentUpon>Navigation.resx</DependentUpon>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	
     
     
 

@@ -15,20 +15,20 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ILocalizationService, LocalizationService>();
 
         // Data layer
-        services.AddSingleton<ISecureStore, SecureStore>();
-        services.AddSingleton<IPreferencesStorage, PreferencesStorage>();
-
-        // Core services
-        services.AddSingleton<IPreferencesService, PreferencesService>();
-        services.AddSingleton<IClusterDiscoveryService, ClusterDiscoveryService>();
-        services.AddSingleton<IPortForwardManager, PortForwardManager>();
-        services.AddSingleton<ISecretLinkService, SecretLinkService>();
-        services.AddSingleton<IForwardLogService, ForwardLogService>();
-
-        // Kube infrastructure
-        services.AddSingleton<IKubeClientFactory, KubeClientFactory>();
-        services.AddScoped<IKubeRepository, KubeRepository>();
-        services.AddScoped<IKubeSecretRepository, KubeSecretRepository>();
+        //services.AddSingleton<ISecureStore, SecureStore>();
+        //services.AddSingleton<IPreferencesStorage, PreferencesStorage>();
+        //
+        //// Core services
+        //services.AddSingleton<IPreferencesService, PreferencesService>();
+        //services.AddSingleton<IClusterDiscoveryService, ClusterDiscoveryService>();
+        //services.AddSingleton<IPortForwardManager, PortForwardManager>();
+        //services.AddSingleton<ISecretLinkService, SecretLinkService>();
+        //services.AddSingleton<IForwardLogService, ForwardLogService>();
+        //
+        //// Kube infrastructure
+        //services.AddSingleton<IKubeClientFactory, KubeClientFactory>();
+        //services.AddScoped<IKubeRepository, KubeRepository>();
+        //services.AddScoped<IKubeSecretRepository, KubeSecretRepository>();
 
         return services;
     }
