@@ -20,9 +20,9 @@
         <MudSpacer />
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             
-            <MudNavLink Href="/resources">@L.Navigation["NavResources"]</MudNavLink>
-            <MudNavLink Href="/templates">@L.Navigation["NavTemplates"]</MudNavLink>
-            <MudNavLink Href="/forwards">@L.Navigation["NavForwards"]</MudNavLink>
+            <MudButton StartIcon="@Icons.Material.Outlined.List" Href="/resources">@L.Navigation["NavResources"]</MudButton>
+            <MudButton StartIcon="@Icons.Material.Outlined.Print" Href="/templates">@L.Navigation["NavTemplates"]</MudButton>
+            <MudButton StartIcon="@Icons.Material.Outlined.NetworkPing" Href="/forwards">@L.Navigation["NavForwards"]</MudButton>
            
         </MudStack>
         <MudSpacer />
@@ -40,8 +40,8 @@
                  OnClose="() => _langMenuOpen = false"
                  ActivatorContent="@(builder => builder.AddContent(0, string.Empty))"
                  AnchorEl="@_langButtonRef">
-            <MudMenuItem OnClick="@(() => ChangeLanguage("en"))"><img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg" height="14" class="mr-1" />English</MudMenuItem>
-            <MudMenuItem OnClick="@(() => ChangeLanguage("it"))"><img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg" height="14" class="mr-1" />Italiano</MudMenuItem>
+            <MudMenuItem OnClick="@(() => ChangeLanguage("en"))">🇬🇧 English</MudMenuItem>
+            <MudMenuItem OnClick="@(() => ChangeLanguage("it"))">🇮🇹 Italiano</MudMenuItem>
         </MudMenu>
 
         <MudIconButton Icon="@(_isDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
@@ -50,19 +50,23 @@
     </MudAppBar>
 
 @code {
-    private bool _isDark;
     private bool _langMenuOpen;
     private MudIconButton _langButtonRef = default!;
 
+    [Parameter] 
+    public bool _isDark { get; set; }
+
+    [Parameter] 
+    public EventCallback OnThemeChangedAsync { get; set; }
+
     protected override void OnInitialized()
     {
-        _isDark = Ui.CurrentTheme == "Dark";
     }
 
-    private void ToggleTheme()
+    private async Task ToggleTheme()
     {
         _isDark = !_isDark;
-        Ui.CurrentTheme = _isDark ? "Dark" : "Light";
+       await OnThemeChangedAsync.InvokeAsync();
     }
 
     private void ToggleLanguageMenu()

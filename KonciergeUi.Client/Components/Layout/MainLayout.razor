@@ -2,10 +2,15 @@
 @using KonciergeUI.Translations.Services
 @inherits LayoutComponentBase
 
+@inject UiState Ui
+
 
 
 @* Required *@
-<MudThemeProvider />
+
+<MudThemeProvider @ref="_mudThemeProvider"
+                  Theme="_theme"
+                  IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider />
 
 @* Needed for dialogs *@
@@ -18,14 +23,61 @@
         <MudLayout>
 
             <!-- TOP APP BAR -->
-            <NavMenu/>
+            <NavMenu _isDark="_isDarkMode" OnThemeChangedAsync="ToggleTheme" />
 
             <!-- MAIN CONTENT -->
-            <MudMainContent Class="pa-0">
+            <MudMainContent >
                 @Body
             </MudMainContent>
-
         </MudLayout>
     </ChildContent>
     
 </ErrorBoundary>
+
+
+
+@code {
+    private MudThemeProvider? _mudThemeProvider;
+    private bool _isDarkMode;
+    private readonly MudTheme _theme = new(); // customize later
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _mudThemeProvider is null)
+            return;
+
+        // 1) Get initial system preference
+        var systemPrefersDark = await _mudThemeProvider.GetSystemPreference(); // true if OS is dark[web:71][web:82]
+        _isDarkMode = Ui.CurrentTheme switch
+        {
+            "Light" => false,
+            "Dark"  => true,
+            _       => systemPrefersDark  // "System" or default
+        };
+
+        Ui.CurrentTheme = _isDarkMode ? "Dark" : "Light";
+
+        // 2) Keep watching OS changes
+        await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+
+        StateHasChanged();
+    }
+
+    private Task OnSystemPreferenceChanged(bool prefersDark)
+    {
+        // Only auto-switch when user has "System" selected in settings
+        if (Ui.CurrentTheme == "System")
+        {
+            _isDarkMode = prefersDark;
+            StateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+
+    private void ToggleTheme()
+    {
+        // Manual toggle overrides current state (but you can also flip Ui.CurrentTheme between Light/Dark/System)
+        _isDarkMode = !_isDarkMode;
+        Ui.CurrentTheme = _isDarkMode ? "Dark" : "Light";
+    }
+}

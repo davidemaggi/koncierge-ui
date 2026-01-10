@@ -18,10 +18,10 @@
                        @bind-Value="Value"
                        Variant="Variant.Outlined"
                        Clearable="true">
-                <MudSelectItem Value="1">Option 1</MudSelectItem>
-                <MudSelectItem Value="2">Option 2</MudSelectItem>
-                <MudSelectItem Value="3">Option 3</MudSelectItem>
-                <MudSelectItem Value="4">Option 4</MudSelectItem>
+                <MudSelectItem T="string" Value="1.ToString()">Option 1</MudSelectItem>
+                <MudSelectItem T="string" Value="2.ToString()">Option 2</MudSelectItem>
+                <MudSelectItem T="string" Value="3.ToString()">Option 3</MudSelectItem>
+                <MudSelectItem T="string" Value="4.ToString()">Option 4</MudSelectItem>
             </MudSelect>
             
             <MudText>Selected: @Value</MudText>
