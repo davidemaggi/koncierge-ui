@@ -1,4 +1,5 @@
 using KonciergeUi.Client.State;
+using KonciergeUI.Core.Clusters;
 using KonciergeUI.Translations.Services;
 using MudBlazor.Services;
 
@@ -26,8 +27,14 @@ public static class ServiceCollectionExtensions
 
         // Translations
         services.AddSingleton<ILocalizationService, LocalizationService>();
-        
-        
+
+
+        // Core services - MOCK IMPLEMENTATION
+        services.AddSingleton<IClusterDiscoveryService, MockClusterDiscoveryService>();
+
+        // TODO: Add other services when ready
+
+
         // Data layer
         //services.AddSingleton<ISecureStore, SecureStore>();
         //services.AddSingleton<IPreferencesStorage, PreferencesStorage>();
@@ -46,4 +53,8 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+
+
+
 }

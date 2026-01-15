@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\KonciergeUI.Models\KonciergeUI.Models.csproj" />
+    </ItemGroup>
+
 </Project>

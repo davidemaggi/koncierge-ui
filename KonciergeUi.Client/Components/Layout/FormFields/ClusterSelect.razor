@@ -1,0 +1,140 @@
+﻿@using KonciergeUI.Core.Clusters
+@using KonciergeUI.Models.Kube
+@inject IClusterDiscoveryService ClusterService
+
+<MudSelect T="ClusterConnectionInfo?"
+           Label="@Label"
+           Value="SelectedCluster"
+           ValueChanged="ClusterSelected"
+           Variant="@Variant"
+           Clearable="true"
+           AdornmentIcon="@Icons.Material.Filled.Cloud"
+           Disabled="@(IsLoading || Disabled)">
+    
+    @if (IsLoading)
+    {
+        <MudSelectItem T="ClusterConnectionInfo?" Value="@null" Disabled="true">
+            Loading clusters...
+        </MudSelectItem>
+    }
+    else if (!_groupedClusters.Any())
+    {
+        <MudSelectItem T="ClusterConnectionInfo?" Value="@null" Disabled="true">
+            No clusters found
+        </MudSelectItem>
+    }
+    else
+    {
+        <MudSelectItem T="ClusterConnectionInfo?" Value="@null">
+            Select a cluster...
+        </MudSelectItem>
+
+        @foreach (var group in _groupedClusters)
+        {
+            <!-- Group header as disabled item -->
+            <MudSelectItem T="ClusterConnectionInfo?" Value="@null" Disabled="true">
+                <MudText Typo="Typo.subtitle2" Color="Color.Primary">
+                    <strong>@GetGroupLabel(group.Key)</strong>
+                </MudText>
+            </MudSelectItem>
+
+            <!-- Group items -->
+            @foreach (var cluster in group.Value)
+            {
+                <MudSelectItem T="ClusterConnectionInfo?" Value="@cluster">
+                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Class="pl-4">
+                        <MudIcon Icon="@(cluster.IsCurrentContext ? Icons.Material.Filled.Star : Icons.Material.Outlined.Star)" 
+                                 Size="Size.Small" 
+                                 Color="@(cluster.IsCurrentContext ? Color.Success : Color.Default)" />
+                        <MudText>@cluster.Name</MudText>
+                        @if (!string.IsNullOrEmpty(cluster.Description))
+                        {
+                            <MudChip  Size="Size.Small"
+                                      Color="Color.Info"
+                                      Variant="Variant.Text"
+                                      T="string">
+                                @cluster.Description
+                            </MudChip>
+                        }
+                    </MudStack>
+                </MudSelectItem>
+            }
+        }
+    }
+</MudSelect>
+
+@code {
+    private Dictionary<string, List<ClusterConnectionInfo>> _groupedClusters = new();
+    private bool IsLoading = true;
+
+    [Parameter]
+    public ClusterConnectionInfo? SelectedCluster { get; set; }
+
+    [Parameter]
+    public EventCallback<ClusterConnectionInfo?> _onClusterSelection { get; set; }
+
+    [Parameter]
+    public string Label { get; set; } = "Select cluster";
+
+    [Parameter]
+    public Variant Variant { get; set; } = Variant.Outlined;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClusters();
+    }
+
+    private async Task LoadClusters()
+    {
+        IsLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var data = await ClusterService.DiscoverClustersAsync();
+
+            // Group by kubeconfig path
+            _groupedClusters = data
+                .GroupBy(c => c.KubeconfigPath)
+                .OrderByDescending(g => g.Any(c => c.IsDefaultKubeconfig)) // Default first
+                .ThenBy(g => g.Key)
+                .ToDictionary(
+                    g => g.Key, 
+                    g => g.OrderByDescending(c => c.IsCurrentContext)
+                          .ThenBy(c => c.Name)
+                          .ToList()
+                );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load clusters: {ex.Message}");
+            _groupedClusters = new();
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetGroupLabel(string kubeconfigPath)
+    {
+        if (kubeconfigPath == "~/.kube/config")
+            return "📁 Default kubeconfig (~/.kube/config)";
+
+        return $"📄 {Path.GetFileName(kubeconfigPath)}";
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadClusters();
+    }
+
+    public async Task ClusterSelected(ClusterConnectionInfo? sel)
+    {
+        await _onClusterSelection.InvokeAsync(sel);
+    }
+}

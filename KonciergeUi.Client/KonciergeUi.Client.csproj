@@ -66,6 +66,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\KonciergeUI.Core\KonciergeUI.Core.csproj" />
       <ProjectReference Include="..\KonciergeUI.Models\KonciergeUI.Models.csproj" />
       <ProjectReference Include="..\KonciergeUI.Translations\KonciergeUI.Translations.csproj" />
     </ItemGroup>
