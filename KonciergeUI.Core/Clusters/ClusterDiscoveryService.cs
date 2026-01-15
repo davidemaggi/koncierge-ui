@@ -1,10 +1,10 @@
 ﻿using k8s;
 using KonciergeUI.Core.Abstractions;
-using KonciergeUI.Data.Preferences;
 using KonciergeUI.Models.Kube;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using KonciergeUI.Data;
 
 namespace KonciergeUI.Core.Clusters
 {
@@ -175,17 +175,32 @@ namespace KonciergeUI.Core.Clusters
             return clusters;
         }
 
+        private string GetHomeDirectory()
+        {
+            return "/Users/davide/";
+            
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            // Detect sandboxed app
+            if (path.Contains("/Library/Containers", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // Use real home directory
+                return Path.GetFullPath("~/");
+            }
+
+            return path;
+        }
+
+
         private string GetDefaultKubeconfigPath()
         {
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            return Path.Combine(home, ".kube", "config");
+            return Path.Combine(GetHomeDirectory(), ".kube", "config");
         }
 
         private string GetDefaultKubeconfigFolder()
         {
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            return Path.Combine(home, ".kube");
+            return Path.Combine(GetHomeDirectory(), ".kube");
         }
+
 
         private string GenerateClusterId(string kubeconfigPath, string contextName)
         {

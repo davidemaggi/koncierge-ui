@@ -4,19 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KonciergeUI.Data.Preferences
+namespace KonciergeUI.Data
 {
     public interface IPreferencesStorage
     {
-        // Kubeconfig paths
-        Task<List<string>> GetCustomKubeconfigPathsAsync();
-        Task AddCustomKubeconfigPathAsync(string path);
-        Task RemoveCustomKubeconfigPathAsync(string path);
-
-        // Selected cluster
-        Task<string?> GetLastSelectedClusterIdAsync();
-        Task SetLastSelectedClusterIdAsync(string clusterId);
-
         // Theme
         Task<string?> GetCurrentThemeAsync();
         Task SetCurrentThemeAsync(string theme);
@@ -24,5 +15,14 @@ namespace KonciergeUI.Data.Preferences
         // Language
         Task<string?> GetCurrentLanguageAsync();
         Task SetCurrentLanguageAsync(string language);
+
+        // Selected cluster
+        Task<string?> GetLastSelectedClusterIdAsync();
+        Task SetLastSelectedClusterIdAsync(string clusterId);
+
+        // Custom kubeconfig paths (now using Preferences too)
+        Task<List<string>> GetCustomKubeconfigPathsAsync();
+        Task AddCustomKubeconfigPathAsync(string path);
+        Task RemoveCustomKubeconfigPathAsync(string path);
     }
 }

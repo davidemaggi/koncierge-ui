@@ -2,8 +2,8 @@ using KonciergeUi.Client.State;
 using KonciergeUI.Core.Abstractions;
 using KonciergeUI.Core.Clusters;
 using KonciergeUI.Core.Mocks;
-using KonciergeUI.Data.Preferences;
-using KonciergeUI.Data.Secure;
+using KonciergeUI.Data;
+
 using KonciergeUI.Kube.Repositories;
 using KonciergeUI.Translations.Services;
 using MudBlazor.Services;
@@ -34,7 +34,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ILocalizationService, LocalizationService>();
 
         // Data layer
-        services.AddSingleton<ISecureStore, SecureStore>();
         services.AddSingleton<IPreferencesStorage, PreferencesStorage>();
 
         // Core services - REAL IMPLEMENTATIONS
