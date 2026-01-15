@@ -1,9 +1,10 @@
-﻿using KonciergeUI.Models.Kube;
+﻿using KonciergeUI.Core.Abstractions;
+using KonciergeUI.Models.Kube;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace KonciergeUI.Core.Clusters
+namespace KonciergeUI.Core.Mocks
 {
     public class MockClusterDiscoveryService : IClusterDiscoveryService
     {

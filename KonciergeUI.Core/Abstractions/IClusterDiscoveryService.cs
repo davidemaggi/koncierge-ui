@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace KonciergeUI.Core.Clusters
+namespace KonciergeUI.Core.Abstractions
 {
     public interface IClusterDiscoveryService
     {

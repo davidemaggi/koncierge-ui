@@ -1,3 +1,4 @@
+using KonciergeUI.Data.Preferences;
 using KonciergeUI.Models.Forwarding;
 using KonciergeUI.Models.Kube;
 using System.ComponentModel;
@@ -7,10 +8,15 @@ namespace KonciergeUi.Client.State;
 
 public class UiState : INotifyPropertyChanged
 {
+    private readonly IPreferencesStorage _preferencesStorage;
     private ClusterConnectionInfo? _selectedCluster;
-    private ForwardTemplate? _selectedTemplate;
-    private string _currentTheme = "System"; // System, Light, Dark
+    private string _currentTheme = "System";
     private string _currentLanguage = "en";
+
+    public UiState(IPreferencesStorage preferencesStorage)
+    {
+        _preferencesStorage = preferencesStorage;
+    }
 
     public ClusterConnectionInfo? SelectedCluster
     {
@@ -21,19 +27,12 @@ public class UiState : INotifyPropertyChanged
             {
                 _selectedCluster = value;
                 OnPropertyChanged();
-            }
-        }
-    }
 
-    public ForwardTemplate? SelectedTemplate
-    {
-        get => _selectedTemplate;
-        set
-        {
-            if (_selectedTemplate != value)
-            {
-                _selectedTemplate = value;
-                OnPropertyChanged();
+                // Persist to storage
+                if (value != null)
+                {
+                    _ = _preferencesStorage.SetLastSelectedClusterIdAsync(value.Id);
+                }
             }
         }
     }
@@ -48,6 +47,9 @@ public class UiState : INotifyPropertyChanged
                 _currentTheme = value;
                 OnPropertyChanged();
                 ThemeChanged?.Invoke(this, value);
+
+                // Persist to storage
+                _ = _preferencesStorage.SetCurrentThemeAsync(value);
             }
         }
     }
@@ -62,6 +64,9 @@ public class UiState : INotifyPropertyChanged
                 _currentLanguage = value;
                 OnPropertyChanged();
                 LanguageChanged?.Invoke(this, value);
+
+                // Persist to storage
+                _ = _preferencesStorage.SetCurrentLanguageAsync(value);
             }
         }
     }
@@ -73,5 +78,26 @@ public class UiState : INotifyPropertyChanged
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    // Load saved preferences on startup
+    public async Task LoadPreferencesAsync()
+    {
+        var theme = await _preferencesStorage.GetCurrentThemeAsync();
+        if (!string.IsNullOrEmpty(theme))
+        {
+            _currentTheme = theme;
+        }
+
+        var language = await _preferencesStorage.GetCurrentLanguageAsync();
+        if (!string.IsNullOrEmpty(language))
+        {
+            _currentLanguage = language;
+        }
+    }
+
+    public async Task<string?> GetLastSelectedClusterIdAsync()
+    {
+        return await _preferencesStorage.GetLastSelectedClusterIdAsync();
     }
 }

@@ -1,0 +1,88 @@
+﻿
+@page "/resources"
+
+@using KonciergeUI.Models.Kube
+@using KonciergeUi.Client.Components.Layout.FormFields
+@using KonciergeUi.Client.Components.Layout.Tables
+@using KonciergeUi.Client.State
+@inject UiState _ui
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="ma-4">
+    <MudGrid Spacing="2">
+        <MudItem xs="12">
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                <ClusterSelect SelectedCluster="_ui.SelectedCluster" _onClusterSelection="OnClusterSelection"  />
+           
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                    Add KubeConfig
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+
+    @if (_ui.SelectedCluster != null)
+    {
+        <MudTabs Elevation="2" Rounded="true" Class="mt-4" ApplyEffectsToContainer="true">
+            <MudTabPanel Text="Pods" Icon="@Icons.Material.Filled.Widgets">
+                <PodsList Cluster="@_ui.SelectedCluster"
+                          OnCreateForwardClicked="HandleCreateForward"
+                          OnViewLogsClicked="HandleViewLogs"
+                          OnShowDetailsClicked="HandleShowDetails" />
+            </MudTabPanel>
+            
+            <MudTabPanel Text="Services" Icon="@Icons.Material.Filled.Cloud">
+                <ServicesList Cluster="@_ui.SelectedCluster"
+                              OnCreateForwardClicked="HandleCreateServiceForward" />
+            </MudTabPanel>
+        </MudTabs>
+    }
+    else
+    {
+        <MudPaper Class="pa-8 text-center mt-12" Elevation="3">
+            <MudIcon Icon="@Icons.Material.Filled.CloudOff" Color="Color.Warning" Size="Size.Large" />
+            <MudText Typo="Typo.h5" Class="mt-4 mb-2">No cluster selected</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                Select a cluster to view pods and services.
+            </MudText>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+
+    
+
+    private async Task OnClusterSelection(ClusterConnectionInfo? sel)
+    {
+
+   
+        _ui.SelectedCluster = sel;
+
+    }
+
+    private void HandleCreateForward(PodInfo pod)
+    {
+        Console.WriteLine($"Create forward for pod: {pod.Name}");
+        // TODO: Open port forward dialog
+    }
+
+    private void HandleViewLogs(PodInfo pod)
+    {
+        Console.WriteLine($"View logs for pod: {pod.Name}");
+        // TODO: Open logs viewer
+    }
+
+    private void HandleShowDetails(PodInfo pod)
+    {
+        Console.WriteLine($"Show details for pod: {pod.Name}");
+        // TODO: Open details dialog
+    }
+
+    private void HandleCreateServiceForward((ServiceInfo service, ServicePort port) args)
+    {
+        Console.WriteLine($"Create forward for service: {args.service.Name}, port: {args.port.Port}");
+        // TODO: Open port forward dialog
+    }
+}
+
+

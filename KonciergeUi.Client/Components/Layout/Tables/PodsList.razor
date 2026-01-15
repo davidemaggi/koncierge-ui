@@ -1,0 +1,368 @@
+﻿@using KonciergeUI.Models.Kube
+@using KonciergeUI.Core.Abstractions
+@inject IKubeRepository KubeRepo
+
+<MudPaper Elevation="2" Class="pa-4">
+    <MudTable Items="@_filteredPods" 
+              Hover="true" 
+              Dense="true" 
+              Loading="@_isLoading"
+              LoadingProgressColor="Color.Primary"
+              FixedHeader="true"
+              Height="calc(100vh - 300px)">
+        
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.Widgets" Class="mr-2" />
+                Pods (@_pods.Count)
+            </MudText>
+            <MudSpacer />
+            
+            <!-- Namespace filter -->
+            <MudSelect T="string"
+                       Value="@_selectedStatus"
+                       ValueChanged="@(value => OnStatusChanged(value))"
+                       Label="Namespace" 
+                       Variant="Variant.Outlined" 
+                       Dense="true"
+                       Class="mr-2"
+                       Style="min-width: 150px;">
+                <MudSelectItem T="string" Value="@("")">All namespaces</MudSelectItem>
+                @foreach (var ns in _namespaces)
+                {
+                    <MudSelectItem T="string" Value="@ns">@ns</MudSelectItem>
+                }
+            </MudSelect>
+
+            <!-- Status filter -->
+            <MudSelect T="string" 
+                       @bind-Value="_selectedStatus" 
+                       Label="Status" 
+                       Variant="Variant.Outlined" 
+                       Dense="true"
+                       Class="mr-2"
+                       Style="min-width: 150px;">
+                <MudSelectItem T="string" Value="@("")">All statuses</MudSelectItem>
+                @foreach (var status in Enum.GetValues<PodStatus>())
+                {
+                    <MudSelectItem T="string" Value="@status.ToString()">@status</MudSelectItem>
+                }
+            </MudSelect>
+
+            <!-- Search -->
+            <MudTextField T="string" Value="@_searchString"
+                          ValueChanged="@(value => OnSearchChanged(value))"
+                          Placeholder="Search pods..." 
+                          Adornment="Adornment.Start" 
+                          AdornmentIcon="@Icons.Material.Filled.Search" 
+                          IconSize="Size.Medium"
+                          Variant="Variant.Outlined"
+                          Dense="true"
+                          Immediate="true"
+                          Class="mr-2"
+                          Style="min-width: 200px;" />
+
+            <!-- Refresh button -->
+            <MudTooltip Text="Refresh">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" 
+                               Color="Color.Primary" 
+                               OnClick="RefreshAsync"
+                               Disabled="@_isLoading" />
+            </MudTooltip>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Namespace</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Ports</MudTh>
+            <MudTh Style="text-align: right;">Actions</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Name">
+                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" Color="Color.Primary" />
+                    <MudText Typo="Typo.body2" Style="font-family: monospace;">@context.Name</MudText>
+                </MudStack>
+            </MudTd>
+            
+            <MudTd DataLabel="Namespace">
+                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">
+                    @context.Namespace
+                </MudChip>
+            </MudTd>
+            
+            <MudTd DataLabel="Status">
+                <MudChip T="string"  Size="Size.Small"
+                         Color="@GetStatusColor(context.Status)" 
+                         Icon="@GetStatusIcon(context.Status)"
+                         Variant="Variant.Filled">
+                    @context.Status
+                </MudChip>
+            </MudTd>
+
+           
+            
+            <MudTd DataLabel="Ports">
+                @if (context.Ports.Any())
+                {
+                    <MudStack Row="true" Spacing="0">
+                        @foreach (var port in context.Ports.Take(3))
+                        {
+                            <MudTooltip Text="@($"{port.ContainerName}: {port.Protocol}")">
+                                <MudChip T="string" Size="Size.Small" 
+                                         Variant="Variant.Text" 
+                                         Color="Color.Info"
+                                         Style="margin-right: 4px;">
+                                    @port.Name:@port.Port
+                                </MudChip>
+                            </MudTooltip>
+                        }
+                        @if (context.Ports.Count > 3)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text">
+                                +@(context.Ports.Count - 3)
+                            </MudChip>
+                        }
+                    </MudStack>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">-</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                @if (context.Ports.Any())
+                {
+                    <MudStack Row="true" Spacing="0">
+                        @foreach (var port in context.Ports)
+                        {
+                            <MudTooltip Text="@($"{port.ContainerName}: {port.Protocol}")">
+                                <MudChip T="string" Size="Size.Small"
+                                         Variant="Variant.Filled"
+                                         Color="Color.Info"
+                                         Style="margin-right: 4px;">
+                                    Forward :@port.Port
+                                </MudChip>
+                            </MudTooltip>
+                        }
+                       
+                    </MudStack>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">-</MudText>
+                }
+            </MudTd>
+            
+        </RowTemplate>
+
+        <NoRecordsContent>
+            <MudAlert Severity="Severity.Info" Class="my-4">
+                @if (_isLoading)
+                {
+                    <MudText>Loading pods...</MudText>
+                }
+                else if (!string.IsNullOrEmpty(_searchString) || !string.IsNullOrEmpty(_selectedNamespace) || !string.IsNullOrEmpty(_selectedStatus))
+                {
+                    <MudText>No pods match the current filters.</MudText>
+                }
+                else
+                {
+                    <MudText>No pods found in this cluster.</MudText>
+                }
+            </MudAlert>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<PodInfo> _pods = new();
+    private List<PodInfo> _filteredPods = new();
+    private List<string> _namespaces = new();
+    private bool _isLoading = false;
+
+    private string _searchString = "";
+    private string _selectedNamespace = "";
+    private string _selectedStatus = "";
+
+    [Parameter]
+    public ClusterConnectionInfo? Cluster { get; set; }
+
+    [Parameter]
+    public EventCallback<PodInfo> OnCreateForwardClicked { get; set; }
+
+    [Parameter]
+    public EventCallback<PodInfo> OnViewLogsClicked { get; set; }
+
+    [Parameter]
+    public EventCallback<PodInfo> OnShowDetailsClicked { get; set; }
+    
+    private bool _hasLoaded = false;
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Cluster != null && !_hasLoaded)
+        {
+            _hasLoaded = true;
+            await LoadPodsAsync();
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Cluster == null)
+        {
+            _pods.Clear();
+            _filteredPods.Clear();
+            _namespaces.Clear();
+            _hasLoaded = false;
+        }
+        else
+        {
+            _hasLoaded = false; // Trigger reload on next render
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        // Watch for filter changes
+        StateHasChanged();
+    }
+
+    private void OnNamespaceChanged(string value)
+    {
+        _selectedNamespace = value;
+        ApplyFilters();
+    }
+
+    private void OnStatusChanged(string value)
+    {
+        _selectedStatus = value;
+        ApplyFilters();
+    }
+
+    private void OnSearchChanged(string value)
+    {
+        _searchString = value;
+        ApplyFilters();
+    }
+
+
+    private async Task LoadPodsAsync()
+    {
+        if (Cluster == null) return;
+
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            _pods = await KubeRepo.ListPodsAsync(Cluster);
+            _namespaces = _pods.Select(p => p.Namespace).Distinct().OrderBy(n => n).ToList();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load pods: {ex.Message}");
+            _pods.Clear();
+            _filteredPods.Clear();
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadPodsAsync();
+    }
+
+    private void ApplyFilters()
+    {
+        _filteredPods = _pods.Where(pod =>
+        {
+            // Namespace filter
+            if (!string.IsNullOrEmpty(_selectedNamespace) && pod.Namespace != _selectedNamespace)
+                return false;
+
+            // Status filter
+            if (!string.IsNullOrEmpty(_selectedStatus) && pod.Status.ToString() != _selectedStatus)
+                return false;
+
+            // Search filter
+            if (!string.IsNullOrEmpty(_searchString))
+            {
+                var search = _searchString.ToLowerInvariant();
+                return pod.Name.ToLowerInvariant().Contains(search) ||
+                       pod.Namespace.ToLowerInvariant().Contains(search) ||
+                       (pod.NodeName?.ToLowerInvariant().Contains(search) ?? false);
+            }
+
+            return true;
+        })
+        .OrderBy(p => p.Namespace)
+        .ThenBy(p => p.Name)
+        .ToList();
+
+    }
+
+    private void OnCreateForward(PodInfo pod)
+    {
+        OnCreateForwardClicked.InvokeAsync(pod);
+    }
+
+    private void OnViewLogs(PodInfo pod)
+    {
+        OnViewLogsClicked.InvokeAsync(pod);
+    }
+
+    private void OnShowDetails(PodInfo pod)
+    {
+        OnShowDetailsClicked.InvokeAsync(pod);
+    }
+
+    private Color GetStatusColor(PodStatus status) => status switch
+    {
+        PodStatus.Running => Color.Success,
+        PodStatus.Pending => Color.Warning,
+        PodStatus.Succeeded => Color.Info,
+        PodStatus.Failed => Color.Error,
+        PodStatus.CrashLoopBackOff => Color.Error,
+        PodStatus.ImagePullBackOff => Color.Error,
+        _ => Color.Default
+    };
+
+    private string GetStatusIcon(PodStatus status) => status switch
+    {
+        PodStatus.Running => Icons.Material.Filled.CheckCircle,
+        PodStatus.Pending => Icons.Material.Filled.Schedule,
+        PodStatus.Succeeded => Icons.Material.Filled.Done,
+        PodStatus.Failed => Icons.Material.Filled.Error,
+        PodStatus.CrashLoopBackOff => Icons.Material.Filled.Loop,
+        PodStatus.ImagePullBackOff => Icons.Material.Filled.CloudDownload,
+        _ => Icons.Material.Filled.Help
+    };
+
+    private string GetAge(DateTimeOffset? startTime)
+    {
+        if (!startTime.HasValue) return "N/A";
+        
+        var age = DateTimeOffset.Now - startTime.Value;
+        
+        if (age.TotalSeconds < 60) return $"{(int)age.TotalSeconds}s";
+        if (age.TotalMinutes < 60) return $"{(int)age.TotalMinutes}m";
+        if (age.TotalHours < 24) return $"{(int)age.TotalHours}h";
+        if (age.TotalDays < 7) return $"{(int)age.TotalDays}d";
+        
+        return startTime.Value.ToString("MMM dd");
+    }
+}

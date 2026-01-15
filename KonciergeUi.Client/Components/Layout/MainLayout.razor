@@ -41,23 +41,30 @@
     private bool _isDarkMode;
     private readonly MudTheme _theme = new(); // customize later
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Load saved preferences (theme + language)
+        await Ui.LoadPreferencesAsync();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender || _mudThemeProvider is null)
             return;
 
-        // 1) Get initial system preference
-        var systemPrefersDark = await _mudThemeProvider.GetSystemPreference(); // true if OS is dark[web:71][web:82]
+        // Get system preference
+        var systemPrefersDark = await _mudThemeProvider.GetSystemPreference();
+
+        // Apply saved theme preference
         _isDarkMode = Ui.CurrentTheme switch
         {
             "Light" => false,
-            "Dark"  => true,
-            _       => systemPrefersDark  // "System" or default
+            "Dark" => true,
+            "System" => systemPrefersDark,
+            _ => systemPrefersDark  // Default to system
         };
 
-        Ui.CurrentTheme = _isDarkMode ? "Dark" : "Light";
-
-        // 2) Keep watching OS changes
+        // Watch OS changes
         await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
 
         StateHasChanged();
@@ -65,7 +72,7 @@
 
     private Task OnSystemPreferenceChanged(bool prefersDark)
     {
-        // Only auto-switch when user has "System" selected in settings
+        // Only auto-switch when user has "System" selected
         if (Ui.CurrentTheme == "System")
         {
             _isDarkMode = prefersDark;
@@ -76,7 +83,6 @@
 
     private void ToggleTheme()
     {
-        // Manual toggle overrides current state (but you can also flip Ui.CurrentTheme between Light/Dark/System)
         _isDarkMode = !_isDarkMode;
         Ui.CurrentTheme = _isDarkMode ? "Dark" : "Light";
     }

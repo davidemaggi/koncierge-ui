@@ -1,6 +1,8 @@
-﻿@using KonciergeUI.Core.Clusters
+﻿@using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Kube
+@using KonciergeUi.Client.State
 @inject IClusterDiscoveryService ClusterService
+@inject UiState _ui
 
 <MudSelect T="ClusterConnectionInfo?"
            Label="@Label"
@@ -85,7 +87,21 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadClusters();
+
+
+        // Restore last selected cluster
+        var lastClusterId = await _ui.GetLastSelectedClusterIdAsync();
+        if (!string.IsNullOrEmpty(lastClusterId))
+        {
+            var cluster = await ClusterService.GetClusterByIdAsync(lastClusterId);
+            if (cluster != null)
+            {
+                _ui.SelectedCluster = cluster;
+            }
+        }
     }
+
+
 
     private async Task LoadClusters()
     {

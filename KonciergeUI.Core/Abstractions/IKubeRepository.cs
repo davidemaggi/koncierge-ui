@@ -1,0 +1,30 @@
+﻿using KonciergeUI.Models.Kube;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace KonciergeUI.Core.Abstractions
+{
+    public interface IKubeRepository
+    {
+        /// <summary>
+        /// List all pods in a cluster (optionally filter by namespace).
+        /// </summary>
+        Task<List<PodInfo>> ListPodsAsync(ClusterConnectionInfo cluster, string? namespaceFilter = null);
+
+        /// <summary>
+        /// List all services in a cluster (optionally filter by namespace).
+        /// </summary>
+        Task<List<ServiceInfo>> ListServicesAsync(ClusterConnectionInfo cluster, string? namespaceFilter = null);
+
+        /// <summary>
+        /// Get detailed info for a specific pod.
+        /// </summary>
+        Task<PodInfo?> GetPodAsync(ClusterConnectionInfo cluster, string podName, string @namespace);
+
+        /// <summary>
+        /// Get detailed info for a specific service.
+        /// </summary>
+        Task<ServiceInfo?> GetServiceAsync(ClusterConnectionInfo cluster, string serviceName, string @namespace);
+    }
+}

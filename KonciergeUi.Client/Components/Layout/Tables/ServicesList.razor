@@ -1,0 +1,318 @@
+﻿@using KonciergeUI.Models.Kube
+@using KonciergeUI.Core.Abstractions
+@inject IKubeRepository KubeRepo
+
+<MudPaper Elevation="2" Class="pa-4">
+    <MudTable Items="@_filteredServices" 
+              Hover="true" 
+              Dense="true" 
+              Loading="@_isLoading"
+              LoadingProgressColor="Color.Primary"
+              FixedHeader="true"
+              Height="calc(100vh - 300px)">
+        
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.Cloud" Class="mr-2" />
+                Services (@_services.Count)
+            </MudText>
+            <MudSpacer />
+            
+            <!-- Namespace filter -->
+            <MudSelect T="string"
+                       Value="@_selectedNamespace"
+                       ValueChanged="@(value => OnNamespaceChanged(value))"
+                       Label="Namespace" 
+                       Variant="Variant.Outlined" 
+                       Dense="true"
+                       Class="mr-2"
+                       Style="min-width: 150px;">
+                <MudSelectItem T="string" Value="@("")">All namespaces</MudSelectItem>
+                @foreach (var ns in _namespaces)
+                {
+                    <MudSelectItem T="string" Value="@ns">@ns</MudSelectItem>
+                }
+            </MudSelect>
+
+            <!-- Type filter -->
+            <MudSelect T="string" 
+                       Value="@_selectedType"
+                       ValueChanged="@(value => OnTypeChanged(value))"
+                       Label="Type" 
+                       Variant="Variant.Outlined" 
+                       Dense="true"
+                       Class="mr-2"
+                       Style="min-width: 150px;">
+                <MudSelectItem T="string" Value="@("")">All types</MudSelectItem>
+                @foreach (var type in Enum.GetValues<ServiceType>())
+                {
+                    <MudSelectItem T="string" Value="@type.ToString()">@type</MudSelectItem>
+                }
+            </MudSelect>
+
+            <!-- Search -->
+            <MudTextField T="string" Value="@_searchString"
+                          ValueChanged="@(value => OnSearchChanged(value))"
+                          Placeholder="Search services..." 
+                          Adornment="Adornment.Start" 
+                          AdornmentIcon="@Icons.Material.Filled.Search" 
+                          IconSize="Size.Medium"
+                          Variant="Variant.Outlined"
+                          Dense="true"
+                          Immediate="true"
+                          Class="mr-2"
+                          Style="min-width: 200px;" />
+
+            <!-- Refresh button -->
+            <MudTooltip Text="Refresh">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" 
+                               Color="Color.Primary" 
+                               OnClick="RefreshAsync"
+                               Disabled="@_isLoading" />
+            </MudTooltip>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Namespace</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh>Ports</MudTh>
+            <MudTh Style="text-align: right;">Actions</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Name">
+                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Cloud" Size="Size.Small" Color="Color.Secondary" />
+                    <MudText Typo="Typo.body2" Style="font-family: monospace;">@context.Name</MudText>
+                </MudStack>
+            </MudTd>
+            
+            <MudTd DataLabel="Namespace">
+                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">
+                    @context.Namespace
+                </MudChip>
+            </MudTd>
+            
+            <MudTd DataLabel="Type">
+                <MudChip T="string" Size="Size.Small"
+                         Color="@GetServiceTypeColor(context.Type)" 
+                         Variant="Variant.Filled">
+                    @context.Type
+                </MudChip>
+            </MudTd>
+            
+            <MudTd DataLabel="Ports">
+                @if (context.Ports.Any())
+                {
+                    <MudStack Row="true" Spacing="0">
+                        @foreach (var port in context.Ports.Take(3))
+                        {
+                            <MudTooltip Text="@($"{port.Protocol} - Target: {port.TargetPort}")">
+                                <MudChip T="string" Size="Size.Small" 
+                                         Variant="Variant.Text" 
+                                         Color="Color.Info"
+                                         Style="margin-right: 4px;">
+                                    @port.Name: @port.Port->@port.TargetPort/@port.Protocol
+                                </MudChip>
+                            </MudTooltip>
+                        }
+                        @if (context.Ports.Count > 3)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text">
+                                +@(context.Ports.Count - 3)
+                            </MudChip>
+                        }
+                    </MudStack>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">-</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                @if (context.Ports.Any())
+                {
+                    <MudStack Row="true" Spacing="0">
+                        @foreach (var port in context.Ports)
+                        {
+                            <MudTooltip Text="@($"{port.Name}: {port.Protocol}")">
+                                <MudChip T="string" Size="Size.Small"
+                                         Variant="Variant.Filled"
+                                          OnClick="@(() => OnCreateForward(context, port))"
+                                         Color="Color.Info"
+                                         Style="margin-right: 4px;">
+                                    Forward :@port.Port
+                                </MudChip>
+                            </MudTooltip>
+                        }
+                       
+                    </MudStack>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">-</MudText>
+                }
+            </MudTd>
+            
+            
+        </RowTemplate>
+
+        <NoRecordsContent>
+            <MudAlert Severity="Severity.Info" Class="my-4">
+                @if (_isLoading)
+                {
+                    <MudText>Loading services...</MudText>
+                }
+                else if (!string.IsNullOrEmpty(_searchString) || !string.IsNullOrEmpty(_selectedNamespace) || !string.IsNullOrEmpty(_selectedType))
+                {
+                    <MudText>No services match the current filters.</MudText>
+                }
+                else
+                {
+                    <MudText>No services found in this cluster.</MudText>
+                }
+            </MudAlert>
+        </NoRecordsContent>
+                <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<ServiceInfo> _services = new();
+    private List<ServiceInfo> _filteredServices = new();
+    private List<string> _namespaces = new();
+    private bool _isLoading = false;
+
+    private string _searchString = "";
+    private string _selectedNamespace = "";
+    private string _selectedType = "";
+
+    [Parameter]
+    public ClusterConnectionInfo? Cluster { get; set; }
+
+    [Parameter]
+    public EventCallback<(ServiceInfo service, ServicePort port)> OnCreateForwardClicked { get; set; }
+
+
+
+ private bool _hasLoaded = false;
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Cluster != null && !_hasLoaded)
+        {
+            _hasLoaded = true;
+            await LoadServicesAsync();
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Cluster == null)
+        {
+            _services.Clear();
+            _filteredServices.Clear();
+            _namespaces.Clear();
+            _hasLoaded = false;
+        }
+        else
+        {
+            _hasLoaded = false; // Trigger reload on next render
+        }
+    }
+
+    private void OnNamespaceChanged(string value)
+    {
+        _selectedNamespace = value;
+        ApplyFilters();
+    }
+
+    private void OnTypeChanged(string value)
+    {
+        _selectedType = value;
+        ApplyFilters();
+    }
+
+    private void OnSearchChanged(string value)
+    {
+        _searchString = value;
+        ApplyFilters();
+    }
+
+    private async Task LoadServicesAsync()
+    {
+        if (Cluster == null) return;
+
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            _services = await KubeRepo.ListServicesAsync(Cluster);
+            _namespaces = _services.Select(s => s.Namespace).Distinct().OrderBy(n => n).ToList();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load services: {ex.Message}");
+            _services.Clear();
+            _filteredServices.Clear();
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadServicesAsync();
+    }
+
+    private void ApplyFilters()
+    {
+        _filteredServices = _services.Where(service =>
+        {
+            // Namespace filter
+            if (!string.IsNullOrEmpty(_selectedNamespace) && service.Namespace != _selectedNamespace)
+                return false;
+
+            // Type filter
+            if (!string.IsNullOrEmpty(_selectedType) && service.Type.ToString() != _selectedType)
+                return false;
+
+            // Search filter
+            if (!string.IsNullOrEmpty(_searchString))
+            {
+                var search = _searchString.ToLowerInvariant();
+                return service.Name.ToLowerInvariant().Contains(search) ||
+                       service.Namespace.ToLowerInvariant().Contains(search);
+            }
+
+            return true;
+        })
+        .OrderBy(s => s.Namespace)
+        .ThenBy(s => s.Name)
+        .ToList();
+    }
+
+    private void OnCreateForward(ServiceInfo service, ServicePort port)
+    {
+        OnCreateForwardClicked.InvokeAsync((service, port));
+    }
+
+    private Color GetServiceTypeColor(ServiceType type) => type switch
+    {
+        ServiceType.ClusterIP => Color.Primary,
+        ServiceType.NodePort => Color.Info,
+        ServiceType.LoadBalancer => Color.Success,
+        ServiceType.ExternalName => Color.Secondary,
+        _ => Color.Default
+    };
+}

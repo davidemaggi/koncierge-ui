@@ -6,4 +6,13 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="KubernetesClient" Version="18.0.13" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\KonciergeUI.Core\KonciergeUI.Core.csproj" />
+      <ProjectReference Include="..\KonciergeUI.Models\KonciergeUI.Models.csproj" />
+    </ItemGroup>
+
 </Project>
