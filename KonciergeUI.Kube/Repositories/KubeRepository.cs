@@ -279,4 +279,41 @@ public class KubeRepository : IKubeRepository
 
         return servicePorts;
     }
+    
+    public async Task<List<V1Secret>> ListSecretsAsync(ClusterConnectionInfo cluster, string @namespace)
+    {
+        try
+        {
+            var client = CreateClient(cluster);
+            var list = await client.CoreV1.ListNamespacedSecretAsync(@namespace);
+            // Filter out service-account-token etc if you want:
+            return list.Items
+                .Where(s => s.Type != "kubernetes.io/service-account-token")
+                .OrderBy(s => s.Metadata?.Name)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to list secrets in {@namespace}: {ex.Message}");
+            return new List<V1Secret>();
+        }
+    }
+
+    public async Task<List<V1ConfigMap>> ListConfigMapsAsync(ClusterConnectionInfo cluster, string @namespace)
+    {
+        try
+        {
+            var client = CreateClient(cluster);
+            var list = await client.CoreV1.ListNamespacedConfigMapAsync(@namespace);
+            return list.Items
+                .OrderBy(c => c.Metadata?.Name)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to list configmaps in {@namespace}: {ex.Message}");
+            return new List<V1ConfigMap>();
+        }
+    }
+
 }

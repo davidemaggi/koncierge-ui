@@ -1,6 +1,9 @@
-﻿@using KonciergeUI.Models.Kube
+﻿@using KonciergeUi.Client.Components.Layout.Modals
+@using KonciergeUI.Models.Kube
 @using KonciergeUI.Core.Abstractions
 @inject IKubeRepository KubeRepo
+@inject IDialogService DialogService
+
 
 <MudPaper Elevation="2" Class="pa-4">
     <MudTable Items="@_filteredPods" 
@@ -142,6 +145,7 @@
                                 <MudChip T="string" Size="Size.Small"
                                          Variant="Variant.Filled"
                                          Color="Color.Info"
+                                         OnClick="()=>OpenForwardCreate(port)"
                                          Style="margin-right: 4px;">
                                     Forward :@port.Port
                                 </MudChip>
@@ -364,5 +368,19 @@
         if (age.TotalDays < 7) return $"{(int)age.TotalDays}d";
         
         return startTime.Value.ToString("MMM dd");
+    }
+    
+    private Task OpenForwardCreate(ContainerPort cp)
+    {
+        var parameters = new DialogParameters<CreateForwardDialog>
+        {
+            { x => x._containerPort, cp },
+           
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
+
+        return DialogService.ShowAsync<CreateForwardDialog>("Create Forward", parameters, options);
+
     }
 }

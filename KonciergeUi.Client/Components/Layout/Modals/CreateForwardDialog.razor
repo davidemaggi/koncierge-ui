@@ -1,0 +1,85 @@
+@using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Models.Kube
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Class="mr-3 mb-n1"/>
+            Create Forward
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+            <MudStack>
+                <MudStack Row>
+                    <MudNumericField @bind-Value="_newForwardRequest.RemotePort" Label="Remote Port" Variant="Variant.Text" Min="0" Max="65535"/>
+                    <MudNumericField @bind-Value="_newForwardRequest.LocalPort" Label="Local Port" Variant="Variant.Text" Min="0" Max="65535"/>
+                </MudStack>
+                <MudSelect T="Enums.ForwardProtocol"
+                           Label="Protocol"
+                           Variant="Variant.Outlined"
+                           @bind-Value="_newForwardRequest.Protocol">
+                    <MudSelectItem T="Enums.ForwardProtocol" Value="Enums.ForwardProtocol.Http">HTTP</MudSelectItem>
+                    <MudSelectItem T="Enums.ForwardProtocol" Value="Enums.ForwardProtocol.Https">HTTPS</MudSelectItem>
+                    <MudSelectItem  T="Enums.ForwardProtocol"Value="Enums.ForwardProtocol.Tcp">TCP</MudSelectItem>
+                    <MudSelectItem  T="Enums.ForwardProtocol" Value="Enums.ForwardProtocol.Grpc">GRPC</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Success" OnClick="CreateForward">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public ContainerPort? _containerPort { get; set; } 
+
+    [Parameter]
+    public string _kind { get; set; } 
+    [Parameter]
+    public string _namespace { get; set; } 
+    [Parameter]
+    public string resourceName { get; set; } 
+    [Parameter]
+    public ServicePort? _servicePort { get; set; } 
+    
+    private void Cancel() => MudDialog.Cancel();
+    
+    private CreateForwardRequest _newForwardRequest;
+
+    
+    bool success;
+    string[] errors = { };
+    MudTextField<string> pwField1;
+    MudForm form;
+    
+    
+    protected override Task OnInitializedAsync()
+    {
+        _newForwardRequest = new CreateForwardRequest
+        {
+            ResourceName = resourceName,
+            ResourceNamespace = _namespace,
+            ResourceKind = _kind,
+            RemotePort = _containerPort is not null ? _containerPort.Port : _servicePort.Port,
+            LocalPort = 0
+        };
+        return base.OnInitializedAsync();
+    }
+
+
+ 
+
+    private async Task CreateForward()
+    {
+        Snackbar.Add("Create Forward", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(_newForwardRequest));
+    }
+
+}

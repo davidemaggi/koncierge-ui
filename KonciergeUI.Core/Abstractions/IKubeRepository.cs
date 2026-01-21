@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using k8s.Models;
 
 namespace KonciergeUI.Core.Abstractions
 {
@@ -26,5 +27,8 @@ namespace KonciergeUI.Core.Abstractions
         /// Get detailed info for a specific service.
         /// </summary>
         Task<ServiceInfo?> GetServiceAsync(ClusterConnectionInfo cluster, string serviceName, string @namespace);
+        
+        Task<List<V1Secret>> ListSecretsAsync(ClusterConnectionInfo cluster, string @namespace);
+        Task<List<V1ConfigMap>> ListConfigMapsAsync(ClusterConnectionInfo cluster, string @namespace);
     }
 }
