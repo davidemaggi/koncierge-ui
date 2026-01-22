@@ -1,6 +1,7 @@
 ﻿@using KonciergeUi.Client.Components.Layout.Modals
 @using KonciergeUI.Models.Kube
 @using KonciergeUI.Core.Abstractions
+@using static KonciergeUI.Models.Forwarding.Enums
 @inject IKubeRepository KubeRepo
 @inject IDialogService DialogService
 
@@ -23,8 +24,8 @@
             
             <!-- Namespace filter -->
             <MudSelect T="string"
-                       Value="@_selectedStatus"
-                       ValueChanged="@(value => OnStatusChanged(value))"
+                       Value="@_selectedNamespace"
+                       ValueChanged="@(value => OnNamespaceChanged(value))"
                        Label="Namespace" 
                        Variant="Variant.Outlined" 
                        Dense="true"
@@ -39,7 +40,8 @@
 
             <!-- Status filter -->
             <MudSelect T="string" 
-                       @bind-Value="_selectedStatus" 
+                       Value="@_selectedStatus"
+                       ValueChanged="@(value => OnStatusChanged(value))"
                        Label="Status" 
                        Variant="Variant.Outlined" 
                        Dense="true"
@@ -145,7 +147,7 @@
                                 <MudChip T="string" Size="Size.Small"
                                          Variant="Variant.Filled"
                                          Color="Color.Info"
-                                         OnClick="()=>OpenForwardCreate(port)"
+                                         OnClick="()=>OpenForwardCreate(port, context)"
                                          Style="margin-right: 4px;">
                                     Forward :@port.Port
                                 </MudChip>
@@ -370,11 +372,15 @@
         return startTime.Value.ToString("MMM dd");
     }
     
-    private Task OpenForwardCreate(ContainerPort cp)
+    private Task OpenForwardCreate(ContainerPort cp, PodInfo pod)
     {
         var parameters = new DialogParameters<CreateForwardDialog>
         {
             { x => x._containerPort, cp },
+            { x => x._namespace, pod.Namespace },
+            { x => x._resourceName, pod.Name },
+            { x => x._kind, ResourceType.Pod },
+            { x => x._cluster, Cluster },
            
         };
 

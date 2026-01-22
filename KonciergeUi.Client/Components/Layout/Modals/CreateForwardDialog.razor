@@ -1,15 +1,38 @@
+@using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Models.Kube
+@using static KonciergeUI.Models.Forwarding.Enums
 @inject ISnackbar Snackbar
+@inject IKubeRepository KubeRepo
 
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Class="mr-3 mb-n1"/>
+            <MudIcon Icon="@Icons.Material.Filled.ForwardToInbox" Class="mr-3 mb-n1"/>
             Create Forward
         </MudText>
     </TitleContent>
     <DialogContent>
+        <MudStack>
+            <MudCard Outlined="true">
+                <MudStack>
+                    <MudText Typo="Typo.body2">Resource</MudText>
+
+                    <MudStack AlignItems="AlignItems.Center"  Row>
+                        @if (_kind == Enums.ResourceType.Pod){
+                            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" Color="Color.Primary" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Cloud" Size="Size.Small" Color="Color.Primary" />
+
+                        }
+                        <MudText Typo="Typo.body1">@_resourceName</MudText>
+                    </MudStack>
+                    <MudText Typo="Typo.body2">@_namespace</MudText>
+
+                </MudStack>
+            </MudCard>
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
             <MudStack>
                 <MudStack Row>
@@ -27,6 +50,46 @@
                 </MudSelect>
             </MudStack>
         </MudForm>
+        <MudStack Row>
+                <MudSpacer />
+            <MudChip T="string" OnClick="ShowAddLinked">Link</MudChip>
+            </MudStack>
+            @if (_configMapsSel.Count != 0 || _secretsSel.Count != 0){
+            <MudCard Outlined="true">
+                    <MudList T="LinkedItem" @bind-SelectedValues="SelectedLinks" SelectionMode="SelectionMode.MultiSelection" ReadOnly="false" CheckBoxColor="Color.Tertiary">
+                        <MudListSubheader>
+                            Select items to link:
+                        </MudListSubheader>
+
+                        @if (_configMapsSel.Count>0){
+                        <MudListItem Text="Config Maps">
+                            <NestedList>
+                                @foreach(var cm in _configMapsSel)
+                                {
+
+                                        <MudListItem T="LinkedItem" Value="cm" Text="@($"{cm.Name}/{cm.Key}")" />
+
+    }
+                            </NestedList>
+                        </MudListItem>
+                        }
+                        @if (_secretsSel.Count > 0)
+                        {
+                            <MudListItem Text="Secrets">
+                                <NestedList>
+                                    @foreach (var s in _secretsSel)
+                                    {
+
+                                        <MudListItem T="LinkedItem" Value="s" Text="@($"{s.Name}/{s.Key}")" />
+
+                                    }
+                                </NestedList>
+                            </MudListItem>
+                        }
+                    </MudList>
+             </MudCard>
+            }
+        </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -41,44 +104,98 @@
     public ContainerPort? _containerPort { get; set; } 
 
     [Parameter]
-    public string _kind { get; set; } 
+    public Enums.ResourceType _kind { get; set; }
     [Parameter]
     public string _namespace { get; set; } 
     [Parameter]
-    public string resourceName { get; set; } 
+    public string _resourceName { get; set; } 
     [Parameter]
     public ServicePort? _servicePort { get; set; } 
-    
+
+    [Parameter]
+    public ClusterConnectionInfo _cluster { get; set; }
+
     private void Cancel() => MudDialog.Cancel();
-    
+
     private CreateForwardRequest _newForwardRequest;
 
-    
+
     bool success;
     string[] errors = { };
     MudTextField<string> pwField1;
     MudForm form;
-    
-    
-    protected override Task OnInitializedAsync()
+    private List<ConfigMapInfo> _configMaps { get; set; } = new List<ConfigMapInfo>();
+    private List<SecretInfo> _secrets { get; set; } = new List<SecretInfo>();
+
+    private List<LinkedItem> _configMapsSel { get; set; } = new List<LinkedItem>();
+    private List<LinkedItem> _secretsSel { get; set; } = new List<LinkedItem>();
+    public IReadOnlyCollection<LinkedItem> SelectedLinks = new List<LinkedItem>();
+
+
+
+
+    protected override async Task OnInitializedAsync()
     {
         _newForwardRequest = new CreateForwardRequest
         {
-            ResourceName = resourceName,
+            ResourceName = _resourceName,
             ResourceNamespace = _namespace,
             ResourceKind = _kind,
             RemotePort = _containerPort is not null ? _containerPort.Port : _servicePort.Port,
-            LocalPort = 0
+            LocalPort = 0,
+            LinkedEntries = new List<LinkedItem>()
         };
-        return base.OnInitializedAsync();
+
+
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task ShowAddLinked()
+    {
+        _configMaps = await KubeRepo.ListConfigMapsAsync(_cluster, _namespace);
+        _secrets = await KubeRepo.ListSecretsAsync(_cluster, _namespace);
+
+        _configMapsSel = new();
+        _secretsSel = new();
+
+
+        foreach (var cm in _configMaps)
+        {
+
+            foreach (var d in cm.Data)
+            {
+
+
+                _configMapsSel.Add(new LinkedItem { Key=d.Key, Kind=LinkedResourceType.ConfigMap, Name=cm.Name, Namespace=cm.NameSpace });
+
+            }
+
+
+        }
+
+        foreach (var s in _secrets)
+        {
+
+            foreach (var d in s.Data)
+            {
+
+
+                _secretsSel.Add(new LinkedItem { Key = d.Key, Kind = LinkedResourceType.Secret, Name = s.Name, Namespace = s.NameSpace });
+
+            }
+
+
+        }
+
     }
 
 
- 
 
     private async Task CreateForward()
     {
         Snackbar.Add("Create Forward", Severity.Success);
+        _newForwardRequest.LinkedEntries = SelectedLinks.ToList();
         MudDialog.Close(DialogResult.Ok(_newForwardRequest));
     }
 

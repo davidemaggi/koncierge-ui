@@ -104,7 +104,7 @@ namespace KonciergeUI.Core.Mocks
             return Task.FromResult(service);
         }
 
-        public Task<List<V1Secret>> ListSecretsAsync(ClusterConnectionInfo cluster, string @namespace)
+        public Task<List<SecretInfo>> ListSecretsAsync(ClusterConnectionInfo cluster, string @namespace)
         {
             var key = (GetClusterKey(cluster), @namespace);
             _secrets.TryGetValue(key, out var list);
@@ -115,10 +115,20 @@ namespace KonciergeUI.Core.Mocks
                 .OrderBy(s => s.Metadata?.Name)
                 .ToList();
 
-            return Task.FromResult(list);
+            return Task.FromResult(list.Select(s => new SecretInfo
+            {
+                Name = s.Metadata.Name,
+                NameSpace = s.Metadata.Namespace(),
+                Data = s.Data?
+    .ToDictionary(
+        kvp => kvp.Key,
+        kvp => Encoding.UTF8.GetString(kvp.Value)
+    ) ?? new Dictionary<string, string>()
+            }
+            ).ToList());
         }
 
-        public Task<List<V1ConfigMap>> ListConfigMapsAsync(ClusterConnectionInfo cluster, string @namespace)
+        public Task<List<ConfigMapInfo>> ListConfigMapsAsync(ClusterConnectionInfo cluster, string @namespace)
         {
             var key = (GetClusterKey(cluster), @namespace);
             _configMaps.TryGetValue(key, out var list);
@@ -127,7 +137,15 @@ namespace KonciergeUI.Core.Mocks
                 .OrderBy(c => c.Metadata?.Name)
                 .ToList();
 
-            return Task.FromResult(list);
+
+            return Task.FromResult(list.Select(c => new ConfigMapInfo
+            {
+                Name = c.Metadata.Name,
+                NameSpace = c.Metadata.Namespace(),
+                Data = c.Data.ToDictionary()
+            }
+         ).ToList());
+
         }
 
         // ----------------- existing mock generators -----------------

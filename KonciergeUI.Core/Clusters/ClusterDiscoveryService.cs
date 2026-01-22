@@ -177,17 +177,11 @@ namespace KonciergeUI.Core.Clusters
 
         private string GetHomeDirectory()
         {
-            return "/Users/davide/";
-            
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            // Detect sandboxed app
-            if (path.Contains("/Library/Containers", StringComparison.InvariantCultureIgnoreCase))
-            {
-                // Use real home directory
-                return Path.GetFullPath("~/");
-            }
-
-            return path;
+            string homePath = (Environment.OSVersion.Platform == PlatformID.Unix ||
+                    Environment.OSVersion.Platform == PlatformID.MacOSX)
+     ? Environment.GetEnvironmentVariable("HOME")
+     : Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%");
+            return homePath;
         }
 
 

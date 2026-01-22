@@ -14,6 +14,12 @@ namespace KonciergeUI.Models.Forwarding
             Service
         }
 
+        public enum LinkedResourceType
+        {
+            ConfigMap,
+            Secret
+        }
+
         public enum ForwardProtocol
         {
             Tcp,
