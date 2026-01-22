@@ -5,6 +5,7 @@
 @using KonciergeUi.Client.Components.Layout.FormFields
 @using KonciergeUi.Client.Components.Layout.Tables
 @using KonciergeUi.Client.State
+@using KonciergeUI.Models.Forwarding
 @inject UiState _ui
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="ma-4">
@@ -32,7 +33,7 @@
             
             <MudTabPanel Text="Services" Icon="@Icons.Material.Filled.Cloud">
                 <ServicesList Cluster="@_ui.SelectedCluster"
-                              OnCreateForwardClicked="HandleCreateServiceForward" />
+                              OnCreateForwardClicked="HandleCreateForward" />
             </MudTabPanel>
         </MudTabs>
     }
@@ -50,7 +51,7 @@
 
 @code {
 
-    
+    private List<CreateForwardRequest> _forwardList { get; set; } = new();
 
     private async Task OnClusterSelection(ClusterConnectionInfo? sel)
     {
@@ -78,10 +79,9 @@
         // TODO: Open details dialog
     }
 
-    private void HandleCreateServiceForward((ServiceInfo service, ServicePort port) args)
+    private void HandleCreateForward(CreateForwardRequest req)
     {
-        Console.WriteLine($"Create forward for service: {args.service.Name}, port: {args.port.Port}");
-        // TODO: Open port forward dialog
+        _forwardList.Add(req);
     }
 }
 

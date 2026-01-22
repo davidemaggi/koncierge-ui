@@ -66,10 +66,21 @@
                             <NestedList>
                                 @foreach(var cm in _configMapsSel)
                                 {
+                                    <MudListItem Text="@cm.Key">
+                                        <NestedList>
+                                            
+                                                    @foreach(var d in cm.Value)
+                                                    {
 
-                                        <MudListItem T="LinkedItem" Value="cm" Text="@($"{cm.Name}/{cm.Key}")" />
+                                                        <MudListItem T="LinkedItem" Value="d" Text="@($"{d.Key}")" />
 
-    }
+                                                    }
+
+                                            
+                                        </NestedList>
+                                    </MudListItem>
+
+                                }
                             </NestedList>
                         </MudListItem>
                         }
@@ -77,10 +88,21 @@
                         {
                             <MudListItem Text="Secrets">
                                 <NestedList>
-                                    @foreach (var s in _secretsSel)
+                                    @foreach(var s in _secretsSel)
                                     {
+                                        <MudListItem Text="@s.Key">
+                                            <NestedList>
+                                            
+                                                @foreach(var d in s.Value)
+                                                {
 
-                                        <MudListItem T="LinkedItem" Value="s" Text="@($"{s.Name}/{s.Key}")" />
+                                                    <MudListItem T="LinkedItem" Value="d" Text="@($"{d.Key}")" />
+
+                                                }
+
+                                            
+                                            </NestedList>
+                                        </MudListItem>
 
                                     }
                                 </NestedList>
@@ -127,8 +149,8 @@
     private List<ConfigMapInfo> _configMaps { get; set; } = new List<ConfigMapInfo>();
     private List<SecretInfo> _secrets { get; set; } = new List<SecretInfo>();
 
-    private List<LinkedItem> _configMapsSel { get; set; } = new List<LinkedItem>();
-    private List<LinkedItem> _secretsSel { get; set; } = new List<LinkedItem>();
+    private Dictionary<string,List<LinkedItem>> _configMapsSel { get; set; } = new ();
+    private Dictionary<string,List<LinkedItem>> _secretsSel { get; set; } = new();
     public IReadOnlyCollection<LinkedItem> SelectedLinks = new List<LinkedItem>();
 
 
@@ -162,28 +184,30 @@
 
         foreach (var cm in _configMaps)
         {
-
+            var tmp=new List<LinkedItem>();
             foreach (var d in cm.Data)
             {
 
 
-                _configMapsSel.Add(new LinkedItem { Key=d.Key, Kind=LinkedResourceType.ConfigMap, Name=cm.Name, Namespace=cm.NameSpace });
+                tmp.Add(new LinkedItem { Key=d.Key, Kind=LinkedResourceType.ConfigMap, Name=cm.Name, Namespace=cm.NameSpace });
 
             }
-
+            _configMapsSel.Add(cm.Name, tmp);
 
         }
 
         foreach (var s in _secrets)
         {
+        var tmp=new List<LinkedItem>();
 
             foreach (var d in s.Data)
             {
 
 
-                _secretsSel.Add(new LinkedItem { Key = d.Key, Kind = LinkedResourceType.Secret, Name = s.Name, Namespace = s.NameSpace });
+                tmp.Add(new LinkedItem { Key = d.Key, Kind = LinkedResourceType.Secret, Name = s.Name, Namespace = s.NameSpace });
 
             }
+        _secretsSel.Add(s.Name, tmp);
 
 
         }

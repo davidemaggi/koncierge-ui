@@ -1,6 +1,7 @@
 ﻿@using KonciergeUi.Client.Components.Layout.Modals
 @using KonciergeUI.Models.Kube
 @using KonciergeUI.Core.Abstractions
+@using KonciergeUI.Models.Forwarding
 @using static KonciergeUI.Models.Forwarding.Enums
 @inject IKubeRepository KubeRepo
 @inject IDialogService DialogService
@@ -196,17 +197,23 @@
     private string _selectedNamespace = "";
     private string _selectedStatus = "";
 
+    private List<CreateForwardRequest> _draftTemplate { get; set; } = new();
+
     [Parameter]
     public ClusterConnectionInfo? Cluster { get; set; }
 
     [Parameter]
-    public EventCallback<PodInfo> OnCreateForwardClicked { get; set; }
+    public EventCallback<CreateForwardRequest> OnCreateForwardClicked { get; set; }
 
     [Parameter]
     public EventCallback<PodInfo> OnViewLogsClicked { get; set; }
 
     [Parameter]
     public EventCallback<PodInfo> OnShowDetailsClicked { get; set; }
+    
+    
+
+    
     
     private bool _hasLoaded = false;
 
@@ -321,10 +328,7 @@
 
     }
 
-    private void OnCreateForward(PodInfo pod)
-    {
-        OnCreateForwardClicked.InvokeAsync(pod);
-    }
+    
 
     private void OnViewLogs(PodInfo pod)
     {
@@ -372,7 +376,7 @@
         return startTime.Value.ToString("MMM dd");
     }
     
-    private Task OpenForwardCreate(ContainerPort cp, PodInfo pod)
+    private async Task OpenForwardCreate(ContainerPort cp, PodInfo pod)
     {
         var parameters = new DialogParameters<CreateForwardDialog>
         {
@@ -386,7 +390,16 @@
 
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
 
-        return DialogService.ShowAsync<CreateForwardDialog>("Create Forward", parameters, options);
+        var dialog= await DialogService.ShowAsync<CreateForwardDialog>("Create Forward", parameters, options);
+        
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+            var xxx = result.Data as CreateForwardRequest;
+            await OnCreateForwardClicked.InvokeAsync(xxx);
+        }
 
     }
 }

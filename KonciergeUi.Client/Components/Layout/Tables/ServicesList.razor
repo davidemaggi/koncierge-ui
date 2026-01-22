@@ -1,5 +1,6 @@
 ﻿@using KonciergeUI.Models.Kube
 @using KonciergeUI.Core.Abstractions
+@using KonciergeUI.Models.Forwarding
 @inject IKubeRepository KubeRepo
 
 <MudPaper Elevation="2" Class="pa-4">
@@ -194,7 +195,7 @@
     public ClusterConnectionInfo? Cluster { get; set; }
 
     [Parameter]
-    public EventCallback<(ServiceInfo service, ServicePort port)> OnCreateForwardClicked { get; set; }
+    public EventCallback<CreateForwardRequest> OnCreateForwardClicked { get; set; }
 
 
 
@@ -304,7 +305,7 @@
 
     private void OnCreateForward(ServiceInfo service, ServicePort port)
     {
-        OnCreateForwardClicked.InvokeAsync((service, port));
+        //OnCreateForwardClicked.InvokeAsync((service, port));
     }
 
     private Color GetServiceTypeColor(ServiceType type) => type switch
