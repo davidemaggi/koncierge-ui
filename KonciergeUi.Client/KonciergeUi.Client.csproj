@@ -41,6 +41,15 @@
 
     <ItemGroup>
         <!-- App Icon -->
+        <MauiAsset Include="wwwroot\_fonts\Italianno-Regular.ttf">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </MauiAsset>
+        <MauiAsset Include="wwwroot\_fonts\OpenSans-Regular.ttf">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </MauiAsset>
+        <MauiAsset Include="wwwroot\_fonts\Roboto.ttf">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </MauiAsset>
         <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
 
         <!-- Splash Screen -->

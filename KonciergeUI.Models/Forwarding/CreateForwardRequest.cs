@@ -2,8 +2,9 @@ using static KonciergeUI.Models.Forwarding.Enums;
 
 namespace KonciergeUI.Models.Forwarding;
 
-public class CreateForwardRequest
+public class CreateForwardRequestOld
 {
+    public required Guid Id { get; set; } = Guid.CreateVersion7();
     public required string ResourceName { get; set; }
     public required string ResourceNamespace { get; set; }
     public required ResourceType ResourceKind { get; set; } // Pod / Service / Deployment etc.
@@ -17,6 +18,8 @@ public class CreateForwardRequest
 
 
 public class LinkedItem {
+    public required Guid Id { get; set; } = Guid.CreateVersion7();
+    
     public required string Name { get; set; }
     public required string Namespace { get; set; }
     public required string Key { get; set; }

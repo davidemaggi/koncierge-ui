@@ -1,0 +1,42 @@
+@using KonciergeUi.Client.Shared
+@using KonciergeUI.Models.Forwarding
+<MudCard Outlined="true">
+    <MudStack Row>
+        <MudStack>
+            <MudStack AlignItems="AlignItems.Center" Row>
+                @if (_definition.ResourceType == Enums.ResourceType.Pod)
+                {
+                    <MudIcon Icon="@KonciergeIcons.Color.Pod" Size="Size.Small" Color="Color.Primary"/>
+                }
+                else
+                {
+                    <MudIcon Icon="@KonciergeIcons.Color.Service" Size="Size.Small" Color="Color.Primary"/>
+
+                }
+                <MudText Style="font-family: monospace;" Typo="Typo.body1">@_definition.ResourceName</MudText>
+            </MudStack>
+            <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{_definition.LocalPort} -> {_definition.TargetPort}({_definition.Protocol.ToString()})")</MudText>
+
+        </MudStack>
+        @if(_showRemove){
+            <MudSpacer></MudSpacer>
+        <MudButton StartIcon="@Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="RemoveClicked">Remove</MudButton>
+        }
+    </MudStack>
+</MudCard>
+@code {
+    [Parameter]
+    public PortForwardDefinition _definition { get; set; }
+    
+    [Parameter] 
+    public bool _showRemove { get; set; } = false;
+
+    [Parameter] 
+    public EventCallback<Guid> OnForwardRemoveAsync { get; set; }
+
+    private async Task RemoveClicked()
+    {
+       await OnForwardRemoveAsync.InvokeAsync(_definition.Id);
+    }
+
+}

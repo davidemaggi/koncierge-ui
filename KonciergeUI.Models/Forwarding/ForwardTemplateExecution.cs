@@ -15,7 +15,7 @@ namespace KonciergeUI.Models.Forwarding
         /// <summary>
         /// Unique identifier for this execution instance.
         /// </summary>
-        public required string Id { get; init; }
+        public required Guid Id { get; init; } = Guid.CreateVersion7();
 
         /// <summary>
         /// The template being executed.
@@ -30,7 +30,7 @@ namespace KonciergeUI.Models.Forwarding
         /// <summary>
         /// Overall execution status.
         /// </summary>
-        public ExecutionStatus Status { get; init; } = ExecutionStatus.Starting;
+        public ForwardStatus Status { get; init; } = ForwardStatus.Stopped;
 
         /// <summary>
         /// List of individual forward instances (one per PortForwardDefinition).

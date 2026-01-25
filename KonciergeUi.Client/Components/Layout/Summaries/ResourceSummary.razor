@@ -1,0 +1,31 @@
+@using KonciergeUi.Client.Shared
+@using KonciergeUI.Models.Forwarding
+<MudCard  Outlined="true">
+    <MudStack>
+        <MudText Style="font-family: monospace;" Typo="Typo.body2" >Resource</MudText>
+
+        <MudStack AlignItems="AlignItems.Center"  Row>
+            @if (_kind == Enums.ResourceType.Pod){
+                <MudIcon Icon="@KonciergeIcons.Color.Pod" Size="Size.Small" Color="Color.Primary" />
+            }
+            else
+            {
+                <MudIcon Icon="@KonciergeIcons.Color.Service" Size="Size.Small" Color="Color.Primary" />
+
+            }
+            <MudText Style="font-family: monospace;" Typo="Typo.body1">@_resourceName</MudText>
+        </MudStack>
+        <MudText Style="font-family: monospace;" Typo="Typo.body2">@_namespace</MudText>
+
+    </MudStack>
+</MudCard>
+@code {
+    
+    [Parameter]
+    public Enums.ResourceType _kind { get; set; }
+    [Parameter]
+    public string _namespace { get; set; } 
+    [Parameter]
+    public string _resourceName { get; set; } 
+    
+}

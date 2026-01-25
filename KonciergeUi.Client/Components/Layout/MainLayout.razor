@@ -35,11 +35,42 @@
 </ErrorBoundary>
 
 
-
 @code {
     private MudThemeProvider? _mudThemeProvider;
     private bool _isDarkMode;
-    private readonly MudTheme _theme = new(); // customize later
+    
+    [Inject] IJSRuntime Js { get; set; } = default!;
+    
+    private MudTheme _theme = new()
+    {
+        Typography = new Typography()
+        {
+            Default = new DefaultTypography()
+            {
+                FontFamily = new[] { "Roboto", "Helvetica", "Arial", "sans-serif" },
+            }
+        },
+        
+        
+        
+        PaletteLight = new PaletteLight
+        {
+            // standard stuff...
+            Primary = Colors.Blue.Default,
+            // custom color for light mode card
+            Background = "#ffffff",
+            // you can keep default others
+            //Surface = "#2c2c2c"
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = Colors.Blue.Lighten2,
+            // custom color for dark mode card background
+            Background = "#121212",
+       // Surface = "#fff9c4"
+            
+        }
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -81,9 +112,12 @@
         return Task.CompletedTask;
     }
 
-    private void ToggleTheme()
+    private async Task ToggleTheme()
     {
         _isDarkMode = !_isDarkMode;
         Ui.CurrentTheme = _isDarkMode ? "Dark" : "Light";
+        
+        await Js.InvokeVoidAsync("koncierge.setThemeClass", _isDarkMode);
+        
     }
 }

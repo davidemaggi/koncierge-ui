@@ -1,0 +1,79 @@
+@using KonciergeUi.Client.Components.Layout.FormFields
+@using KonciergeUi.Client.Components.Layout.Summaries
+@using KonciergeUi.Client.State
+@using KonciergeUI.Core.Abstractions
+@using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Models.Kube
+@using KonciergeUI.Models.Security
+@using static KonciergeUI.Models.Forwarding.Enums
+@inject ISnackbar Snackbar
+@inject IKubeRepository KubeRepo
+@inject UiState _ui
+@inject IPortForwardManager _fwdManager;
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Class="mr-3 mb-n1"/>
+            Start Forward
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack>
+            <ClusterSelect SelectedCluster="_cluster" _onClusterSelection="OnClusterSelection"  />
+
+        </MudStack>
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Success" OnClick="StartForward">Start</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public required ForwardTemplate _template { get; set; } 
+
+    [Parameter]
+
+    public ClusterConnectionInfo? _cluster { get; set; }
+
+    private void Cancel() => MudDialog.Cancel();
+
+
+
+    bool success;
+
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        _cluster = _ui.SelectedCluster;
+        
+        
+        await base.OnInitializedAsync();
+    }
+
+    private async Task OnClusterSelection(ClusterConnectionInfo? sel)
+    {
+
+   
+        _cluster= sel;
+
+    }
+
+
+    private async Task StartForward()
+    {
+        var client =  KubeRepo.GetClient(_cluster);
+        
+        await _fwdManager.StartTemplateAsync(client,_template);
+        MudDialog.Close();
+    }
+
+}

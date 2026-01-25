@@ -13,6 +13,8 @@ namespace KonciergeUI.Kube.Repositories;
 
 public class KubeRepository : IKubeRepository
 {
+    public IKubernetes GetClient(ClusterConnectionInfo cluster)=>CreateClient(cluster);
+
     public async Task<List<PodInfo>> ListPodsAsync(ClusterConnectionInfo cluster, string? namespaceFilter = null)
     {
         var pods = new List<PodInfo>();

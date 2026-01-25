@@ -2,12 +2,20 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using k8s;
 using k8s.Models;
 
 namespace KonciergeUI.Core.Abstractions
 {
     public interface IKubeRepository
     {
+        
+         /// <summary>
+        /// List all pods in a cluster (optionally filter by namespace).
+        /// </summary>
+        IKubernetes GetClient(ClusterConnectionInfo cluster);
+        
+        
         /// <summary>
         /// List all pods in a cluster (optionally filter by namespace).
         /// </summary>

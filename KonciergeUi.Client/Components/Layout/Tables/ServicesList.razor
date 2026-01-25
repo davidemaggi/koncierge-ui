@@ -1,7 +1,10 @@
-﻿@using KonciergeUI.Models.Kube
+﻿@using KonciergeUi.Client.Components.Layout.Modals
+@using KonciergeUi.Client.Shared
+@using KonciergeUI.Models.Kube
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 @inject IKubeRepository KubeRepo
+@inject IDialogService DialogService
 
 <MudPaper Elevation="2" Class="pa-4">
     <MudTable Items="@_filteredServices" 
@@ -14,7 +17,7 @@
         
         <ToolBarContent>
             <MudText Typo="Typo.h6">
-                <MudIcon Icon="@Icons.Material.Filled.Cloud" Class="mr-2" />
+                <MudIcon Icon="@KonciergeIcons.Outlined.Service" Class="mr-2" />
                 Services (@_services.Count)
             </MudText>
             <MudSpacer />
@@ -84,7 +87,7 @@
         <RowTemplate>
             <MudTd DataLabel="Name">
                 <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
-                    <MudIcon Icon="@Icons.Material.Filled.Cloud" Size="Size.Small" Color="Color.Secondary" />
+                    <MudIcon Icon="@KonciergeIcons.Outlined.Service" Size="Size.Small" Color="Color.Secondary" />
                     <MudText Typo="Typo.body2" Style="font-family: monospace;">@context.Name</MudText>
                 </MudStack>
             </MudTd>
@@ -140,8 +143,7 @@
                             <MudTooltip Text="@($"{port.Name}: {port.Protocol}")">
                                 <MudChip T="string" Size="Size.Small"
                                          Variant="Variant.Filled"
-                                          OnClick="@(() => OnCreateForward(context, port))"
-                                         Color="Color.Info"
+                                         OnClick="()=>OpenForwardCreate(port, context)"                                         Color="Color.Info"
                                          Style="margin-right: 4px;">
                                     Forward :@port.Port
                                 </MudChip>
@@ -195,7 +197,7 @@
     public ClusterConnectionInfo? Cluster { get; set; }
 
     [Parameter]
-    public EventCallback<CreateForwardRequest> OnCreateForwardClicked { get; set; }
+    public EventCallback<PortForwardDefinition> OnCreateForwardClicked { get; set; }
 
 
 
@@ -303,9 +305,31 @@
         .ToList();
     }
 
-    private void OnCreateForward(ServiceInfo service, ServicePort port)
+    private async Task OpenForwardCreate(ServicePort cp, ServiceInfo ser)
     {
-        //OnCreateForwardClicked.InvokeAsync((service, port));
+        var parameters = new DialogParameters<CreateForwardDialog>
+        {
+            { x => x._servicePort, cp },
+            { x => x._namespace, ser.Namespace },
+            { x => x._resourceName, ser.Name },
+            { x => x._kind, Enums.ResourceType.Service },
+            { x => x._cluster, Cluster },
+           
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
+
+        var dialog= await DialogService.ShowAsync<CreateForwardDialog>("Create Forward", parameters, options);
+        
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+            var xxx = result.Data as PortForwardDefinition;
+            await OnCreateForwardClicked.InvokeAsync(xxx);
+        }
+
     }
 
     private Color GetServiceTypeColor(ServiceType type) => type switch

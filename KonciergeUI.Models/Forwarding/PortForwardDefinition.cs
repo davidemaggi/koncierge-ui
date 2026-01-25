@@ -14,51 +14,51 @@ namespace KonciergeUI.Models.Forwarding
         /// <summary>
         /// Unique identifier for this forward definition.
         /// </summary>
-        public required string Id { get; init; }
+        public required Guid Id { get; init; } = Guid.CreateVersion7();
 
         /// <summary>
         /// Display name (e.g., "API Server").
         /// </summary>
-        public required string Name { get; init; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Kubernetes resource type (Pod or Service).
         /// </summary>
-        public required ResourceType ResourceType { get; init; }
+        public required ResourceType ResourceType { get; set; }
 
         /// <summary>
         /// Name of the pod or service.
         /// </summary>
-        public required string ResourceName { get; init; }
+        public required string ResourceName { get; set; }
 
         /// <summary>
         /// Namespace of the resource (can be null to use cluster default).
         /// </summary>
-        public string? Namespace { get; init; }
+        public required string Namespace { get; set; }
 
         /// <summary>
         /// Target port on the pod/service (e.g., 8080).
         /// </summary>
-        public required int TargetPort { get; init; }
+        public required int TargetPort { get; set; }
 
         /// <summary>
         /// Local port to bind (e.g., 8080). Can be 0 for auto-assign.
         /// </summary>
-        public int LocalPort { get; init; }
+        public int LocalPort { get; set; }
 
         /// <summary>
         /// Protocol hint (Http, Tcp, Grpc, etc.).
         /// </summary>
-        public ForwardProtocol Protocol { get; init; } = ForwardProtocol.Tcp;
+        public ForwardProtocol Protocol { get; set; } = ForwardProtocol.Tcp;
 
         /// <summary>
         /// List of secrets/configmaps/kubeconfig entries linked to this forward.
         /// </summary>
-        public List<SecretReference> LinkedSecrets { get; init; } = new();
+        public List<SecretReference> LinkedSecrets { get; set; } = new();
 
         /// <summary>
         /// Optional selector labels (if ResourceType is Service and you want pod selection).
         /// </summary>
-        public Dictionary<string, string>? LabelSelector { get; init; }
+        public Dictionary<string, string>? LabelSelector { get; set; }
     }
 }

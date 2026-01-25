@@ -1,6 +1,8 @@
+@using KonciergeUi.Client.Components.Layout.Summaries
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Models.Kube
+@using KonciergeUI.Models.Security
 @using static KonciergeUI.Models.Forwarding.Enums
 @inject ISnackbar Snackbar
 @inject IKubeRepository KubeRepo
@@ -14,35 +16,19 @@
     </TitleContent>
     <DialogContent>
         <MudStack>
-            <MudCard Outlined="true">
-                <MudStack>
-                    <MudText Typo="Typo.body2">Resource</MudText>
-
-                    <MudStack AlignItems="AlignItems.Center"  Row>
-                        @if (_kind == Enums.ResourceType.Pod){
-                            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" Color="Color.Primary" />
-                        }
-                        else
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.Cloud" Size="Size.Small" Color="Color.Primary" />
-
-                        }
-                        <MudText Typo="Typo.body1">@_resourceName</MudText>
-                    </MudStack>
-                    <MudText Typo="Typo.body2">@_namespace</MudText>
-
-                </MudStack>
-            </MudCard>
+            <ResourceSummary _kind="_kind" _namespace="@_namespace"  _resourceName="@_resourceName"/>
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
             <MudStack>
                 <MudStack Row>
-                    <MudNumericField @bind-Value="_newForwardRequest.RemotePort" Label="Remote Port" Variant="Variant.Text" Min="0" Max="65535"/>
+                    <MudNumericField Disabled="true" @bind-Value="_newForwardRequest.TargetPort" Label="Remote Port" Variant="Variant.Text" Min="0" Max="65535"/>
                     <MudNumericField @bind-Value="_newForwardRequest.LocalPort" Label="Local Port" Variant="Variant.Text" Min="0" Max="65535"/>
                 </MudStack>
-                <MudSelect T="Enums.ForwardProtocol"
+                <MudSelect T="ForwardProtocol"
                            Label="Protocol"
                            Variant="Variant.Outlined"
-                           @bind-Value="_newForwardRequest.Protocol">
+                           @bind-Value="_newForwardRequest.Protocol"
+                           Disabled="true"
+                           >
                     <MudSelectItem T="Enums.ForwardProtocol" Value="Enums.ForwardProtocol.Http">HTTP</MudSelectItem>
                     <MudSelectItem T="Enums.ForwardProtocol" Value="Enums.ForwardProtocol.Https">HTTPS</MudSelectItem>
                     <MudSelectItem  T="Enums.ForwardProtocol"Value="Enums.ForwardProtocol.Tcp">TCP</MudSelectItem>
@@ -56,7 +42,7 @@
             </MudStack>
             @if (_configMapsSel.Count != 0 || _secretsSel.Count != 0){
             <MudCard Outlined="true">
-                    <MudList T="LinkedItem" @bind-SelectedValues="SelectedLinks" SelectionMode="SelectionMode.MultiSelection" ReadOnly="false" CheckBoxColor="Color.Tertiary">
+                    <MudList T="SecretReference" @bind-SelectedValues="SelectedLinks" SelectionMode="SelectionMode.MultiSelection" ReadOnly="false" CheckBoxColor="Color.Tertiary">
                         <MudListSubheader>
                             Select items to link:
                         </MudListSubheader>
@@ -72,7 +58,7 @@
                                                     @foreach(var d in cm.Value)
                                                     {
 
-                                                        <MudListItem T="LinkedItem" Value="d" Text="@($"{d.Key}")" />
+                                                        <MudListItem T="SecretReference" Value="d" Text="@($"{d.Key}")" />
 
                                                     }
 
@@ -96,7 +82,7 @@
                                                 @foreach(var d in s.Value)
                                                 {
 
-                                                    <MudListItem T="LinkedItem" Value="d" Text="@($"{d.Key}")" />
+                                                    <MudListItem T="SecretReference" Value="d" Text="@($"{d.Key}")" />
 
                                                 }
 
@@ -139,7 +125,7 @@
 
     private void Cancel() => MudDialog.Cancel();
 
-    private CreateForwardRequest _newForwardRequest;
+    private PortForwardDefinition _newForwardRequest;
 
 
     bool success;
@@ -149,23 +135,27 @@
     private List<ConfigMapInfo> _configMaps { get; set; } = new List<ConfigMapInfo>();
     private List<SecretInfo> _secrets { get; set; } = new List<SecretInfo>();
 
-    private Dictionary<string,List<LinkedItem>> _configMapsSel { get; set; } = new ();
-    private Dictionary<string,List<LinkedItem>> _secretsSel { get; set; } = new();
-    public IReadOnlyCollection<LinkedItem> SelectedLinks = new List<LinkedItem>();
+    private Dictionary<string,List<SecretReference>> _configMapsSel { get; set; } = new ();
+    private Dictionary<string,List<SecretReference>> _secretsSel { get; set; } = new();
+    public IReadOnlyCollection<SecretReference> SelectedLinks = new List<SecretReference>();
 
 
 
 
     protected override async Task OnInitializedAsync()
     {
-        _newForwardRequest = new CreateForwardRequest
+        _newForwardRequest = new PortForwardDefinition
         {
             ResourceName = _resourceName,
-            ResourceNamespace = _namespace,
-            ResourceKind = _kind,
-            RemotePort = _containerPort is not null ? _containerPort.Port : _servicePort.Port,
+            Namespace = _namespace,
+            ResourceType = _kind,
+            TargetPort = _containerPort is not null
+                ? _containerPort.Port
+                : _servicePort.Port,
             LocalPort = 0,
-            LinkedEntries = new List<LinkedItem>()
+            LinkedSecrets = new List<SecretReference>(),
+            Name = $"{_namespace}.{_resourceName}:xxx",
+            Id = Guid.CreateVersion7()
         };
 
 
@@ -184,12 +174,12 @@
 
         foreach (var cm in _configMaps)
         {
-            var tmp=new List<LinkedItem>();
+            var tmp=new List<SecretReference>();
             foreach (var d in cm.Data)
             {
 
 
-                tmp.Add(new LinkedItem { Key=d.Key, Kind=LinkedResourceType.ConfigMap, Name=cm.Name, Namespace=cm.NameSpace });
+                tmp.Add(new SecretReference { Key=d.Key, SourceType= SecretSourceType.ConfigMap, ResourceName= cm.Name, Namespace=cm.NameSpace });
 
             }
             _configMapsSel.Add(cm.Name, tmp);
@@ -198,13 +188,13 @@
 
         foreach (var s in _secrets)
         {
-        var tmp=new List<LinkedItem>();
+        var tmp=new List<SecretReference>();
 
             foreach (var d in s.Data)
             {
 
 
-                tmp.Add(new LinkedItem { Key = d.Key, Kind = LinkedResourceType.Secret, Name = s.Name, Namespace = s.NameSpace });
+                tmp.Add(new SecretReference { Key = d.Key, SourceType = SecretSourceType.Secret, ResourceName = s.Name, Namespace = s.NameSpace });
 
             }
         _secretsSel.Add(s.Name, tmp);
@@ -219,7 +209,7 @@
     private async Task CreateForward()
     {
         Snackbar.Add("Create Forward", Severity.Success);
-        _newForwardRequest.LinkedEntries = SelectedLinks.ToList();
+        _newForwardRequest.LinkedSecrets = SelectedLinks.ToList();
         MudDialog.Close(DialogResult.Ok(_newForwardRequest));
     }
 

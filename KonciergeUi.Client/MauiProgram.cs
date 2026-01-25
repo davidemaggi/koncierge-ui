@@ -12,19 +12,30 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .ConfigureFonts(fonts => { fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"); });
+            .ConfigureFonts(fonts =>
+            {
+                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                fonts.AddFont("Italianno-Regular.ttf", "Italianno-Regular");
+                fonts.AddFont("Roboto.ttf", "Roboto");
+            });
 
 
 #if DEBUG
+        
+        builder.Logging.ClearProviders();
+        builder.Logging.AddDebug(); // Debug → Rider Debug window
+        //builder.Logging.SetMinimumLevel(LogLevel.Trace);
+        
         builder.Services.AddBlazorWebViewDeveloperTools();
-        builder.Logging.AddDebug();
         AppDomain.CurrentDomain.FirstChanceException += (_, args) =>
         {
             var xxx = args.Exception;
         };
 
 #endif
-        
+
+        builder.Services.AddMauiBlazorWebView();
+            ;
 
         // Register app services
         builder.Services.RegisterKonciergeServices();

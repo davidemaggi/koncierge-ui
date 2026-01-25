@@ -1,0 +1,47 @@
+using MudBlazor;
+
+namespace KonciergeUi.Client.Shared;
+
+
+//https://pictogrammers.com/library/mdi/
+public static class KonciergeIcons
+{
+  
+  public static class Flags
+  {
+    public const string Italy = @"<svg id=""emoji"" viewBox=""0 0 72 72"" xmlns=""http://www.w3.org/2000/svg""> <g id=""color""> <rect x=""5"" y=""17"" width=""62"" height=""38"" fill=""#fff""/> <rect x=""5"" y=""17"" width=""21"" height=""38"" fill=""#5c9e31""/> <rect x=""46"" y=""17"" width=""21"" height=""38"" fill=""#d22f27""/> </g> <g id=""line""> <rect x=""5"" y=""17"" width=""62"" height=""38"" fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2""/> </g> </svg>
+";
+    public const string Uk = @"<svg id=""emoji"" viewBox=""0 0 72 72"" xmlns=""http://www.w3.org/2000/svg""> <g id=""color""> <rect x=""5"" y=""17"" width=""62"" height=""38"" fill=""#1e50a0""/> <g> <polygon fill=""#fff"" points=""40 28.856 40 32 50.181 32 67 21.691 67 17 59.346 17 40 28.856""/> <polygon fill=""#d22f27"" points=""67 17 67 17 63.173 17 40 31.203 40 32 43.482 32 67 17.586 67 17""/> <polygon fill=""#fff"" points=""59.347 55 67 55 67 55 67 50.308 50.182 40 40 40 40 43.143 59.347 55""/> <polygon fill=""#d22f27"" points=""67 55 67 52.653 46.355 40 41.568 40 66.042 55 67 55 67 55""/> <polygon fill=""#fff"" points=""32 43.144 32 40 21.819 40 5 50.309 5 55 12.654 55 32 43.144""/> <polygon fill=""#d22f27"" points=""5 55 5 55 8.827 55 32 40.797 32 40 28.518 40 5 54.414 5 55""/> <polygon fill=""#fff"" points=""12.653 17 5 17 5 17 5 21.692 21.818 32 32 32 32 28.857 12.653 17""/> <polygon fill=""#d22f27"" points=""5 17 5 19.347 25.646 32 30.432 32 5.958 17 5 17 5 17""/> <rect x=""5"" y=""31"" width=""62"" height=""10"" fill=""#fff""/> <rect x=""31"" y=""17"" width=""10"" height=""38"" fill=""#fff""/> <rect x=""5"" y=""33"" width=""62"" height=""6"" fill=""#d22f27""/> <rect x=""33"" y=""17"" width=""6"" height=""38"" fill=""#d22f27""/> </g> </g> <g id=""line""> <rect x=""5"" y=""17"" width=""62"" height=""38"" fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2""/> </g> </svg>
+";
+
+  }
+
+  public static class Filled
+  {
+    public const string Logo = @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 24 24""><title>room-service</title><path d=""M12,5A2,2 0 0,1 14,7C14,7.24 13.96,7.47 13.88,7.69C17.95,8.5 21,11.91 21,16H3C3,11.91 6.05,8.5 10.12,7.69C10.04,7.47 10,7.24 10,7A2,2 0 0,1 12,5M22,19H2V17H22V19Z"" /></svg>";
+
+  }
+  
+    public static class Outlined
+    {
+        public const string Pod = @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 24 24""><title>cube-outline</title><path d=""M21,16.5C21,16.88 20.79,17.21 20.47,17.38L12.57,21.82C12.41,21.94 12.21,22 12,22C11.79,22 11.59,21.94 11.43,21.82L3.53,17.38C3.21,17.21 3,16.88 3,16.5V7.5C3,7.12 3.21,6.79 3.53,6.62L11.43,2.18C11.59,2.06 11.79,2 12,2C12.21,2 12.41,2.06 12.57,2.18L20.47,6.62C20.79,6.79 21,7.12 21,7.5V16.5M12,4.15L6.04,7.5L12,10.85L17.96,7.5L12,4.15M5,15.91L11,19.29V12.58L5,9.21V15.91M19,15.91V9.21L13,12.58V19.29L19,15.91Z"" /></svg>";
+        public const string Service = @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 24 24""><title>power-plug-outline</title><path d=""M16 7V3H14V7H10V3H8V7C7 7 6 8 6 9V14.5L9.5 18V21H14.5V18L18 14.5V9C18 8 17 7 16 7M16 13.67L13.09 16.59L12.67 17H11.33L10.92 16.59L8 13.67V9.09C8 9.06 8.06 9 8.09 9H15.92C15.95 9 16 9.06 16 9.09V13.67Z"" /></svg>";
+
+    }
+
+
+    public static class Color
+    {
+        public const string Pod = @"<svg id=""emoji"" viewBox=""0 0 72 72"" xmlns=""http://www.w3.org/2000/svg""> <g id=""color""> <path fill=""#f4aa41"" d=""m34.3223,64.1641c-.1755,0-.3479-.0462-.5-.1338l-22.6894-13.3321c-.3095-.1787-.5001-.5089-.5-.8662l-.251-27.414c0-.3573.1905-.6875.5-.8662l24.1904-14.3318c.3096-.1777.6904-.1777,1,0l22.6905,13.0818c.4784.2759.6426.8874.3666,1.3659-.0875.1517-.2133.2777-.3647.3655l-23.1923,14.0001-.2501,27.1327c-.0015.5514-.4486.9977-1,.9981Z""/> <polygon fill=""#f4aa41"" points=""36 64.5715 60.7589 50.4641 60.413 21.988 35.5724 36.0333 36 64.5715""/> <path fill=""#d0cfce"" d=""m44.4415,37.9783c-.7769-.442-1.2545-1.2692-1.249-2.163v-4.1719l-22.8806-15.5295c.692-.4567,6.2179-3.6331,6.5605-3.7231l26.1492,13.0017c.3095.1787.5001.5089.5.8662v6.0244c-.0018,1.1714-.6264,2.2536-1.64,2.8409l-4.9444,2.8544c-.771.4505-1.7251.4505-2.4961,0h.0004Z""/> <path fill=""#d0cfce"" d=""m44.8377,59.475v-3.336c.0017-1.0607.5674-2.0405,1.4853-2.5722l6.0733-3.5068c.8836-.5099,2.0133-.207,2.5232.6766.162.2808.2473.5992.2473.9234,0,0-.0232,1.6053-.3301,1.8473-2.0407,1.6093-9.9991,6.2783-9.999,5.9677Z""/> <path fill=""#3f3f3f"" d=""m44.4274,45.9464v.8683c0,.8266.67,1.4967,1.4967,1.4967.2628,0,.5209-.0692.7485-.2006l6.8048-3.76c.7054-.4073,1.14-1.1599,1.14-1.9745v-1.1184c0-.7976-.6466-1.4442-1.4442-1.4442-.2535,0-.5025.0667-.7221.1935l-6.7455,3.7252c-.7909.4567-1.2781,1.3006-1.2781,2.2139Z""/> <polygon fill=""#fff"" points=""31.083 38.917 22.785 34.264 22.785 41.706 31.083 46.359 31.083 38.917""/> </g> <g id=""line""> <polygon fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" points=""61.262 21.168 35.572 6.336 9.882 21.168 9.882 50.832 35.572 65.664 61.262 50.832 61.262 21.168""/> <line x1=""35.5724"" x2=""35.5724"" y1=""36.0333"" y2=""65.6642"" fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2""/> <line x1=""35.6301"" x2=""9.9401"" y1=""36.0333"" y2=""21.2012"" fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2""/> <line x1=""52.5169"" x2=""61.2624"" y1=""26.2504"" y2=""21.2012"" fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2""/> <line x1=""35.5724"" x2=""44.1879"" y1=""36.0333"" y2=""31.0591"" fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2""/> <path fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""m26.884,11.4565l25.6375,14.8018v6.0248c0,.8146-.4346,1.5672-1.14,1.9745l-4.9439,2.8543c-.7158.4133-1.6312.1681-2.0446-.5477-.1314-.2276-.2006-.4857-.2006-.7485v-4.7486l-25.5689-14.8183""/> <polygon fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" points=""31.083 38.917 22.785 34.264 22.785 41.706 31.083 46.359 31.083 38.917""/> <path fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""m54.1667,54.6663v-3.0063c0-.4679-.3793-.8472-.8472-.8472-.1487,0-.2948.0391-.4236.1135l-6.073,3.5062c-.6098.3519-.9854,1.0025-.9853,1.7065v3.3361""/> <path fill=""none"" stroke=""#000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""m44.4274,45.9464v.8683c0,.8266.67,1.4967,1.4967,1.4967.2628,0,.5209-.0692.7485-.2006l6.8048-3.76c.7054-.4073,1.14-1.1599,1.14-1.9745v-1.1184c0-.7976-.6466-1.4442-1.4442-1.4442-.2535,0-.5025.0667-.7221.1935l-6.7455,3.7252c-.7909.4567-1.2781,1.3006-1.2781,2.2139Z""/> </g> </svg> ";
+
+        public const string Service = @"<svg id=""emoji"" viewBox=""0 0 72 72"" xmlns=""http://www.w3.org/2000/svg""> <g id=""color""> <path fill=""#9b9b9a"" stroke=""none"" d=""M30.644,51.1065c0.5335-0.1424,1.0815,0.1746,1.224,0.708l1.455,5.449h8.387l1.455-5.426 c0.143-0.5334,0.6913-0.85,1.2248-0.7071c0.0001,0,0.0002,0,0.0002,0""/> <path fill=""#3F3F3F"" stroke=""none"" d=""M33.013,24.1055c-0.5523,0-1-0.4477-1-1V8.2195c0-1.2744-1.0331-2.3075-2.3075-2.3075 c-1.2744,0-2.3075,1.0331-2.3075,2.3075v14.883c0,0.5523-0.4477,1-1,1""/> <path fill=""#3F3F3F"" stroke=""none"" d=""M49.55,24.1055c-0.5523,0-1-0.4477-1-1V8.2195c-0.001-1.2741-1.0346-2.3062-2.3088-2.3052 c-1.2728,0.001-2.3043,1.0325-2.3052,2.3052v14.883c0,0.5523-0.4477,1-1,1""/> <path fill=""#d0cfce"" stroke=""none"" d=""M47.601,24.1885H20.435v10.48c-0.0125,9.4811,7.6634,17.1771,17.1444,17.1895 c3.5425,0.0047,6.9998-1.0868,9.8976-3.1245C48.0699,40.5639,48.1113,32.3637,47.601,24.1885z""/> <path fill=""#9b9b9a"" stroke=""none"" d=""M47.601,24.1885c0.5104,8.1755,0.469,16.3761-0.124,24.546c4.5953-3.2095,7.3349-8.4598,7.339-14.065 v-10.48L47.601,24.1885z""/> <path fill=""#d0cfce"" stroke=""none"" d=""M41.657,67.0965c-0.5523,0-1-0.4477-1-1v-7.083h-6.063v7.083c0,0.5523-0.4477,1-1,1""/> </g> <g id=""hair""/> <g id=""skin""/> <g id=""skin-shadow""/> <g id=""line""> <path fill=""none"" stroke=""#000000"" stroke-linecap=""round"" stroke-miterlimit=""10"" stroke-width=""2"" d=""M33.013,23.0925V8.2105 c0-1.8264-1.4806-3.307-3.307-3.307h0l0,0c-1.8264,0-3.307,1.4806-3.307,3.307l0,0v14.883""/> <path fill=""none"" stroke=""#000000"" stroke-linecap=""round"" stroke-miterlimit=""10"" stroke-width=""2"" d=""M49.55,23.0925V8.2105 c0-1.8264-1.4806-3.307-3.307-3.307h0l0,0c-1.8264,0-3.307,1.4806-3.307,3.307l0,0v14.883""/> <path fill=""none"" stroke=""#000000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" d=""M19.435,23.1885v11.48 c0,10.0461,8.1439,18.19,18.19,18.19s18.19-8.144,18.19-18.19v-11.48H19.435z""/> <polyline fill=""none"" stroke=""#000000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" points=""31.011,51.8095 32.665,58.0005 42.586,58.0005 44.24,51.8335""/> <polyline fill=""none"" stroke=""#000000"" stroke-linecap=""round"" stroke-linejoin=""round"" stroke-width=""2"" points=""33.618,66.0835 33.618,58.0005 41.681,58.0005 41.681,66.0835""/> </g> </svg>
+";
+        
+        
+        
+    }
+    
+    
+    
+    
+}

@@ -1,0 +1,12 @@
+/* Global selectors for 3rd-party components */
+:global(body.theme-dark) .mud-card.koncierge-forward-card,
+:global(body.theme-dark) .koncierge-forward-card {
+    background-color: #2c2c2c !important;
+    transition: background-color 0.2s ease;
+}
+
+:global(body.theme-light) .mud-card.koncierge-forward-card,
+:global(body.theme-light) .koncierge-forward-card {
+    background-color: #fff9c4 !important;
+    transition: background-color 0.2s ease;
+}

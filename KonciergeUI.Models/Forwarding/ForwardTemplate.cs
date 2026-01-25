@@ -13,7 +13,7 @@ namespace KonciergeUI.Models.Forwarding
         /// <summary>
         /// Unique identifier for this template.
         /// </summary>
-        public required string Id { get; init; }
+        public required Guid Id { get; init; } = Guid.CreateVersion7();
 
         /// <summary>
         /// Display name (e.g., "Backend Dev Environment").

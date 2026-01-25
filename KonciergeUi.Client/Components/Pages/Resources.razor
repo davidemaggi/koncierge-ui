@@ -3,12 +3,18 @@
 
 @using KonciergeUI.Models.Kube
 @using KonciergeUi.Client.Components.Layout.FormFields
+@using KonciergeUi.Client.Components.Layout.Modals
+@using KonciergeUi.Client.Components.Layout.Summaries
 @using KonciergeUi.Client.Components.Layout.Tables
+@using KonciergeUi.Client.Shared
 @using KonciergeUi.Client.State
+@using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 @inject UiState _ui
+@inject IPortForwardManager _fwdManager;
+@inject IDialogService DialogService;
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="ma-4">
+<MudStack Class="ma-4">
     <MudGrid Spacing="2">
         <MudItem xs="12">
             <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
@@ -20,18 +26,42 @@
             </MudStack>
         </MudItem>
     </MudGrid>
+    @if (_forwardList.Count>0)
+    {
+        <MudCard>
+            <MudCardContent>
+                <MudStack>
+                    <MudText Typo="Typo.h5" Class="mt-4 mb-2">Current Forwards @($"({_forwardList.Count})")</MudText>
+                    
+                    <MudGrid>
+                        @foreach (var fwd in _forwardList)
+                        {
+                            <MudItem xs="12">
+                                <ForwardSummary _definition="fwd" _showRemove="true" OnForwardRemoveAsync="RemoveForwardFromList"/>
+                            </MudItem>
+                        }
 
+                    </MudGrid>
+                </MudStack>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton OnClick="StartForward"  StartIcon="@Icons.Material.Filled.PlayArrow" Color="Color.Success">Start Forward</MudButton>
+                <MudButton  StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">Create Template</MudButton>
+
+            </MudCardActions>
+        </MudCard>
+    }
     @if (_ui.SelectedCluster != null)
     {
         <MudTabs Elevation="2" Rounded="true" Class="mt-4" ApplyEffectsToContainer="true">
-            <MudTabPanel Text="Pods" Icon="@Icons.Material.Filled.Widgets">
+            <MudTabPanel Text="Pods" Icon="@KonciergeIcons.Color.Pod">
                 <PodsList Cluster="@_ui.SelectedCluster"
                           OnCreateForwardClicked="HandleCreateForward"
                           OnViewLogsClicked="HandleViewLogs"
                           OnShowDetailsClicked="HandleShowDetails" />
             </MudTabPanel>
             
-            <MudTabPanel Text="Services" Icon="@Icons.Material.Filled.Cloud">
+            <MudTabPanel Text="Services" Icon="@KonciergeIcons.Color.Service">
                 <ServicesList Cluster="@_ui.SelectedCluster"
                               OnCreateForwardClicked="HandleCreateForward" />
             </MudTabPanel>
@@ -47,11 +77,11 @@
             </MudText>
         </MudPaper>
     }
-</MudContainer>
+</MudStack>
 
 @code {
 
-    private List<CreateForwardRequest> _forwardList { get; set; } = new();
+    private List<PortForwardDefinition> _forwardList { get; set; } = new();
 
     private async Task OnClusterSelection(ClusterConnectionInfo? sel)
     {
@@ -79,10 +109,54 @@
         // TODO: Open details dialog
     }
 
-    private void HandleCreateForward(CreateForwardRequest req)
+    private void HandleCreateForward(PortForwardDefinition req)
     {
         _forwardList.Add(req);
     }
+
+    private void RemoveForwardFromList(Guid toRemove)
+    {
+        _forwardList = _forwardList.Where(fwd => fwd.Id != toRemove).ToList();
+    }
+
+   
+    private async Task StartForward()
+    {
+        var tmptemplate = new ForwardTemplate
+        {
+            Id = Guid.CreateVersion7(),
+            Name = "Temporary Template",
+            Description = "Descrizione",
+            Forwards = _forwardList,
+            CreatedAt = DateTime.UtcNow,
+            ModifiedAt = DateTime.UtcNow,
+            Icon = null,
+            Tags = null
+        };
+        
+        
+        
+        var parameters = new DialogParameters<StartForwardDialog>
+        {
+            { x => x._template, tmptemplate },
+
+           
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
+
+        var dialog= await DialogService.ShowAsync<StartForwardDialog>("Start Forward", parameters, options);
+        
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+           
+        }
+
+    }
+
 }
 
 

@@ -1,4 +1,5 @@
-﻿@using KonciergeUi.Client.State
+﻿@using KonciergeUi.Client.Shared
+@using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
 @inherits LayoutComponentBase
 
@@ -8,7 +9,7 @@
 
 <MudAppBar Elevation="1">
         <!-- Left: logo + name -->
-        <MudIconButton Icon="@Icons.Material.Filled.Star"
+        <MudIconButton Icon="@KonciergeIcons.Filled.Logo"
                        Color="Color.Secondary"
                        Edge="Edge.Start"
                        Class="mr-2" />
@@ -28,7 +29,7 @@
         <MudSpacer />
 
         <!-- Right: language selector + theme switch -->
-        <MudIconButton Icon="@Icons.Material.Filled.Language"
+        <MudIconButton Icon="@Icons.Material.Filled.Translate"
                        Color="Color.Inherit"
                        OnClick="ToggleLanguageMenu"
                        
@@ -40,8 +41,8 @@
                  OnClose="() => _langMenuOpen = false"
                  ActivatorContent="@(builder => builder.AddContent(0, string.Empty))"
                  AnchorEl="@_langButtonRef">
-            <MudMenuItem OnClick="@(() => ChangeLanguage("en"))">🇬🇧 English</MudMenuItem>
-            <MudMenuItem OnClick="@(() => ChangeLanguage("it"))">🇮🇹 Italiano</MudMenuItem>
+            <MudMenuItem Icon="@KonciergeIcons.Flags.Uk"  OnClick="@(() => ChangeLanguage("en"))">English</MudMenuItem>
+            <MudMenuItem Icon="@KonciergeIcons.Flags.Italy"  OnClick="@(() => ChangeLanguage("it"))">Italiano</MudMenuItem>
         </MudMenu>
 
         <MudIconButton Icon="@(_isDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"

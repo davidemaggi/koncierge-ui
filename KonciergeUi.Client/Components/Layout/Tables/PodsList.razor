@@ -1,4 +1,5 @@
 ﻿@using KonciergeUi.Client.Components.Layout.Modals
+@using KonciergeUi.Client.Shared
 @using KonciergeUI.Models.Kube
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
@@ -18,7 +19,7 @@
         
         <ToolBarContent>
             <MudText Typo="Typo.h6">
-                <MudIcon Icon="@Icons.Material.Filled.Widgets" Class="mr-2" />
+                <MudIcon Icon="@KonciergeIcons.Outlined.Pod" Class="mr-2" />
                 Pods (@_pods.Count)
             </MudText>
             <MudSpacer />
@@ -88,7 +89,7 @@
         <RowTemplate>
             <MudTd DataLabel="Name">
                 <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
-                    <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" Color="Color.Primary" />
+                    <MudIcon Icon="@KonciergeIcons.Outlined.Pod" Size="Size.Small" Color="Color.Primary" />
                     <MudText Typo="Typo.body2" Style="font-family: monospace;">@context.Name</MudText>
                 </MudStack>
             </MudTd>
@@ -197,13 +198,13 @@
     private string _selectedNamespace = "";
     private string _selectedStatus = "";
 
-    private List<CreateForwardRequest> _draftTemplate { get; set; } = new();
+    private List<PortForwardDefinition> _draftTemplate { get; set; } = new();
 
     [Parameter]
     public ClusterConnectionInfo? Cluster { get; set; }
 
     [Parameter]
-    public EventCallback<CreateForwardRequest> OnCreateForwardClicked { get; set; }
+    public EventCallback<PortForwardDefinition> OnCreateForwardClicked { get; set; }
 
     [Parameter]
     public EventCallback<PodInfo> OnViewLogsClicked { get; set; }
@@ -397,7 +398,7 @@
         if (!result.Canceled)
         {
             //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
-            var xxx = result.Data as CreateForwardRequest;
+            var xxx = result.Data as PortForwardDefinition;
             await OnCreateForwardClicked.InvokeAsync(xxx);
         }
 

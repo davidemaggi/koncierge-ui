@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using k8s;
 
 namespace KonciergeUI.Core.Mocks
 {
@@ -65,6 +66,11 @@ namespace KonciergeUI.Core.Mocks
 
         private static string GetClusterKey(ClusterConnectionInfo cluster)
             => string.IsNullOrWhiteSpace(cluster.Id) ? "mock-cluster" : cluster.Id;
+
+        public IKubernetes GetClient(ClusterConnectionInfo cluster)
+        {
+            throw new NotImplementedException();
+        }
 
         public Task<List<PodInfo>> ListPodsAsync(ClusterConnectionInfo cluster, string? namespaceFilter = null)
         {

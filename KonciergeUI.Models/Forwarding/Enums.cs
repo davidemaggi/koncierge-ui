@@ -45,6 +45,7 @@ namespace KonciergeUI.Models.Forwarding
             Running,
             Reconnecting,
             Stopped,
+            Stopping,
             Failed
         }
     }
