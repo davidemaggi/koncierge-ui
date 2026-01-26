@@ -1,0 +1,65 @@
+@using KonciergeUI.Data
+@using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Models.Kube
+@inject IPreferencesStorage _storage
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Save" Class="mr-3 mb-n1"/>
+            Save Template
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+            <MudStack Row>
+                <MudTextField T="string" @bind-Value="@_template.Name" Label="Name"  />
+                <MudTextField T="string" @bind-Value="@_template.Description" Label="Description"  />
+                           </MudStack>
+        </MudForm>
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Success" OnClick="OnSaveAsync">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public required ForwardTemplate _template { get; set; } 
+
+    
+    MudForm form;
+
+    bool success;
+    string[] errors = { };
+
+    string _name;
+    string _description;
+
+    private void Cancel() => MudDialog.Cancel();
+
+
+
+
+
+
+
+
+    protected async Task OnSaveAsync()
+    {
+   
+        await _storage.AddForwardTemplateAsync(_template);
+        
+        MudDialog.Close();
+    }
+
+   
+
+
+    
+
+}

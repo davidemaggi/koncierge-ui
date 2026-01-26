@@ -4,8 +4,10 @@
 @inherits LayoutComponentBase
 
 @inject UiState Ui;
-@inject ILocalizationService L
+@inject ILocalizationService L;
+@inject NavigationManager _nav;
 
+@implements IDisposable
 
 <MudAppBar Elevation="1">
         <!-- Left: logo + name -->
@@ -21,9 +23,9 @@
         <MudSpacer />
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             
-            <MudButton StartIcon="@Icons.Material.Outlined.List" Href="/resources">@L.Navigation["NavResources"]</MudButton>
-            <MudButton StartIcon="@Icons.Material.Outlined.Print" Href="/templates">@L.Navigation["NavTemplates"]</MudButton>
-            <MudButton StartIcon="@Icons.Material.Outlined.NetworkPing" Href="/forwards">@L.Navigation["NavForwards"]</MudButton>
+            <MudButton Color="Color.Info" Variant="@GetVariant("")" StartIcon="@KonciergeIcons.Outlined.Resources" Href="/">@L.Navigation["NavResources"]</MudButton>
+            <MudButton Color="Color.Info" Variant="@GetVariant("templates")" StartIcon="@KonciergeIcons.Outlined.Templates" Href="/templates">@L.Navigation["NavTemplates"]</MudButton>
+            <MudButton Color="Color.Info" Variant="@GetVariant("activeforwards")" StartIcon="@KonciergeIcons.Outlined.ActiveForwards" Href="/activeforwards">@L.Navigation["NavForwards"]</MudButton>
            
         </MudStack>
         <MudSpacer />
@@ -62,8 +64,23 @@
 
     protected override void OnInitialized()
     {
+        _nav.LocationChanged += OnLocationChanged;
     }
 
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);  // Forces re-render on nav
+    }
+
+    public void Dispose()
+    {
+        _nav.LocationChanged -= OnLocationChanged;
+    }
+
+    private string CurrentPath => _nav.ToBaseRelativePath(_nav.Uri); 
+
+    private Variant GetVariant(string href) 
+        => CurrentPath == href ? Variant.Filled : Variant.Text;
     private async Task ToggleTheme()
     {
         _isDark = !_isDark;

@@ -13,42 +13,42 @@ namespace KonciergeUI.Models.Forwarding
         /// <summary>
         /// Unique identifier for this template.
         /// </summary>
-        public required Guid Id { get; init; } = Guid.CreateVersion7();
+        public Guid Id { get; init; } = Guid.CreateVersion7();
 
         /// <summary>
         /// Display name (e.g., "Backend Dev Environment").
         /// </summary>
-        public required string Name { get; init; }
+        public string Name { get; set; } = "Temporary Template";
 
         /// <summary>
         /// Optional description/notes.
         /// </summary>
-        public string? Description { get; init; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// List of port forward definitions in this template.
         /// </summary>
-        public required List<PortForwardDefinition> Forwards { get; init; } = new();
+        public List<PortForwardDefinition> Forwards { get; set; } = new();
 
         /// <summary>
         /// When this template was created.
         /// </summary>
-        public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         /// <summary>
         /// When this template was last modified.
         /// </summary>
-        public DateTimeOffset ModifiedAt { get; init; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset ModifiedAt { get; set; } = DateTimeOffset.UtcNow;
 
         /// <summary>
         /// Optional icon/emoji identifier (e.g., "🚀", "backend", etc.).
         /// </summary>
-        public string? Icon { get; init; }
+        public string? Icon { get; set; }
 
         /// <summary>
         /// Tags for organizing templates (e.g., "dev", "staging", "backend").
         /// </summary>
-        public List<string>? Tags { get; init; }
+        public List<string>? Tags { get; set; }
     }
 
     

@@ -1,0 +1,74 @@
+@using KonciergeUi.Client.Components.Layout.Modals
+@using KonciergeUI.Data
+@using KonciergeUI.Models.Forwarding
+@inject IPreferencesStorage _storage
+@inject IDialogService DialogService
+
+
+<MudExpansionPanels>
+    <MudExpansionPanel>
+        <TitleContent>
+            <MudStack Row>
+                
+                    <MudIcon Icon="@KonciergeIcons.Outlined.Templates" Color="Color.Primary" />
+                    <MudStack>
+                        <MudText Typo="Typo.body1">@_template.Name</MudText>
+                        <MudText Typo="Typo.body2">@_template.Description</MudText>
+                        <MudStack Row>
+                            <MudText Typo="Typo.body2">@_template.Forwards.Count Forward(s)</MudText>
+                            <MudText Typo="Typo.body2"> - </MudText>
+                            <MudText Typo="Typo.body2">@_template.ModifiedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudText>
+                            
+                        </MudStack>
+                    </MudStack>
+                    
+                <MudSpacer/>
+                
+                    <MudButton OnClick="StartTemplate" Color="Color.Success" StartIcon="@Icons.Material.Outlined.PlayArrow">Start Template</MudButton>
+                    <MudIconButton OnClick="DeleteTemplate" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete" />
+            </MudStack>
+        </TitleContent>
+        <ChildContent>
+
+            @foreach(var fwd in _template.Forwards) {
+                <ForwardSummary _definition="fwd" _showRemove="false"/>
+            }
+
+        </ChildContent>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+@code {
+    
+    
+    [Parameter]
+    public ForwardTemplate _template { get; set; }
+
+    private async Task DeleteTemplate(MouseEventArgs arg)
+    {
+        await _storage.RemoveForwardTemplateAsync(_template.Id);
+        StateHasChanged();
+    }
+    
+    private async Task StartTemplate(MouseEventArgs arg)
+    {
+        var parameters = new DialogParameters<StartForwardDialog>
+        {
+            { x => x._template, _template },
+
+           
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
+
+        var dialog= await DialogService.ShowAsync<StartForwardDialog>("Start Forward", parameters, options);
+        
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+           
+        }
+    }
+
+}

@@ -10,6 +10,7 @@
 @using KonciergeUi.Client.State
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
+@using OneOf.Types
 @inject UiState _ui
 @inject IPortForwardingService _fwd;
 @inject IDialogService DialogService;
@@ -26,15 +27,15 @@
             </MudStack>
         </MudItem>
     </MudGrid>
-    @if (_forwardList.Count>0)
+    @if (_currentTemplate.Forwards.Count>0)
     {
         <MudCard>
             <MudCardContent>
                 <MudStack>
-                    <MudText Typo="Typo.h5" Class="mt-4 mb-2">Current Forwards @($"({_forwardList.Count})")</MudText>
+                    <MudText Typo="Typo.h5" Class="mt-4 mb-2">@_currentTemplate.Name @($"({_currentTemplate.Forwards.Count})")</MudText>
                     
                     <MudGrid>
-                        @foreach (var fwd in _forwardList)
+                        @foreach (var fwd in _currentTemplate.Forwards)
                         {
                             <MudItem xs="12">
                                 <ForwardSummary _definition="fwd" _showRemove="true" OnForwardRemoveAsync="RemoveForwardFromList"/>
@@ -46,7 +47,7 @@
             </MudCardContent>
             <MudCardActions>
                 <MudButton OnClick="StartForward"  StartIcon="@Icons.Material.Filled.PlayArrow" Color="Color.Success">Start Forward</MudButton>
-                <MudButton  StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">Create Template</MudButton>
+                <MudButton OnClick="OnSaveClick" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">Create Template</MudButton>
 
             </MudCardActions>
         </MudCard>
@@ -81,7 +82,7 @@
 
 @code {
 
-    private List<PortForwardDefinition> _forwardList { get; set; } = new();
+    private ForwardTemplate _currentTemplate { get; set; } = new();
 
     private async Task OnClusterSelection(ClusterConnectionInfo? sel)
     {
@@ -111,34 +112,24 @@
 
     private void HandleCreateForward(PortForwardDefinition req)
     {
-        _forwardList.Add(req);
+        _currentTemplate.Forwards.Add(req);
     }
 
     private void RemoveForwardFromList(Guid toRemove)
     {
-        _forwardList = _forwardList.Where(fwd => fwd.Id != toRemove).ToList();
+        _currentTemplate.Forwards.RemoveAll(fwd => fwd.Id != toRemove);
     }
 
    
     private async Task StartForward()
     {
-        var tmptemplate = new ForwardTemplate
-        {
-            Id = Guid.CreateVersion7(),
-            Name = "Temporary Template",
-            Description = "Descrizione",
-            Forwards = _forwardList,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
-            Icon = null,
-            Tags = null
-        };
+        
         
         
         
         var parameters = new DialogParameters<StartForwardDialog>
         {
-            { x => x._template, tmptemplate },
+            { x => x._template, _currentTemplate },
 
            
         };
@@ -153,6 +144,33 @@
         {
             //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
            
+        }
+
+    }
+    
+    
+    private async Task OnSaveClick()
+    {
+        
+        
+        
+        
+        var parameters = new DialogParameters<SaveTemplateDialog>
+        {
+            { x => x._template, _currentTemplate },
+
+           
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
+
+        var dialog= await DialogService.ShowAsync<SaveTemplateDialog>("SaveTemplate", parameters, options);
+        
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            _currentTemplate = new();
         }
 
     }

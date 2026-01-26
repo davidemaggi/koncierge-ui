@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KonciergeUI.Models.Forwarding;
 
 namespace KonciergeUI.Data
 {
@@ -24,5 +25,12 @@ namespace KonciergeUI.Data
         Task<List<string>> GetCustomKubeconfigPathsAsync();
         Task AddCustomKubeconfigPathAsync(string path);
         Task RemoveCustomKubeconfigPathAsync(string path);
+        
+        // Forward Templates
+        Task AddForwardTemplateAsync(ForwardTemplate template);
+        Task UpdateForwardTemplateAsync(ForwardTemplate updatedTemplate);
+        Task RemoveForwardTemplateAsync(Guid id);
+
+        Task<List<ForwardTemplate>> GetForwardTemplatesAsync();
     }
 }

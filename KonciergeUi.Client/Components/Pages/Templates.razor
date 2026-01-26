@@ -1,0 +1,62 @@
+@page "/templates"
+
+@using KonciergeUI.Models.Kube
+@using KonciergeUi.Client.Components.Layout.FormFields
+@using KonciergeUi.Client.Components.Layout.Summaries
+@using KonciergeUi.Client.State
+@using KonciergeUI.Core.Abstractions
+@using KonciergeUI.Data
+@using KonciergeUI.Models.Forwarding
+@inject UiState _ui
+@inject IPreferencesStorage _storage;
+
+<MudStack Class="ma-4">
+    @if (_templates.Any())
+    {
+        <MudCard>
+            <MudCardContent>
+                <MudStack>
+                    <MudGrid>
+                        @foreach (var template in _templates)
+                        {
+                            <MudItem xs="12">
+                                <TemplateSummary _template="template"/>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudStack>
+            </MudCardContent>
+        @*
+            <MudCardActions>
+                <MudButton OnClick="StartForward"  StartIcon="@Icons.Material.Filled.PlayArrow" Color="Color.Success">Start Forward</MudButton>
+                <MudButton  StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">Create Template</MudButton>
+
+            </MudCardActions>
+            *@
+        </MudCard>
+    }
+    else
+    {
+        <MudPaper Class="pa-8 text-center mt-12" Elevation="3">
+            <MudIcon Icon="@Icons.Material.Filled.CloudOff" Color="Color.Warning" Size="Size.Large" />
+            <MudText Typo="Typo.h5" Class="mt-4 mb-2">No Template present</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                Add a new template from Resource tab
+            </MudText>
+        </MudPaper>
+    }
+</MudStack>
+
+@code {
+
+    private List<ForwardTemplate> _templates { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _templates = await _storage.GetForwardTemplatesAsync();
+    }
+
+
+}
+
+

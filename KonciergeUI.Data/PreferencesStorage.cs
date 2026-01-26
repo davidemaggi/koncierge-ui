@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using KonciergeUI.Models.Forwarding;
 
 namespace KonciergeUI.Data
 {
@@ -14,6 +15,7 @@ namespace KonciergeUI.Data
         private const string CurrentLanguageKey = "CurrentLanguage";
         private const string LastSelectedClusterKey = "LastSelectedCluster";
         private const string CustomKubeconfigPathsKey = "CustomKubeconfigPaths";
+        private const string ForwardTemplatesKey = "ForwardTemplates";
 
         public async Task<string?> GetCurrentThemeAsync()
         {
@@ -88,5 +90,68 @@ namespace KonciergeUI.Data
 
             await Task.CompletedTask;
         }
+        
+        
+        public async Task<List<ForwardTemplate>> GetForwardTemplatesAsync()
+        {
+            var json = Preferences.Get(ForwardTemplatesKey, "[]");
+            try
+            {
+                return JsonSerializer.Deserialize<List<ForwardTemplate>>(json) ?? new List<ForwardTemplate>();
+            }
+            catch
+            {
+                return new List<ForwardTemplate>();
+            }
+        }
+
+        public async Task AddForwardTemplateAsync(ForwardTemplate template)
+        {
+            var templates = await GetForwardTemplatesAsync();
+            // Avoid dupes by Name (or add ID prop if you want)
+            if (!templates.Any(t => t.Id == template.Id))
+            {
+                template.CreatedAt=DateTimeOffset.UtcNow;
+                template.ModifiedAt=template.CreatedAt;
+                
+                templates.Add(template);
+                var json = JsonSerializer.Serialize(templates);
+                Preferences.Set(ForwardTemplatesKey, json);
+            }
+
+            {
+                await UpdateForwardTemplateAsync(template);
+            }
+            await Task.CompletedTask;
+        }
+
+        public async Task UpdateForwardTemplateAsync(ForwardTemplate updatedTemplate)
+        {
+            var templates = await GetForwardTemplatesAsync();
+            var existingIndex = templates.FindIndex(t => t.Id == updatedTemplate.Id);
+            if (existingIndex != -1)
+            {
+                updatedTemplate.ModifiedAt=DateTimeOffset.UtcNow;
+                
+                
+                templates[existingIndex] = updatedTemplate;
+                var json = JsonSerializer.Serialize(templates);
+                Preferences.Set(ForwardTemplatesKey, json);
+            }
+            await Task.CompletedTask;
+        }
+
+        public async Task RemoveForwardTemplateAsync(Guid id)
+        {
+            var templates = await GetForwardTemplatesAsync();
+            if (templates.RemoveAll(t => t.Id == id) > 0)
+            {
+                var json = JsonSerializer.Serialize(templates);
+                Preferences.Set(ForwardTemplatesKey, json);
+            }
+            await Task.CompletedTask;
+        }
+
+      
     }
 }
