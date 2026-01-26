@@ -17,11 +17,15 @@ namespace KonciergeUI.Kube
         private readonly ConcurrentDictionary<Guid, RunningTemplate> _runningTemplates = new();
         private readonly ConcurrentDictionary<Guid, ActiveForward> _activeForwards = new();
         private readonly ConcurrentDictionary<Guid, IKubernetes> _k8sClients = new(); // Track clients per template
+        private readonly IKubeRepository _kube;
 
-        public PortForwardingService(ILogger<PortForwardingService> logger)
+        public PortForwardingService(ILogger<PortForwardingService> logger, IKubeRepository kube)
         {
             _logger = logger;
+            _kube = kube;
         }
+
+        #region Template Management
 
         public async Task<RunningTemplate> StartTemplateAsync(
             ForwardTemplate template,
@@ -68,9 +72,12 @@ namespace KonciergeUI.Kube
                         Status = ForwardStatus.Starting
                     };
 
+                    // Resolve secrets using the extracted method
+                    await ResolveSecretsForForwardAsync(instance, cluster, cancellationToken);
+
                     forwardInstances.Add(instance);
 
-                    var activeForward = await StartForwardAsync(instance, k8sClient, cancellationToken);
+                    var activeForward = await StartForwardInternalAsync(instance, k8sClient, cancellationToken);
                     activeForwards.Add(activeForward);
                     _activeForwards[instance.Id] = activeForward;
 
@@ -104,7 +111,14 @@ namespace KonciergeUI.Kube
                 // Cleanup any started forwards
                 foreach (var activeForward in activeForwards)
                 {
-                    await activeForward.StopAsync();
+                    try
+                    {
+                        await activeForward.StopAsync();
+                    }
+                    catch (Exception cleanupEx)
+                    {
+                        _logger.LogWarning(cleanupEx, "Error during cleanup of forward");
+                    }
                 }
 
                 // Dispose the K8s client
@@ -129,9 +143,18 @@ namespace KonciergeUI.Kube
                 {
                     if (_activeForwards.TryRemove(forward.Id, out var activeForward))
                     {
-                        await activeForward.StopAsync();
-                        forward.Status = ForwardStatus.Stopped;
-                        forward.StoppedAt = DateTimeOffset.UtcNow;
+                        try
+                        {
+                            await activeForward.StopAsync();
+                            forward.Status = ForwardStatus.Stopped;
+                            forward.StoppedAt = DateTimeOffset.UtcNow;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Error stopping forward {ForwardId}", forward.Id);
+                            forward.Status = ForwardStatus.Failed;
+                            forward.ErrorMessage = ex.Message;
+                        }
                     }
                 });
 
@@ -158,6 +181,160 @@ namespace KonciergeUI.Kube
             return _runningTemplates.Values.ToList().AsReadOnly();
         }
 
+        #endregion
+
+        #region Individual Forward Management
+
+        public async Task<bool> StartForwardAsync(Guid forwardInstanceId, CancellationToken cancellationToken = default)
+        {
+            var (template, forward) = FindForwardInstance(forwardInstanceId);
+
+            if (template == null || forward == null)
+            {
+                _logger.LogWarning("Forward instance {ForwardId} not found", forwardInstanceId);
+                return false;
+            }
+
+            if (forward.Status == ForwardStatus.Running)
+            {
+                _logger.LogInformation("Forward {ForwardName} ({ForwardId}) is already running",
+                    forward.Name, forwardInstanceId);
+                return true;
+            }
+
+            try
+            {
+                _logger.LogInformation("Starting forward {ForwardName} ({ForwardId})",
+                    forward.Name, forwardInstanceId);
+
+                forward.Status = ForwardStatus.Starting;
+                forward.StartedAt = DateTimeOffset.UtcNow;
+                forward.StoppedAt = null;
+                forward.ErrorMessage = null;
+                forward.ReconnectAttempts = 0;
+
+                // Get the K8s client for this template
+                if (!_k8sClients.TryGetValue(template.TemplateId, out var k8sClient))
+                {
+                    throw new InvalidOperationException(
+                        $"K8s client not found for template {template.Definition.Name}");
+                }
+
+                // Resolve secrets if not already done or if they need refresh
+                if (!forward.ResolvedSecrets.Any() && forward.Definition.LinkedSecrets.Any())
+                {
+                    await ResolveSecretsForForwardAsync(forward, template.ClusterInfo, cancellationToken);
+                }
+
+                // Start the actual port forward
+                var activeForward = await StartForwardInternalAsync(forward, k8sClient, cancellationToken);
+                _activeForwards[forwardInstanceId] = activeForward;
+
+                forward.Status = ForwardStatus.Running;
+                forward.BoundLocalPort = activeForward.BoundPort;
+
+                _logger.LogInformation("Forward {ForwardName} ({ForwardId}) started successfully on port {Port}",
+                    forward.Name, forwardInstanceId, forward.BoundLocalPort);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to start forward {ForwardName} ({ForwardId})",
+                    forward.Name, forwardInstanceId);
+
+                forward.Status = ForwardStatus.Failed;
+                forward.ErrorMessage = ex.Message;
+                forward.StoppedAt = DateTimeOffset.UtcNow;
+
+                return false;
+            }
+        }
+
+        public async Task<bool> StopForwardAsync(Guid forwardInstanceId, CancellationToken cancellationToken = default)
+        {
+            var (template, forward) = FindForwardInstance(forwardInstanceId);
+
+            if (template == null || forward == null)
+            {
+                _logger.LogWarning("Forward instance {ForwardId} not found", forwardInstanceId);
+                return false;
+            }
+
+            if (forward.Status == ForwardStatus.Stopped)
+            {
+                _logger.LogInformation("Forward {ForwardName} ({ForwardId}) is already stopped",
+                    forward.Name, forwardInstanceId);
+                return true;
+            }
+
+            try
+            {
+                _logger.LogInformation("Stopping forward {ForwardName} ({ForwardId})",
+                    forward.Name, forwardInstanceId);
+
+                forward.Status = ForwardStatus.Stopping;
+
+                // Stop the active forward
+                if (_activeForwards.TryRemove(forwardInstanceId, out var activeForward))
+                {
+                    await activeForward.StopAsync();
+                }
+
+                forward.Status = ForwardStatus.Stopped;
+                forward.StoppedAt = DateTimeOffset.UtcNow;
+                forward.BoundLocalPort = null;
+
+                _logger.LogInformation("Forward {ForwardName} ({ForwardId}) stopped successfully",
+                    forward.Name, forwardInstanceId);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to stop forward {ForwardName} ({ForwardId})",
+                    forward.Name, forwardInstanceId);
+
+                forward.Status = ForwardStatus.Failed;
+                forward.ErrorMessage = ex.Message;
+
+                return false;
+            }
+        }
+
+        public async Task<bool> RestartForwardAsync(Guid forwardInstanceId, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Restarting forward {ForwardId}", forwardInstanceId);
+
+            var stopResult = await StopForwardAsync(forwardInstanceId, cancellationToken);
+            if (!stopResult)
+            {
+                _logger.LogWarning("Failed to stop forward {ForwardId}, cannot restart", forwardInstanceId);
+                return false;
+            }
+
+            // Brief delay to ensure cleanup
+            await Task.Delay(500, cancellationToken);
+
+            return await StartForwardAsync(forwardInstanceId, cancellationToken);
+        }
+
+        public Task<ForwardStatus?> GetForwardStatusAsync(Guid forwardInstanceId)
+        {
+            var (_, forward) = FindForwardInstance(forwardInstanceId);
+            return Task.FromResult(forward?.Status);
+        }
+
+        public ForwardInstance? GetForwardInstance(Guid forwardInstanceId)
+        {
+            var (_, forward) = FindForwardInstance(forwardInstanceId);
+            return forward;
+        }
+
+        #endregion
+
+        #region Logs
+
         public Task<IReadOnlyCollection<string>> GetForwardLogsAsync(Guid forwardInstanceId, int maxLines = 100)
         {
             if (_activeForwards.TryGetValue(forwardInstanceId, out var activeForward))
@@ -168,7 +345,123 @@ namespace KonciergeUI.Kube
             return Task.FromResult<IReadOnlyCollection<string>>(Array.Empty<string>());
         }
 
-        private async Task<ActiveForward> StartForwardAsync(
+        #endregion
+
+        #region Private Helper Methods
+
+        /// <summary>
+        /// Find which template contains a specific forward instance.
+        /// </summary>
+        private (RunningTemplate? template, ForwardInstance? forward) FindForwardInstance(Guid forwardInstanceId)
+        {
+            foreach (var template in _runningTemplates.Values)
+            {
+                var forward = template.Forwards.FirstOrDefault(f => f.Id == forwardInstanceId);
+                if (forward != null)
+                {
+                    return (template, forward);
+                }
+            }
+            return (null, null);
+        }
+
+        /// <summary>
+        /// Resolve secrets and configmaps for a forward instance.
+        /// </summary>
+        private async Task ResolveSecretsForForwardAsync(
+            ForwardInstance forward,
+            ClusterConnectionInfo cluster,
+            CancellationToken cancellationToken)
+        {
+            var definition = forward.Definition;
+
+            if (!definition.LinkedSecrets.Any())
+            {
+                return;
+            }
+
+            var nsSecrets = new List<SecretInfo>();
+            var nsConfigs = new List<ConfigMapInfo>();
+
+            try
+            {
+                if (definition.LinkedSecrets.Any(x => x.SourceType == Models.Security.SecretSourceType.Secret))
+                {
+                    nsSecrets = await _kube.ListSecretsAsync(cluster, definition.Namespace);
+                }
+
+                if (definition.LinkedSecrets.Any(x => x.SourceType == Models.Security.SecretSourceType.ConfigMap))
+                {
+                    nsConfigs = await _kube.ListConfigMapsAsync(cluster, definition.Namespace);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to list secrets/configmaps for forward {ForwardName}", forward.Name);
+                throw;
+            }
+
+            forward.ResolvedSecrets.Clear(); // Clear any existing
+
+            foreach (var secret in definition.LinkedSecrets)
+            {
+                var tmp = new ResolvedSecret()
+                {
+                    Reference = secret,
+                    Value = null
+                };
+
+                try
+                {
+                    if (secret.SourceType == Models.Security.SecretSourceType.ConfigMap)
+                    {
+                        var cm = nsConfigs.FirstOrDefault(cm => cm.Name == secret.ResourceName);
+                        if (cm != null && cm.Data.TryGetValue(secret.Key, out var configValue))
+                        {
+                            tmp.Value = configValue;
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "ConfigMap {ResourceName} or key {Key} not found in namespace {Namespace}",
+                                secret.ResourceName, secret.Key, secret.Namespace);
+                        }
+                    }
+                    else if (secret.SourceType == Models.Security.SecretSourceType.Secret)
+                    {
+                        var s = nsSecrets.FirstOrDefault(s => s.Name == secret.ResourceName);
+                        if (s != null && s.Data.TryGetValue(secret.Key, out var secretValue))
+                        {
+                            if (secretValue != null)
+                            {
+                                tmp.Value = secretValue;
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "Secret {ResourceName} or key {Key} not found in namespace {Namespace}",
+                                secret.ResourceName, secret.Key, secret.Namespace);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error retrieving Secret/ConfigMap {Namespace}.{ResourceName}",
+                        secret.Namespace, secret.ResourceName);
+                }
+
+                forward.ResolvedSecrets.Add(tmp);
+            }
+
+            _logger.LogInformation("Resolved {Count} secrets for forward {ForwardName}",
+                forward.ResolvedSecrets.Count, forward.Name);
+        }
+
+        /// <summary>
+        /// Internal method to start the actual port forward.
+        /// </summary>
+        private async Task<ActiveForward> StartForwardInternalAsync(
             ForwardInstance instance,
             IKubernetes k8sClient,
             CancellationToken cancellationToken)
@@ -198,6 +491,9 @@ namespace KonciergeUI.Kube
             return activeForward;
         }
 
+        /// <summary>
+        /// Resolve a pod name from a service selector.
+        /// </summary>
         private async Task<string> ResolvePodFromServiceAsync(
             string serviceName,
             string @namespace,
@@ -240,22 +536,51 @@ namespace KonciergeUI.Kube
             }
         }
 
+        #endregion
+
+        #region Dispose
+
         public void Dispose()
         {
-            foreach (var activeForward in _activeForwards.Values)
-            {
-                activeForward.StopAsync().GetAwaiter().GetResult();
-            }
+            _logger.LogInformation("Disposing PortForwardingService, stopping all forwards");
 
+            // Stop all active forwards
+            var stopTasks = _activeForwards.Values
+                .Select(async activeForward =>
+                {
+                    try
+                    {
+                        await activeForward.StopAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error stopping forward during dispose");
+                    }
+                });
+
+            Task.WhenAll(stopTasks).GetAwaiter().GetResult();
+
+            // Dispose all K8s clients
             foreach (var k8sClient in _k8sClients.Values)
             {
-                k8sClient.Dispose();
+                try
+                {
+                    k8sClient.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error disposing K8s client");
+                }
             }
 
             _activeForwards.Clear();
             _runningTemplates.Clear();
             _k8sClients.Clear();
+
+            _logger.LogInformation("PortForwardingService disposed");
         }
+
+        #endregion
     }
 
 }

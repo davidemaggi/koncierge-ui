@@ -357,5 +357,15 @@ namespace KonciergeUI.Core.Mocks
         {
             return $"203.{_random.Next(0, 255)}.{_random.Next(0, 255)}.{_random.Next(1, 255)}";
         }
+
+        public Task<SecretInfo> GetSecretAsync(ClusterConnectionInfo cluster, string @namespace, string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ConfigMapInfo> GetConfigMapAsync(ClusterConnectionInfo cluster, string @namespace, string name)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

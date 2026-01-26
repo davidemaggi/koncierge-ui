@@ -343,4 +343,25 @@ public class KubeRepository : IKubeRepository
         }
     }
 
+    public async Task<SecretInfo?> GetSecretAsync(ClusterConnectionInfo cluster, string @namespace, string name)
+    {
+        var list = await ListSecretsAsync(cluster, @namespace);
+
+        var ret = list.FirstOrDefault(s => s.Name == name);
+
+
+        return ret;
+    }
+
+    public async Task<ConfigMapInfo?> GetConfigMapAsync(ClusterConnectionInfo cluster, string @namespace, string name)
+    {
+        var list = await ListConfigMapsAsync(cluster, @namespace);
+
+        var ret = list.FirstOrDefault(s => s.Name == name);
+
+
+        return ret;
+    }
+
+
 }

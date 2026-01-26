@@ -18,7 +18,7 @@ namespace KonciergeUI.Models.Forwarding
         /// <summary>
         /// The actual decoded value (base64-decoded for secrets).
         /// </summary>
-        public required string Value { get; init; }
+        public required string? Value { get; set; }
 
         /// <summary>
         /// Whether this value is sensitive (should be masked in UI by default).

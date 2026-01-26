@@ -38,5 +38,8 @@ namespace KonciergeUI.Core.Abstractions
         
         Task<List<SecretInfo>> ListSecretsAsync(ClusterConnectionInfo cluster, string @namespace);
         Task<List<ConfigMapInfo>> ListConfigMapsAsync(ClusterConnectionInfo cluster, string @namespace);
+
+        Task<SecretInfo> GetSecretAsync(ClusterConnectionInfo cluster, string @namespace, string name);
+        Task<ConfigMapInfo> GetConfigMapAsync(ClusterConnectionInfo cluster, string @namespace, string name);
     }
 }
