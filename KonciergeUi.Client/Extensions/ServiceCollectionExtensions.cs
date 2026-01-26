@@ -42,7 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IKubeRepository, KubeRepository>();
         
         // Port forward manager (singleton!)
-        services.AddSingleton<IPortForwardManager, PortForwardManager>();
+        services.AddSingleton<IPortForwardingService, PortForwardingService>();
         // Core services - MOCK IMPLEMENTATION
         //services.AddSingleton<IClusterDiscoveryService, MockClusterDiscoveryService>();
         //services.AddSingleton<IKubeRepository, MockKubeRepository>();
