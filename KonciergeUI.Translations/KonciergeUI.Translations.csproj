@@ -17,6 +17,31 @@
         <AutoGen>True</AutoGen>
         <DependentUpon>Navigation.resx</DependentUpon>
       </Compile>
+      <Compile Update="Resources\Enumerations.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Enumerations.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Resources\Forwards.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Forwards.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Resources\Templates.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Templates.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Resources\Resources.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Resources.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Resources\Global.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Global.resx</DependentUpon>
+      </Compile>
     </ItemGroup>
 
 	<!-- Navigation resources -->
@@ -27,6 +52,29 @@
 		</EmbeddedResource>
 		<EmbeddedResource Update="Resources\Navigation.it.resx">
 			<DependentUpon>Navigation.resx</DependentUpon>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Enumerations.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Enumerations.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Forwards.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Forwards.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Templates.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Templates.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Resources.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Enumerations.it.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Global.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Global.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 	</ItemGroup>
 

@@ -1,4 +1,5 @@
-﻿@using KonciergeUi.Client.Shared
+﻿@using System.Globalization
+@using KonciergeUi.Client.Shared
 @using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
 @inherits LayoutComponentBase
@@ -65,11 +66,19 @@
     protected override void OnInitialized()
     {
         _nav.LocationChanged += OnLocationChanged;
+        Ui.LanguageChanged += OnLanguageChanged;
     }
+
+   
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        InvokeAsync(StateHasChanged);  // Forces re-render on nav
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private void OnLanguageChanged(object? sender, string culture)  // ← THIS METHOD
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
@@ -94,9 +103,13 @@
 
     private void ChangeLanguage(string culture)
     {
-        L.SetCulture(culture);
-        Ui.CurrentLanguage = culture;
+        Ui.CurrentLanguage = culture;           // persists to preferences
+
+        // Force a full Blazor pipeline rebuild under the new culture
+        _nav.NavigateTo(_nav.Uri, forceLoad: true);
+
         _langMenuOpen = false;
-        StateHasChanged();
     }
+
+
 }

@@ -7,6 +7,7 @@ namespace KonciergeUi.Client;
 
 public static class MauiProgram
 {
+    public static IServiceProvider ServiceProvider { get; private set; }
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
@@ -42,11 +43,7 @@ public static class MauiProgram
         
         var app= builder.Build();
 
-        Task.Run(async () =>
-        {
-            var uiState = app.Services.GetRequiredService<UiState>();
-            await uiState.LoadPreferencesAsync();
-        });
+        ServiceProvider = app.Services;
 
         return app;
     }

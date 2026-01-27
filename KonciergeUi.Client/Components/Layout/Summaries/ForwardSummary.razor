@@ -6,11 +6,11 @@
             <MudStack AlignItems="AlignItems.Center" Row>
                 @if (_definition.ResourceType == Enums.ResourceType.Pod)
                 {
-                    <MudIcon Icon="@KonciergeIcons.Color.Pod" Size="Size.Small" Color="Color.Primary"/>
+                    <MudIcon Icon="@KonciergeIcons.Outlined.Pod" Size="Size.Small" Color="Color.Primary"/>
                 }
                 else
                 {
-                    <MudIcon Icon="@KonciergeIcons.Color.Service" Size="Size.Small" Color="Color.Secondary"/>
+                    <MudIcon Icon="@KonciergeIcons.Outlined.Service" Size="Size.Small" Color="Color.Secondary"/>
 
                 }
                 <MudText Style="font-family: monospace;" Typo="Typo.body1">@_definition.ResourceName</MudText>

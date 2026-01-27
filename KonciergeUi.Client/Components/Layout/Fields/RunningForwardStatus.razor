@@ -20,13 +20,32 @@
     private string _statusIcon = Icons.Material.Outlined.CheckCircleOutline;
 
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-
-
+       
         refreshStatus();
+        
+        
+        
+        base.OnInitialized();
+    }
 
 
+    private string _lastHash = "";
+
+    protected override bool ShouldRender()
+    {
+        var currentHash = _status.ToString();  // Your state checksum
+    
+        if (_lastHash != currentHash)
+        {
+            refreshStatus();
+
+            return true;
+        }
+    
+        Console.WriteLine("No state change - skipping render");
+        return false;
     }
 
     private void refreshStatus()
@@ -49,14 +68,28 @@
                 _statusIcon = Icons.Material.Outlined.StopCircle;
 
                 break;
+            case ForwardStatus.Reconnecting:
+                _statusColor = Color.Warning;
+                _statusIcon = Icons.Material.Outlined.Refresh;
+
+                break;
+            case ForwardStatus.Stopping:
+                _statusColor = Color.Warning;
+                _statusIcon = Icons.Material.Outlined.StopCircle;
+                break;
+            case ForwardStatus.Failed:
+                _statusColor = Color.Error;
+                _statusIcon = Icons.Material.Outlined.Error;
+                break;
             default:
                 _statusColor = Color.Transparent;
                 _statusIcon = Icons.Material.Outlined.StopCircle;
 
                 break;
         }
+        _lastHash = _status.ToString();
 
-        StateHasChanged();
+       // StateHasChanged();
 
     }
 

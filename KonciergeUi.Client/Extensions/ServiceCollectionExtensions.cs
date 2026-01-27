@@ -32,9 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ForwardSessionState>();
 
         // Translations
-        services.AddSingleton<ILocalizationService, LocalizationService>();
-
-        // Data layer
+        services.AddSingleton<ILocalizationService, LocalizationService>();  // Singleton!        // Data layer
         services.AddSingleton<IPreferencesStorage, PreferencesStorage>();
 
         // Core services - REAL IMPLEMENTATIONS

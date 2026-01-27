@@ -13,17 +13,20 @@ public class LocalizationService:ILocalizationService
     
     public LocalizationService(
         IStringLocalizer<Navigation> navigation,
-        IStringLocalizer<Navigation> enums
-        //IStringLocalizer<Templates> templates,
-        //IStringLocalizer<Forwards> forwards,
+        IStringLocalizer<Enumerations> enums,
+        IStringLocalizer<Templates> templates,
+        IStringLocalizer<Forwards> forwards,
+        IStringLocalizer<Resources.Resources> resources,
+        IStringLocalizer<Global> global
         //IStringLocalizer<Settings> settings
         )
     {
         Navigation = navigation;
         Enumerations = enums;
-        //Templates = templates;
-        //Forwards = forwards;
-        //Settings = settings;
+        Templates = templates;
+        Forwards = forwards;
+        Resources = resources;
+        Global = global;
 
         _currentCulture = CultureInfo.CurrentCulture;
     }
@@ -32,7 +35,8 @@ public class LocalizationService:ILocalizationService
     public IStringLocalizer Enumerations { get; }
     public IStringLocalizer Templates { get; }
     public IStringLocalizer Forwards { get; }
-    public IStringLocalizer Settings { get; }
+    public IStringLocalizer Resources { get; } 
+    public IStringLocalizer Global { get; } 
 
     public CultureInfo CurrentCulture => _currentCulture;
 
@@ -40,11 +44,15 @@ public class LocalizationService:ILocalizationService
     {
         var culture = new CultureInfo(cultureName);
         _currentCulture = culture;
+
         CultureInfo.CurrentCulture = culture;
         CultureInfo.CurrentUICulture = culture;
-        
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+
         CultureChanged?.Invoke(this, culture);
     }
+
 
     public event EventHandler<CultureInfo>? CultureChanged;
 }

@@ -1,0 +1,57 @@
+@using KonciergeUI.Translations.Services
+@inject ILocalizationService L
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>@ContentText</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@CancelButtonText</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Confirm">@ConfirmButtonText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string ContentText { get; set; } = "";
+    [Parameter] public string ConfirmButtonText { get; set; } = "";
+    [Parameter] public string CancelButtonText { get; set; } = "";
+    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(Title))
+        {
+            Title = L.Global["confirm_dialog_title"];
+        }
+        
+        if (string.IsNullOrEmpty(ContentText))
+        {
+            ContentText = L.Global["confirm_dialog_message"];
+        }
+        
+        if (string.IsNullOrEmpty(ConfirmButtonText))
+        {
+            ConfirmButtonText = L.Global["confirm_dialog_ok_label"];
+        }
+        
+        if (string.IsNullOrEmpty(CancelButtonText))
+        {
+            CancelButtonText = L.Global["confirm_dialog_cancel_label"];
+        }
+    }
+    
+    
+    
+    private async Task Confirm()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    
+    private void Cancel() => MudDialog.Cancel();
+}

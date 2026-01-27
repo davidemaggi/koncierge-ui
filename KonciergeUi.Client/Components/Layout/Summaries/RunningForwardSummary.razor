@@ -1,26 +1,30 @@
 @using KonciergeUI.Models.Kube
 @using KonciergeUI.Models.Security
 @using KonciergeUi.Client.Components.Layout.Fields
+@using KonciergeUi.Client.Components.Layout.Views
 @using KonciergeUi.Client.Shared
+@using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 
 @inject ISnackbar _snakbar
+@inject IPortForwardingService _fwdService;
 
 <MudCard Outlined="false">
-    <MudStack Row>
+    <MudStack>
+    <MudStack AlignItems="AlignItems.Center" Row>
         <MudStack>
             <MudStack AlignItems="AlignItems.Center" Row>
                 @if (_instance.Definition.ResourceType == Enums.ResourceType.Pod)
                 {
-                    <MudIcon Icon="@KonciergeIcons.Color.Pod" Size="Size.Small" Color="Color.Primary"/>
+                    <MudIcon Icon="@KonciergeIcons.Outlined.Pod" Size="Size.Small" Color="Color.Primary"/>
                 }
                 else
                 {
-                    <MudIcon Icon="@KonciergeIcons.Color.Service" Size="Size.Small" Color="Color.Secondary" />
+                    <MudIcon Icon="@KonciergeIcons.Outlined.Service" Size="Size.Small" Color="Color.Secondary"/>
 
                 }
                 <MudText Style="font-family: monospace;" Typo="Typo.body1">@_instance.Definition.ResourceName</MudText>
-                <RunningForwardStatus _status="_instance.Status" />
+                <RunningForwardStatus _status="_instance.Status"/>
             </MudStack>
             <MudStack AlignItems="AlignItems.Center" Row>
 
@@ -33,25 +37,42 @@
                 <MudText Typo="Typo.body2">@($"Protocol: ")</MudText>
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_instance.Definition.Protocol.ToString().ToUpper()}")</MudText>
             </MudStack>
-            @if (_instance.ResolvedSecrets.Any()) { 
-            <MudStack AlignItems="AlignItems.Center" Row>
+            @if (_instance.ResolvedSecrets.Any())
+            {
+                <MudStack AlignItems="AlignItems.Center" Row>
 
-                <MudText Typo="Typo.body2">@($"Links: ")</MudText>
+                    <MudText Typo="Typo.body2">@($"Links: ")</MudText>
 
-                @foreach (var secret in _instance.ResolvedSecrets)
-                {
-                    <MudTooltip Text="@secret.Value">
-                            <MudChip T="string" OnClose="(()=>OnCopyClicked(secret))" Icon="@GetLinkedIcon(secret)" CloseIcon="@Icons.Material.Filled.ContentCopy" IconColor="Color.Info">@($"{@secret.Reference.Key}")</MudChip>
-                    </MudTooltip>
-                
-                
-                
-                }
+                    @foreach (var secret in _instance.ResolvedSecrets)
+                    {
+                        <MudTooltip Text="@secret.Value">
+                            <MudChip T="string" OnClose="(() => OnCopyClicked(secret))" Icon="@GetLinkedIcon(secret)" CloseIcon="@Icons.Material.Filled.ContentCopy" IconColor="Color.Info">@($"{@secret.Reference.Key}")</MudChip>
+                        </MudTooltip>
 
-            </MudStack>
+
+
+                    }
+
+                </MudStack>
             }
         </MudStack>
-       
+        <MudSpacer/>
+        <MudIconButton OnClick="ShowLog" Icon="@Icons.Material.Filled.Terminal"/>
+        @if (_instance.Status != Enums.ForwardStatus.Stopped)
+        {
+            <MudButton StartIcon="@Icons.Material.Outlined.StopCircle" Color="Color.Error" OnClick="StopForward">Stop Forward</MudButton>
+        }
+        else
+        {
+            <MudButton StartIcon="@Icons.Material.Outlined.Start" Color="Color.Success" OnClick="StartForward">Start Forward</MudButton>
+
+        }
+    </MudStack>
+    @if (_showLog)
+    {
+        
+        <Output _logs="@_fwdService.GetForwardLogsAsync(_instance.Id).Result.ToList()"></Output>
+    }
     </MudStack>
 </MudCard>
 @code {
@@ -60,6 +81,7 @@
     [Parameter]
     public ClusterConnectionInfo _cluster { get; set; }
 
+    private bool _showLog = false;
 
 
     [Parameter] 
@@ -97,6 +119,29 @@
 
 
 
-    } 
+    }
+
+    private async Task StopForward(MouseEventArgs arg)
+    {
+        var res= await _fwdService.StopForwardAsync(_instance.Id);
+        StateHasChanged();
+
+    }
+    
+    private async Task StartForward(MouseEventArgs arg)
+    {
+        var res= await _fwdService.StartForwardAsync(_instance.Id);
+    StateHasChanged();
+
+    }
+
+    private Task ShowLog(MouseEventArgs arg)
+    {
+        _showLog = !_showLog;
+        
+        StateHasChanged();
+        
+        return Task.CompletedTask;
+    }
 
 }

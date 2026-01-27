@@ -30,7 +30,8 @@ namespace KonciergeUI.Data
 
         public async Task<string?> GetCurrentLanguageAsync()
         {
-            return Preferences.Get(CurrentLanguageKey, "en");
+            var locale= Preferences.Get(CurrentLanguageKey, "en");
+            return locale;
         }
 
         public async Task SetCurrentLanguageAsync(string language)

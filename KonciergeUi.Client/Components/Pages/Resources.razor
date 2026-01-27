@@ -55,14 +55,14 @@
     @if (_ui.SelectedCluster != null)
     {
         <MudTabs Elevation="2" Rounded="true" Class="mt-4" ApplyEffectsToContainer="true">
-            <MudTabPanel Text="Pods" Icon="@KonciergeIcons.Color.Pod">
+            <MudTabPanel Text="Pods" Icon="@KonciergeIcons.Outlined.Pod">
                 <PodsList Cluster="@_ui.SelectedCluster"
                           OnCreateForwardClicked="HandleCreateForward"
                           OnViewLogsClicked="HandleViewLogs"
                           OnShowDetailsClicked="HandleShowDetails" />
             </MudTabPanel>
             
-            <MudTabPanel Text="Services" Icon="@KonciergeIcons.Color.Service">
+            <MudTabPanel Text="Services" Icon="@KonciergeIcons.Outlined.Service">
                 <ServicesList Cluster="@_ui.SelectedCluster"
                               OnCreateForwardClicked="HandleCreateForward" />
             </MudTabPanel>
