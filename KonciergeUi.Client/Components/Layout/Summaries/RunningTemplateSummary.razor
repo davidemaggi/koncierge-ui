@@ -1,0 +1,73 @@
+﻿@using KonciergeUi.Client.Components.Layout.Modals
+@using KonciergeUI.Data
+@using KonciergeUI.Models.Forwarding
+@inject IPreferencesStorage _storage
+@inject IDialogService DialogService
+
+
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudIcon Icon="@KonciergeIcons.Outlined.Templates" Color="Color.Primary" />
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+        <MudStack AlignItems="AlignItems.Center" Row>
+                <MudText Typo="Typo.body1">@_template.Definition.Name</MudText>
+                <MudAlert Dense="true" Severity="Severity.Info">@_template.Forwards.Count Forward(s)</MudAlert>
+
+
+                
+            </MudStack>
+            </CardHeaderContent>
+        <CardHeaderActions>
+                    <MudStack Row>
+                <MudText Typo="Typo.body2">Context: @($"{@_template.ClusterInfo.ContextName}@{@_template.ClusterInfo.Name}")</MudText>
+
+            <MudButton OnClick="Stoptemplate" Color="Color.Error" StartIcon="@Icons.Material.Outlined.StopCircle">Stop Template</MudButton>
+            </MudStack>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        @foreach (var fwd in _template.Forwards)
+        {
+            <RunningForwardSummary _cluster="_template.ClusterInfo" _instance="fwd" />
+        }
+    </MudCardContent>
+    <MudCardActions>
+      
+    </MudCardActions>
+</MudCard>
+
+
+@code {
+
+
+    [Parameter]
+    public RunningTemplate _template { get; set; }
+
+    
+
+    private async Task Stoptemplate(MouseEventArgs arg)
+    {
+        var parameters = new DialogParameters<StartForwardDialog>
+        {
+            { x => x._template, _template.Definition },
+
+
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
+
+        var dialog = await DialogService.ShowAsync<StartForwardDialog>("Start Forward", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+
+        }
+    }
+
+}

@@ -1,0 +1,102 @@
+@using KonciergeUI.Models.Kube
+@using KonciergeUI.Models.Security
+@using KonciergeUi.Client.Components.Layout.Fields
+@using KonciergeUi.Client.Shared
+@using KonciergeUI.Models.Forwarding
+
+@inject ISnackbar _snakbar
+
+<MudCard Outlined="false">
+    <MudStack Row>
+        <MudStack>
+            <MudStack AlignItems="AlignItems.Center" Row>
+                @if (_instance.Definition.ResourceType == Enums.ResourceType.Pod)
+                {
+                    <MudIcon Icon="@KonciergeIcons.Color.Pod" Size="Size.Small" Color="Color.Primary"/>
+                }
+                else
+                {
+                    <MudIcon Icon="@KonciergeIcons.Color.Service" Size="Size.Small" Color="Color.Secondary" />
+
+                }
+                <MudText Style="font-family: monospace;" Typo="Typo.body1">@_instance.Definition.ResourceName</MudText>
+                <RunningForwardStatus _status="_instance.Status" />
+            </MudStack>
+            <MudStack AlignItems="AlignItems.Center" Row>
+
+                <MudText Typo="Typo.body2">@($"Source: ")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_cluster.ContextName}:{_instance.Definition.TargetPort}")</MudText>
+
+                <MudText Typo="Typo.body2">@($"Destination: ")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{_instance.Definition.LocalPort}")</MudText>
+
+                <MudText Typo="Typo.body2">@($"Protocol: ")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_instance.Definition.Protocol.ToString().ToUpper()}")</MudText>
+            </MudStack>
+            @if (_instance.ResolvedSecrets.Any()) { 
+            <MudStack AlignItems="AlignItems.Center" Row>
+
+                <MudText Typo="Typo.body2">@($"Links: ")</MudText>
+
+                @foreach (var secret in _instance.ResolvedSecrets)
+                {
+                    <MudTooltip Text="@secret.Value">
+                            <MudChip T="string" OnClose="(()=>OnCopyClicked(secret))" Icon="@GetLinkedIcon(secret)" CloseIcon="@Icons.Material.Filled.ContentCopy" IconColor="Color.Info">@($"{@secret.Reference.Key}")</MudChip>
+                    </MudTooltip>
+                
+                
+                
+                }
+
+            </MudStack>
+            }
+        </MudStack>
+       
+    </MudStack>
+</MudCard>
+@code {
+    [Parameter]
+    public ForwardInstance _instance { get; set; }
+    [Parameter]
+    public ClusterConnectionInfo _cluster { get; set; }
+
+
+
+    [Parameter] 
+    public EventCallback<Guid> OnForwardRemoveAsync { get; set; }
+
+    private async Task RemoveClicked()
+    {
+        await OnForwardRemoveAsync.InvokeAsync(_instance.Definition.Id);
+    }
+
+    private async Task OnCopyClicked(ResolvedSecret s)
+    {
+        if (Clipboard.Default.HasText)
+        {
+            await Clipboard.Default.SetTextAsync(s.Value);
+
+            _snakbar.Add("Added to Clipboard", Severity.Info);
+        }
+    }
+
+
+    private string? GetLinkedIcon(ResolvedSecret rs)
+
+    {
+
+        switch (rs.Reference.SourceType)
+        {
+            case SecretSourceType.Secret:
+                return Icons.Material.Filled.Key;
+            case SecretSourceType.ConfigMap:
+                return Icons.Material.Filled.Settings;
+            default:
+                return Icons.Material.Filled.Settings;
+        }
+
+
+
+    } 
+
+}

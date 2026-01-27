@@ -12,15 +12,15 @@ public class LocalizationService:ILocalizationService
     
     
     public LocalizationService(
-        IStringLocalizer<Navigation> navigation//,
-        //IStringLocalizer<Dashboard> dashboard,
+        IStringLocalizer<Navigation> navigation,
+        IStringLocalizer<Navigation> enums
         //IStringLocalizer<Templates> templates,
         //IStringLocalizer<Forwards> forwards,
         //IStringLocalizer<Settings> settings
         )
     {
         Navigation = navigation;
-        //Dashboard = dashboard;
+        Enumerations = enums;
         //Templates = templates;
         //Forwards = forwards;
         //Settings = settings;
@@ -29,7 +29,7 @@ public class LocalizationService:ILocalizationService
     }
 
     public IStringLocalizer Navigation { get; }
-    public IStringLocalizer Dashboard { get; }
+    public IStringLocalizer Enumerations { get; }
     public IStringLocalizer Templates { get; }
     public IStringLocalizer Forwards { get; }
     public IStringLocalizer Settings { get; }

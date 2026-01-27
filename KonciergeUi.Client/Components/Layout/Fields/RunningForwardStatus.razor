@@ -1,0 +1,63 @@
+﻿@using KonciergeUI.Translations
+@using KonciergeUI.Translations.Services
+@using static KonciergeUI.Models.Forwarding.Enums
+@inject ILocalizationService L;
+
+<MudStack AlignItems="AlignItems.Center" Row>
+
+    <MudIcon Color="@_statusColor" Icon="@_statusIcon" />
+    <MudText Color="@_statusColor" Typo="Typo.body1">@_statusText</MudText>
+
+
+</MudStack>
+
+@code{
+    [Parameter]
+    public ForwardStatus _status { get; set; } = ForwardStatus.Stopped;
+
+    private Color _statusColor = Color.Primary;
+    private string _statusText = "";
+    private string _statusIcon = Icons.Material.Outlined.CheckCircleOutline;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        refreshStatus();
+
+
+    }
+
+    private void refreshStatus()
+    {
+        _statusText = L.Enumerations[$"{TranslationPrefixes.EnumerationsPrefix.FORWARD_STATUS}.{_status.ToString().ToLower()}"];
+        switch (_status)
+        {
+
+            case ForwardStatus.Starting:
+                _statusColor = Color.Info;
+                _statusIcon = Icons.Material.Outlined.HourglassBottom;
+                break;
+            case ForwardStatus.Running:
+                _statusIcon = Icons.Material.Outlined.CheckCircleOutline;
+
+                _statusColor = Color.Success;
+                break;
+            case ForwardStatus.Stopped:
+                _statusColor = Color.Error;
+                _statusIcon = Icons.Material.Outlined.StopCircle;
+
+                break;
+            default:
+                _statusColor = Color.Transparent;
+                _statusIcon = Icons.Material.Outlined.StopCircle;
+
+                break;
+        }
+
+        StateHasChanged();
+
+    }
+
+}
