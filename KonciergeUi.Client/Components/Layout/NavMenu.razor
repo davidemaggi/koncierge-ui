@@ -33,7 +33,7 @@
 
         <!-- Right: language selector + theme switch -->
         <MudIconButton Icon="@Icons.Material.Filled.Translate"
-                       Color="Color.Inherit"
+                       Color="Color.Primary"
                        OnClick="ToggleLanguageMenu"
                        
                        @ref="_langButtonRef" />
@@ -49,7 +49,7 @@
         </MudMenu>
 
         <MudIconButton Icon="@(_isDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
-                       Color="Color.Inherit"
+                       Color="Color.Primary"
                        OnClick="@ToggleTheme" />
     </MudAppBar>
 

@@ -18,12 +18,13 @@
 <MudStack Class="ma-4">
     <MudGrid Spacing="2">
         <MudItem xs="12">
-            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+            <MudStack Row="true" Spacing="2"  AlignItems="AlignItems.Center" StretchItems="StretchItems.StartAndEnd">
                 <ClusterSelect SelectedCluster="_ui.SelectedCluster" _onClusterSelection="OnClusterSelection"  />
            
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
                     Add KubeConfig
                 </MudButton>
+                <MudSpacer/>
             </MudStack>
         </MudItem>
     </MudGrid>
