@@ -51,7 +51,9 @@
 
     protected async Task OnSaveAsync()
     {
-   
+        
+        
+        
         await _storage.AddForwardTemplateAsync(_template);
         
         MudDialog.Close();

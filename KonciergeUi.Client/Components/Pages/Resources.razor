@@ -11,10 +11,13 @@
 @using KonciergeUi.Client.State
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Translations.Services
 @using OneOf.Types
 @inject UiState _ui
 @inject IPortForwardingService _fwd;
 @inject IDialogService DialogService;
+@inject ISnackbar Snackbar;
+@inject ILocalizationService L
 
 <MudStack Class="ma-4">
     <MudGrid Spacing="2">
@@ -113,12 +116,26 @@
 
     private void HandleCreateForward(PortForwardDefinition req)
     {
+
+        if (req.LocalPort!=0 && _currentTemplate.Forwards.Any(x=>x.LocalPort==req.LocalPort))
+        {
+            Snackbar.Add(L.Errors["forward_same_port"], Severity.Error);
+
+        }
+        else
+        {
+        Snackbar.Add("Forward Created", Severity.Success);
         _currentTemplate.Forwards.Add(req);
+            
+        }
+
+
     }
 
     private void RemoveForwardFromList(Guid toRemove)
     {
         _currentTemplate.Forwards.RemoveAll(fwd => fwd.Id != toRemove);
+        StateHasChanged();
     }
 
    

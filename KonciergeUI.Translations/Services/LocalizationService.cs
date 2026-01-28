@@ -17,7 +17,8 @@ public class LocalizationService:ILocalizationService
         IStringLocalizer<Templates> templates,
         IStringLocalizer<Forwards> forwards,
         IStringLocalizer<Resources.Resources> resources,
-        IStringLocalizer<Global> global
+        IStringLocalizer<Global> global,
+        IStringLocalizer<Errors> errors
         //IStringLocalizer<Settings> settings
         )
     {
@@ -27,6 +28,7 @@ public class LocalizationService:ILocalizationService
         Forwards = forwards;
         Resources = resources;
         Global = global;
+        Errors = errors;
 
         _currentCulture = CultureInfo.CurrentCulture;
     }
@@ -37,6 +39,7 @@ public class LocalizationService:ILocalizationService
     public IStringLocalizer Forwards { get; }
     public IStringLocalizer Resources { get; } 
     public IStringLocalizer Global { get; } 
+    public IStringLocalizer Errors { get; } 
 
     public CultureInfo CurrentCulture => _currentCulture;
 

@@ -42,6 +42,11 @@
         <AutoGen>True</AutoGen>
         <DependentUpon>Global.resx</DependentUpon>
       </Compile>
+      <Compile Update="Resources\Errors.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Errors.resx</DependentUpon>
+      </Compile>
     </ItemGroup>
 
 	<!-- Navigation resources -->
@@ -75,6 +80,10 @@
 		<EmbeddedResource Update="Resources\Global.resx">
 		  <Generator>PublicResXFileCodeGenerator</Generator>
 		  <LastGenOutput>Global.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\Errors.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Errors.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 	</ItemGroup>
 

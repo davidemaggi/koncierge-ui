@@ -1,9 +1,11 @@
 @using KonciergeUi.Client.Components.Theme
+@using KonciergeUi.Client.Extensions
 @using KonciergeUi.Client.Shared
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.State
 
 @inject UiState _ui;
+@inject IDialogService Dialog
 
 
 <MudCard Elevation="0" Outlined="false" Style="@(KonciergeColors.GetSummayCardBackground(_ui))">
@@ -45,7 +47,10 @@
 
     private async Task RemoveClicked()
     {
-        await OnForwardRemoveAsync.InvokeAsync(_definition.Id);
+
+        await Dialog.ShowConfirmationActionAsync( ()=> OnForwardRemoveAsync.InvokeAsync(_definition.Id));
+        
+       
     }
     private MudTheme Theme = new MudTheme();
 

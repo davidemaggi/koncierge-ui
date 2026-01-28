@@ -208,7 +208,11 @@
 
     private async Task CreateForward()
     {
-        Snackbar.Add("Create Forward", Severity.Success);
+        
+        
+        
+        
+        
         _newForwardRequest.LinkedSecrets = SelectedLinks.ToList();
         MudDialog.Close(DialogResult.Ok(_newForwardRequest));
     }
