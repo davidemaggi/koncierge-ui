@@ -6,6 +6,7 @@
 @using KonciergeUi.Client.Components.Layout.Modals
 @using KonciergeUi.Client.Components.Layout.Summaries
 @using KonciergeUi.Client.Components.Layout.Tables
+@using KonciergeUi.Client.Components.Layout.Views
 @using KonciergeUi.Client.Shared
 @using KonciergeUi.Client.State
 @using KonciergeUI.Core.Abstractions
@@ -71,13 +72,8 @@
     }
     else
     {
-        <MudPaper Class="pa-8 text-center mt-12" Elevation="3">
-            <MudIcon Icon="@Icons.Material.Filled.CloudOff" Color="Color.Warning" Size="Size.Large" />
-            <MudText Typo="Typo.h5" Class="mt-4 mb-2">No cluster selected</MudText>
-            <MudText Typo="Typo.body1" Color="Color.Secondary">
-                Select a cluster to view pods and services.
-            </MudText>
-        </MudPaper>
+        <NoEntry  _icon="@KonciergeIcons.Outlined.Resources" _title="No cluster selected"  _subtitle="Select a cluster to view pods and services." />
+
     }
 </MudStack>
 

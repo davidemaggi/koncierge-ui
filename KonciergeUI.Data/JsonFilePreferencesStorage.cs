@@ -32,7 +32,7 @@ namespace KonciergeUI.Data
                 Directory.CreateDirectory(appDataDir);
             }
 
-            _filePath = Path.Combine(appDataDir, "preferences.json");
+            _filePath = Path.Combine(appDataDir, "koncierge_preferences.json");
             _data = LoadFromFile();
         }
 

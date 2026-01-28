@@ -1,0 +1,20 @@
+<MudCard>
+    <MudStack AlignItems="AlignItems.Center">
+        <MudIcon Icon="@_icon" Style="font-size: 8rem;"></MudIcon>
+        <MudText Typo="Typo.h3">@_title</MudText>
+        <MudText Typo="Typo.h5">@_subtitle</MudText>
+    </MudStack>
+</MudCard>
+@code {
+    [Parameter] 
+    public required string _icon { get; set; }
+
+    [Parameter] 
+    public required string _title { get; set; }
+    
+    [Parameter] 
+    public string? _subtitle { get; set; }
+    
+}
+
+

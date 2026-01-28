@@ -1,0 +1,24 @@
+using KonciergeUi.Client.State;
+
+namespace KonciergeUi.Client.Components.Theme;
+
+public static class KonciergeColors
+{
+
+    public static string GetSummayCardBackground(UiState ui)
+    {
+        if (ui.CurrentTheme=="Dark")
+        {
+            
+            return $"background:#2E2E2E;";
+
+        }
+
+        return $"background:#F9FAFB;";
+    }
+    
+    
+  
+
+
+}

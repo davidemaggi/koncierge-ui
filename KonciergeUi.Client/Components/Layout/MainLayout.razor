@@ -1,4 +1,5 @@
-﻿@using KonciergeUi.Client.Components.Theme
+﻿@using KonciergeUi.Client.Components.Layout.Views
+@using KonciergeUi.Client.Components.Theme
 @using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
 @inherits LayoutComponentBase
@@ -22,7 +23,7 @@
 <ErrorBoundary>
     <ChildContent>
         <MudLayout>
-
+<MudStack StretchItems="StretchItems.Middle" Style="height: 100vh">
             <!-- TOP APP BAR -->
             <NavMenu _isDark="_isDarkMode" OnThemeChangedAsync="ToggleTheme" />
 
@@ -30,6 +31,8 @@
             <MudMainContent >
                 @Body
             </MudMainContent>
+            <Footer></Footer>
+</MudStack>
         </MudLayout>
     </ChildContent>
     

@@ -1,3 +1,4 @@
+@using KonciergeUi.Client.Components.Theme
 @using KonciergeUi.Client.Shared
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.State
@@ -5,7 +6,7 @@
 @inject UiState _ui;
 
 
-<MudCard Elevation="0" Outlined="false" Style="@(getBackgroudColor())">
+<MudCard Elevation="0" Outlined="false" Style="@(KonciergeColors.GetSummayCardBackground(_ui))">
     <MudStack Row>
         <MudStack>
             <MudStack AlignItems="AlignItems.Center" Row>
@@ -48,17 +49,6 @@
     }
     private MudTheme Theme = new MudTheme();
 
-    private string getBackgroudColor()
-
-    {
-        if (_ui.CurrentTheme=="Dark")
-        {
-            
-            return $"background:rgba(0,255,0,0.3);";
-
-        }
-
-        return $"background:rgba(0,255,0,0.3);";
-    }
+    
 
 }

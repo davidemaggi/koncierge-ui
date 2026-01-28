@@ -3,6 +3,7 @@
 @using KonciergeUI.Models.Kube
 @using KonciergeUi.Client.Components.Layout.FormFields
 @using KonciergeUi.Client.Components.Layout.Summaries
+@using KonciergeUi.Client.Components.Layout.Views
 @using KonciergeUi.Client.State
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Data
@@ -37,13 +38,8 @@
     }
     else
     {
-        <MudPaper Class="pa-8 text-center mt-12" Elevation="3">
-            <MudIcon Icon="@Icons.Material.Filled.CloudOff" Color="Color.Warning" Size="Size.Large" />
-            <MudText Typo="Typo.h5" Class="mt-4 mb-2">No Template present</MudText>
-            <MudText Typo="Typo.body1" Color="Color.Secondary">
-                Add a new template from Resource tab
-            </MudText>
-        </MudPaper>
+        <NoEntry  _icon="@KonciergeIcons.Outlined.Templates" _title="No templates yet"  _subtitle="Create port forwards in the Resources tab and save them as templates" />
+
     }
 </MudStack>
 
