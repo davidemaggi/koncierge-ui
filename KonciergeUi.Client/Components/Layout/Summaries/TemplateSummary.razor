@@ -1,14 +1,15 @@
 @using KonciergeUi.Client.Components.Layout.Modals
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
+@using KonciergeUi.Client.Extensions
 @inject IPreferencesStorage _storage
 @inject IDialogService DialogService
 
 
-<MudExpansionPanels>
+<MudExpansionPanels Elevation="0">
     <MudExpansionPanel>
         <TitleContent>
-            <MudStack Row>
+            <MudStack AlignItems="AlignItems.Center" Row>
                 
                     <MudIcon Icon="@KonciergeIcons.Outlined.Templates" Color="Color.Primary" />
                     <MudStack>
@@ -17,7 +18,7 @@
                         <MudStack Row>
                             <MudText Typo="Typo.body2">@_template.Forwards.Count Forward(s)</MudText>
                             <MudText Typo="Typo.body2"> - </MudText>
-                            <MudText Typo="Typo.body2">@_template.ModifiedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudText>
+                            <MudText Typo="Typo.body2">Modified @_template.ModifiedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudText>
                             
                         </MudStack>
                     </MudStack>
@@ -29,22 +30,28 @@
             </MudStack>
         </TitleContent>
         <ChildContent>
-
+             <MudStack Spacing="10">
             @foreach(var fwd in _template.Forwards) {
                 <ForwardSummary _definition="fwd" _showRemove="false"/>
             }
-
+             </MudStack>
         </ChildContent>
     </MudExpansionPanel>
 </MudExpansionPanels>
 @code {
-    
-    
+
+
     [Parameter]
     public ForwardTemplate _template { get; set; }
 
     private async Task DeleteTemplate(MouseEventArgs arg)
     {
+
+        var res= await DialogService.ShowConfirmationAsync();
+
+        if (!res)
+            return;
+
         await _storage.RemoveForwardTemplateAsync(_template.Id);
         StateHasChanged();
     }

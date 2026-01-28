@@ -1,4 +1,5 @@
-﻿@using KonciergeUi.Client.State
+﻿@using KonciergeUi.Client.Components.Theme
+@using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
 @inherits LayoutComponentBase
 
@@ -38,40 +39,10 @@
 @code {
     private MudThemeProvider? _mudThemeProvider;
     private bool _isDarkMode;
-    
+
     [Inject] IJSRuntime Js { get; set; } = default!;
-    
-    private MudTheme _theme = new()
-    {
-        Typography = new Typography()
-        {
-            Default = new DefaultTypography()
-            {
-                FontFamily = new[] { "Roboto", "Helvetica", "Arial", "sans-serif" },
-            }
-        },
-        
-        
-        
-        PaletteLight = new PaletteLight
-        {
-            AppbarBackground="#ffffff",
-            // standard stuff...
-            Primary = Colors.Blue.Default,
-            // custom color for light mode card
-            Background = "#F9FAFB",
-            // you can keep default others
-            //Surface = "#2c2c2c"
-        },
-        PaletteDark = new PaletteDark
-        {
-            Primary = Colors.Blue.Lighten2,
-            // custom color for dark mode card background
-            Background = "#121827",
-       // Surface = "#fff9c4"
-       AppbarBackground="#202937"
-        }
-    };
+
+    private KoniergeTheme _theme = new();
 
     protected override async Task OnInitializedAsync()
     {

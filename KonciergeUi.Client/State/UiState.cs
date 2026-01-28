@@ -13,6 +13,12 @@ public class UiState : INotifyPropertyChanged
     private string _currentTheme = "System";
     private string _currentLanguage = "en";
 
+    private string? _selectedNamespace = null;
+    private string? _selectedType = null;
+    private string? _selectedStatus = null;
+    private string? _searchString = null;
+    
+
     public UiState(IPreferencesStorage preferencesStorage)
     {
         _preferencesStorage = preferencesStorage;
@@ -100,4 +106,64 @@ public class UiState : INotifyPropertyChanged
     {
         return await _preferencesStorage.GetLastSelectedClusterIdAsync();
     }
+
+
+    public string? SelectedType
+    {
+        get => _selectedType;
+        set
+        {
+            if (_selectedType != value)
+            {
+                _selectedType = value;
+                OnPropertyChanged();
+
+                
+            }
+        }
+    }
+
+    public string? SelectedNamespace
+    {
+        get => _selectedNamespace;
+        set
+        {
+            if (_selectedNamespace != value)
+            {
+                _selectedNamespace = value;
+                OnPropertyChanged();
+
+
+            }
+        }
+    }
+    public string? SelectedStatus
+    {
+        get => _selectedStatus;
+        set
+        {
+            if (_selectedStatus != value)
+            {
+                _selectedStatus = value;
+                OnPropertyChanged();
+
+
+            }
+        }
+    }
+    public string? SearchString
+    {
+        get => _searchString;
+        set
+        {
+            if (_searchString != value)
+            {
+                _searchString = value;
+                OnPropertyChanged();
+
+
+            }
+        }
+    }
+
 }

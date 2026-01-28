@@ -3,8 +3,11 @@
 @using KonciergeUI.Models.Kube
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
+@using KonciergeUi.Client.State
 @inject IKubeRepository KubeRepo
 @inject IDialogService DialogService
+@inject UiState _ui
+
 
 <MudPaper Elevation="2" Class="pa-4">
     <MudTable Items="@_filteredServices" 
@@ -24,7 +27,7 @@
             
             <!-- Namespace filter -->
             <MudSelect T="string"
-                       Value="@_selectedNamespace"
+                       Value="@_ui.SelectedNamespace"
                        ValueChanged="@(value => OnNamespaceChanged(value))"
                        Label="Namespace" 
                        Variant="Variant.Outlined" 
@@ -40,7 +43,7 @@
 
             <!-- Type filter -->
             <MudSelect T="string" 
-                       Value="@_selectedType"
+                       Value="@_ui.SelectedType"
                        ValueChanged="@(value => OnTypeChanged(value))"
                        Label="Type" 
                        Variant="Variant.Outlined" 
@@ -55,7 +58,7 @@
             </MudSelect>
 
             <!-- Search -->
-            <MudTextField T="string" Value="@_searchString"
+            <MudTextField T="string" Value="@_ui.SearchString"
                           ValueChanged="@(value => OnSearchChanged(value))"
                           Placeholder="Search services..." 
                           Adornment="Adornment.Start" 
@@ -167,7 +170,7 @@
                 {
                     <MudText>Loading services...</MudText>
                 }
-                else if (!string.IsNullOrEmpty(_searchString) || !string.IsNullOrEmpty(_selectedNamespace) || !string.IsNullOrEmpty(_selectedType))
+                else if (!string.IsNullOrEmpty(_ui.SearchString) || !string.IsNullOrEmpty(_ui.SelectedNamespace) || !string.IsNullOrEmpty(_ui.SelectedType))
                 {
                     <MudText>No services match the current filters.</MudText>
                 }
@@ -189,9 +192,7 @@
     private List<string> _namespaces = new();
     private bool _isLoading = false;
 
-    private string _searchString = "";
-    private string _selectedNamespace = "";
-    private string _selectedType = "";
+
 
     [Parameter]
     public ClusterConnectionInfo? Cluster { get; set; }
@@ -231,19 +232,19 @@
 
     private void OnNamespaceChanged(string value)
     {
-        _selectedNamespace = value;
+        _ui.SelectedNamespace = value;
         ApplyFilters();
     }
 
     private void OnTypeChanged(string value)
     {
-        _selectedType = value;
+        _ui.SelectedType = value;
         ApplyFilters();
     }
 
     private void OnSearchChanged(string value)
     {
-        _searchString = value;
+        _ui.SearchString = value;
         ApplyFilters();
     }
 
@@ -283,17 +284,17 @@
         _filteredServices = _services.Where(service =>
         {
             // Namespace filter
-            if (!string.IsNullOrEmpty(_selectedNamespace) && service.Namespace != _selectedNamespace)
+            if (!string.IsNullOrEmpty(_ui.SelectedNamespace) && service.Namespace != _ui.SelectedNamespace)
                 return false;
 
             // Type filter
-            if (!string.IsNullOrEmpty(_selectedType) && service.Type.ToString() != _selectedType)
+            if (!string.IsNullOrEmpty(_ui.SelectedType) && service.Type.ToString() != _ui.SelectedType)
                 return false;
 
             // Search filter
-            if (!string.IsNullOrEmpty(_searchString))
+            if (!string.IsNullOrEmpty(_ui.SearchString))
             {
-                var search = _searchString.ToLowerInvariant();
+                var search = _ui.SearchString.ToLowerInvariant();
                 return service.Name.ToLowerInvariant().Contains(search) ||
                        service.Namespace.ToLowerInvariant().Contains(search);
             }

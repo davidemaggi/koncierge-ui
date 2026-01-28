@@ -3,9 +3,11 @@
 @using KonciergeUI.Models.Kube
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
+@using KonciergeUi.Client.State
 @using static KonciergeUI.Models.Forwarding.Enums
 @inject IKubeRepository KubeRepo
 @inject IDialogService DialogService
+@inject UiState _ui
 
 
 <MudPaper Elevation="2" Class="pa-4">
@@ -26,7 +28,7 @@
             
             <!-- Namespace filter -->
             <MudSelect T="string"
-                       Value="@_selectedNamespace"
+                       Value="@_ui.SelectedNamespace"
                        ValueChanged="@(value => OnNamespaceChanged(value))"
                        Label="Namespace" 
                        Variant="Variant.Outlined" 
@@ -42,7 +44,7 @@
 
             <!-- Status filter -->
             <MudSelect T="string" 
-                       Value="@_selectedStatus"
+                       Value="@_ui.SelectedStatus"
                        ValueChanged="@(value => OnStatusChanged(value))"
                        Label="Status" 
                        Variant="Variant.Outlined" 
@@ -57,7 +59,7 @@
             </MudSelect>
 
             <!-- Search -->
-            <MudTextField T="string" Value="@_searchString"
+            <MudTextField T="string" Value="@_ui.SearchString"
                           ValueChanged="@(value => OnSearchChanged(value))"
                           Placeholder="Search pods..." 
                           Adornment="Adornment.Start" 
@@ -172,7 +174,7 @@
                 {
                     <MudText>Loading pods...</MudText>
                 }
-                else if (!string.IsNullOrEmpty(_searchString) || !string.IsNullOrEmpty(_selectedNamespace) || !string.IsNullOrEmpty(_selectedStatus))
+                else if (!string.IsNullOrEmpty(_ui.SearchString) || !string.IsNullOrEmpty(_ui.SelectedNamespace) || !string.IsNullOrEmpty(_ui.SelectedStatus))
                 {
                     <MudText>No pods match the current filters.</MudText>
                 }
@@ -194,9 +196,7 @@
     private List<string> _namespaces = new();
     private bool _isLoading = false;
 
-    private string _searchString = "";
-    private string _selectedNamespace = "";
-    private string _selectedStatus = "";
+
 
     private List<PortForwardDefinition> _draftTemplate { get; set; } = new();
 
@@ -252,19 +252,19 @@
 
     private void OnNamespaceChanged(string value)
     {
-        _selectedNamespace = value;
+        _ui.SelectedNamespace = value;
         ApplyFilters();
     }
 
     private void OnStatusChanged(string value)
     {
-        _selectedStatus = value;
+        _ui.SelectedStatus = value;
         ApplyFilters();
     }
 
     private void OnSearchChanged(string value)
     {
-        _searchString = value;
+        _ui.SearchString = value;
         ApplyFilters();
     }
 
@@ -305,17 +305,17 @@
         _filteredPods = _pods.Where(pod =>
         {
             // Namespace filter
-            if (!string.IsNullOrEmpty(_selectedNamespace) && pod.Namespace != _selectedNamespace)
+            if (!string.IsNullOrEmpty(_ui.SelectedNamespace) && pod.Namespace != _ui.SelectedNamespace)
                 return false;
 
             // Status filter
-            if (!string.IsNullOrEmpty(_selectedStatus) && pod.Status.ToString() != _selectedStatus)
+            if (!string.IsNullOrEmpty(_ui.SelectedStatus) && pod.Status.ToString() != _ui.SelectedStatus)
                 return false;
 
             // Search filter
-            if (!string.IsNullOrEmpty(_searchString))
+            if (!string.IsNullOrEmpty(_ui.SearchString))
             {
-                var search = _searchString.ToLowerInvariant();
+                var search = _ui.SearchString.ToLowerInvariant();
                 return pod.Name.ToLowerInvariant().Contains(search) ||
                        pod.Namespace.ToLowerInvariant().Contains(search) ||
                        (pod.NodeName?.ToLowerInvariant().Contains(search) ?? false);

@@ -33,7 +33,7 @@ public static class ServiceCollectionExtensions
 
         // Translations
         services.AddSingleton<ILocalizationService, LocalizationService>();  // Singleton!        // Data layer
-        services.AddSingleton<IPreferencesStorage, PreferencesStorage>();
+        services.AddSingleton<IPreferencesStorage, JsonFilePreferencesStorage>();
 
         // Core services - REAL IMPLEMENTATIONS
         services.AddSingleton<IClusterDiscoveryService, ClusterDiscoveryService>();

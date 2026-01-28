@@ -73,7 +73,7 @@
     }
     else
     {
-        <MudButton Style="justify-content: flex-start" OnClick="ToggleEditing" Variant="Variant.Outlined">
+        <MudButton Color="Color.Primary" Style="justify-content: flex-start" OnClick="ToggleEditing" Variant="Variant.Outlined">
 
          <MudStack  AlignItems="AlignItems.Center" Row>
                     <MudIcon Color="Color.Primary" Icon="@KonciergeIcons.Outlined.Resources" />
@@ -127,6 +127,7 @@
             {
                 _ui.SelectedCluster = cluster;
                 SelectedCluster = cluster;
+                await _onClusterSelection.InvokeAsync(SelectedCluster);
             }
             else
             {
@@ -139,7 +140,7 @@
             _selectionEnabled = true;  
         }
     }
-
+    
 
 
     private async Task LoadClusters()

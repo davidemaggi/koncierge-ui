@@ -85,6 +85,10 @@
 
     private ForwardTemplate _currentTemplate { get; set; } = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
     private async Task OnClusterSelection(ClusterConnectionInfo? sel)
     {
 
