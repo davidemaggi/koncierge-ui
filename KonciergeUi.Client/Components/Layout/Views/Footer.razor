@@ -1,5 +1,22 @@
-<h3>Footer</h3>
-
-@code {
+<MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" StretchItems="StretchItems.Middle" Row>
     
+    <MudStack Spacing="1" AlignItems="AlignItems.Center" Row><MudText Align="Align.Left" Typo="Typo.body1">v1.0.0 - Annabelle </MudText> <MudIcon Icon="@KonciergeIcons.Color.Ananbelle"/></MudStack>
+    <MudStack Justify="Justify.Center" Spacing="1" AlignItems="AlignItems.Center" Row><MudText Align="Align.Center" Typo="Typo.body1">Made with</MudText><MudIcon Icon="@KonciergeIcons.Color.Love"/><MudText Align="Align.Center" Typo="Typo.body1">in</MudText><MudIcon Icon="@KonciergeIcons.Flags.Italy"/></MudStack>
+    <MudButton IconColor="Color.Error" StartIcon="@Icons.Material.Filled.BugReport" OnClick="OpenGithub">Report an Issue</MudButton>
+</MudStack>
+@code {
+
+
+    private async Task OpenGithub(MouseEventArgs arg)
+    {
+        try
+        {
+            Uri uri = new Uri("https://github.com/davidemaggi/koncierge-ui/issues");
+            await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
+        }
+        catch (Exception ex)
+        {
+            // An unexpected error occurred. No browser may be installed on the device.
+        }    }
+
 }

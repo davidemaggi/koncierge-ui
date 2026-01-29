@@ -12,9 +12,9 @@
     </TitleContent>
     <DialogContent>
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
-            <MudStack Row>
+            <MudStack>
                 <MudTextField T="string" @bind-Value="@_template.Name" Label="Name"  />
-                <MudTextField T="string" @bind-Value="@_template.Description" Label="Description"  />
+                <MudTextField T="string" @bind-Value="@_template.Description" Lines="5" Label="Description"  />
                            </MudStack>
         </MudForm>
 

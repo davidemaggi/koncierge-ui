@@ -1,57 +1,73 @@
 ﻿@using System.Globalization
 @using KonciergeUi.Client.Shared
 @using KonciergeUi.Client.State
+@using KonciergeUI.Core.Abstractions
+@using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Translations.Services
 @inherits LayoutComponentBase
 
 @inject UiState Ui;
 @inject ILocalizationService L;
 @inject NavigationManager _nav;
+@inject IPortForwardingService _fwd;
 
 @implements IDisposable
 
 <MudAppBar Elevation="1">
-        <!-- Left: logo + name -->
-        <MudIconButton Icon="@KonciergeIcons.Filled.Logo"
-                       Color="Color.Primary"
-                       Edge="Edge.Start"
-                       Class="mr-2" />
-        <MudText Typo="Typo.h6" Class="mud-appbar-title">
-            @L.Navigation["AppName"]
-        </MudText>
+    <MudStack AlignItems="AlignItems.Center" Spacing="3" Row>
+    <!-- Left: logo + name -->
+    <MudIcon Icon="@KonciergeIcons.Filled.Logo"
+             Style="font-size: 2rem;"
+             />
+    <MudText Typo="Typo.body1" Style="font-size: x-large; font-weight: bold" Class="mud-appbar-title">
+        @L.Navigation["AppName"]
+    </MudText>
+    </MudStack>
+    <!-- Center: navigation -->
+    <MudSpacer/>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
 
-        <!-- Center: navigation -->
-        <MudSpacer />
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-            
-            <MudButton Color="Color.Info" Variant="@GetVariant("")" StartIcon="@KonciergeIcons.Outlined.Resources" Href="/">@L.Navigation["NavResources"]</MudButton>
-            <MudButton Color="Color.Info" Variant="@GetVariant("templates")" StartIcon="@KonciergeIcons.Outlined.Templates" Href="/templates">@L.Navigation["NavTemplates"]</MudButton>
+        <MudButton Color="Color.Info" Variant="@GetVariant("")" StartIcon="@KonciergeIcons.Outlined.Resources" Href="/">@L.Navigation["NavResources"]</MudButton>
+        <MudButton Color="Color.Info" Variant="@GetVariant("templates")" StartIcon="@KonciergeIcons.Outlined.Templates" Href="/templates">@L.Navigation["NavTemplates"]</MudButton>
+        
+        @if (getFwdCount()>0)
+        {
+            <MudBadge Content="@_fwdCount" Color="Color.Secondary" Overlap="true" Class="mx-6 my-4">
+                <MudButton Color="Color.Info" Variant="@GetVariant("activeforwards")" StartIcon="@KonciergeIcons.Outlined.ActiveForwards" Href="/activeforwards">@L.Navigation["NavForwards"]</MudButton>
+            </MudBadge>
+        }
+        else
+        {
             <MudButton Color="Color.Info" Variant="@GetVariant("activeforwards")" StartIcon="@KonciergeIcons.Outlined.ActiveForwards" Href="/activeforwards">@L.Navigation["NavForwards"]</MudButton>
-           
-        </MudStack>
-        <MudSpacer />
 
-        <!-- Right: language selector + theme switch -->
-        <MudIconButton Icon="@Icons.Material.Filled.Translate"
-                       Color="Color.Primary"
-                       OnClick="ToggleLanguageMenu"
-                       
-                       @ref="_langButtonRef" />
-        <MudMenu AnchorOrigin="Origin.BottomRight"
-                 TransformOrigin="Origin.TopRight"
-                 Open="@_langMenuOpen"
-                 CloseMenuOnItemClick="true"
-                 OnClose="() => _langMenuOpen = false"
-                 ActivatorContent="@(builder => builder.AddContent(0, string.Empty))"
-                 AnchorEl="@_langButtonRef">
-            <MudMenuItem Icon="@KonciergeIcons.Flags.Uk"  OnClick="@(() => ChangeLanguage("en"))">English</MudMenuItem>
-            <MudMenuItem Icon="@KonciergeIcons.Flags.Italy"  OnClick="@(() => ChangeLanguage("it"))">Italiano</MudMenuItem>
-        </MudMenu>
+        }
+        
 
-        <MudIconButton Icon="@(_isDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
-                       Color="Color.Primary"
-                       OnClick="@ToggleTheme" />
-    </MudAppBar>
+
+    </MudStack>
+    <MudSpacer/>
+
+    <!-- Right: language selector + theme switch -->
+    <MudIconButton Icon="@Icons.Material.Filled.Translate"
+                   Color="Color.Primary"
+                   OnClick="ToggleLanguageMenu"
+
+                   @ref="_langButtonRef"/>
+    <MudMenu AnchorOrigin="Origin.BottomRight"
+             TransformOrigin="Origin.TopRight"
+             Open="@_langMenuOpen"
+             CloseMenuOnItemClick="true"
+             OnClose="() => _langMenuOpen = false"
+             ActivatorContent="@(builder => builder.AddContent(0, string.Empty))"
+             AnchorEl="@_langButtonRef">
+        <MudMenuItem Icon="@KonciergeIcons.Flags.Uk" OnClick="@(() => ChangeLanguage("en"))">English</MudMenuItem>
+        <MudMenuItem Icon="@KonciergeIcons.Flags.Italy" OnClick="@(() => ChangeLanguage("it"))">Italiano</MudMenuItem>
+    </MudMenu>
+
+    <MudIconButton Icon="@(_isDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                   Color="Color.Primary"
+                   OnClick="@ToggleTheme"/>
+</MudAppBar>
 
 @code {
     private bool _langMenuOpen;
@@ -63,6 +79,9 @@
     [Parameter] 
     public EventCallback OnThemeChangedAsync { get; set; }
 
+
+    private int _fwdCount;
+    
     protected override void OnInitialized()
     {
         _nav.LocationChanged += OnLocationChanged;
@@ -111,5 +130,17 @@
         _langMenuOpen = false;
     }
 
+
+    private int getFwdCount()
+    {
+        _fwdCount= 0;
+
+        foreach (var tmp in _fwd.GetAllRunningTemplates())
+        {
+            _fwdCount += tmp.Forwards.Count(x => x.Status == Enums.ForwardStatus.Running);
+        }
+
+        return _fwdCount;
+    }
 
 }

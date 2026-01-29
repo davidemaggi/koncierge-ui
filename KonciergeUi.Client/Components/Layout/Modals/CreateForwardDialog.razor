@@ -36,9 +36,10 @@
                 </MudSelect>
             </MudStack>
         </MudForm>
-        <MudStack Row>
-                <MudSpacer />
-            <MudChip T="string" OnClick="ShowAddLinked">Link</MudChip>
+            <MudStack StretchItems="StretchItems.Start" Row>
+                <MudText>Linked Secret(s)</MudText>
+                <MudSpacer/>
+                <MudChip T="string" OnClick="ShowAddLinked">Link</MudChip>
             </MudStack>
             @if (_configMapsSel.Count != 0 || _secretsSel.Count != 0){
             <MudCard Outlined="true">

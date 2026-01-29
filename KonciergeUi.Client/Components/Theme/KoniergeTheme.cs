@@ -1,4 +1,6 @@
 ﻿using MudBlazor;
+using Color = MudBlazor.Color;
+using Colors = Microsoft.Maui.Graphics.Colors;
 
 
 namespace KonciergeUi.Client.Components.Theme
@@ -28,7 +30,8 @@ namespace KonciergeUi.Client.Components.Theme
                 // custom color for light mode card
                 Background = "#F9FAFB",
                 // you can keep default others
-                Surface = "#ffffff"
+                Surface = "#ffffff",
+                AppbarText = MudBlazor.Colors.Gray.Darken4
             };
             PaletteDark = new PaletteDark
             {
@@ -36,7 +39,9 @@ namespace KonciergeUi.Client.Components.Theme
                 // custom color for dark mode card background
                 Background = "#121827",
                 Surface = "#1e2939",
-                AppbarBackground = "#202937"
+                AppbarBackground = "#202937",
+                AppbarText = MudBlazor.Colors.Gray.Lighten5
+                
             };
 
 

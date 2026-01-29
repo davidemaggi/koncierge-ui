@@ -18,7 +18,7 @@ namespace KonciergeUI.Models.Forwarding
         /// <summary>
         /// Display name (e.g., "Backend Dev Environment").
         /// </summary>
-        public string Name { get; set; } = "Temporary Template";
+        public string Name { get; set; } = "";
 
         /// <summary>
         /// Optional description/notes.
