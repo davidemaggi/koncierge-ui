@@ -32,10 +32,12 @@
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
+        <MudStack Spacing="3">
         @foreach (var fwd in _template.Forwards)
         {
             <RunningForwardSummary _cluster="_template.ClusterInfo" _instance="fwd" />
         }
+        </MudStack>
     </MudCardContent>
     <MudCardActions>
       
