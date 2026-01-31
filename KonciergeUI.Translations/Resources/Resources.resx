@@ -18,7 +18,25 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="test" xml:space="preserve">
-        <value>eh</value>
+    <data name="add_kubeconfig" xml:space="preserve">
+        <value>Add kubeconfig</value>
+    </data>
+    <data name="start_forward" xml:space="preserve">
+        <value>Start Forward</value>
+    </data>
+    <data name="create_template" xml:space="preserve">
+        <value>Create Template</value>
+    </data>
+    <data name="tab_pods" xml:space="preserve">
+        <value>Pods</value>
+    </data>
+    <data name="tab_services" xml:space="preserve">
+        <value>Services</value>
+    </data>
+    <data name="empty_title" xml:space="preserve">
+        <value>No cluster selected</value>
+    </data>
+    <data name="empty_subtitle" xml:space="preserve">
+        <value>Select a cluster to view pods and services.</value>
     </data>
 </root>

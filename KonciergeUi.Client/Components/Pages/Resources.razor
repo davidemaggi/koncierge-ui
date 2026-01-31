@@ -26,7 +26,7 @@
                 <ClusterSelect SelectedCluster="_ui.SelectedCluster" _onClusterSelection="OnClusterSelection"  />
            
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
-                    Add KubeConfig
+                    @L.Resources["add_kubeconfig"]
                 </MudButton>
                 <MudSpacer/>
             </MudStack>
@@ -51,8 +51,8 @@
                 </MudStack>
             </MudCardContent>
             <MudCardActions>
-                <MudButton OnClick="StartForward"  StartIcon="@Icons.Material.Filled.PlayArrow" Color="Color.Success">Start Forward</MudButton>
-                <MudButton OnClick="OnSaveClick" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">Create Template</MudButton>
+                <MudButton OnClick="StartForward"  StartIcon="@Icons.Material.Filled.PlayArrow" Color="Color.Success">@L.Resources["start_forward"]</MudButton>
+                <MudButton OnClick="OnSaveClick" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">@L.Resources["crete_template"]</MudButton>
 
             </MudCardActions>
         </MudCard>
@@ -60,14 +60,14 @@
     @if (_ui.SelectedCluster != null)
     {
         <MudTabs Elevation="2" Rounded="true" Class="mt-4" ApplyEffectsToContainer="true">
-            <MudTabPanel Text="Pods" Icon="@KonciergeIcons.Outlined.Pod">
+            <MudTabPanel Text="@L.Resources["tab_pods"]" Icon="@KonciergeIcons.Outlined.Pod">
                 <PodsList Cluster="@_ui.SelectedCluster"
                           OnCreateForwardClicked="HandleCreateForward"
                           OnViewLogsClicked="HandleViewLogs"
                           OnShowDetailsClicked="HandleShowDetails" />
             </MudTabPanel>
             
-            <MudTabPanel Text="Services" Icon="@KonciergeIcons.Outlined.Service">
+            <MudTabPanel Text="@L.Resources["tab_services"]" Icon="@KonciergeIcons.Outlined.Service">
                 <ServicesList Cluster="@_ui.SelectedCluster"
                               OnCreateForwardClicked="HandleCreateForward" />
             </MudTabPanel>
@@ -75,7 +75,7 @@
     }
     else
     {
-        <NoEntry  _icon="@KonciergeIcons.Outlined.Resources" _title="No cluster selected"  _subtitle="Select a cluster to view pods and services." />
+        <NoEntry  _icon="@KonciergeIcons.Outlined.Resources" _title="@L.Resources["empty_title"]"  _subtitle="@L.Resources["empty_subtitle"]" />
 
     }
 </MudStack>

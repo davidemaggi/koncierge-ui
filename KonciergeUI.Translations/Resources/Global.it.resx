@@ -21,6 +21,6 @@
         <value>Si, facciamolo!</value>
     </data>
     <data name="confirm_dialog_title" xml:space="preserve">
-        <value>Annulla</value>
+        <value>Confermi?</value>
     </data>
 </root>

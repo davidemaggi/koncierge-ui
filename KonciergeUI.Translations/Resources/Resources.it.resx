@@ -11,7 +11,25 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="test" xml:space="preserve">
-        <value>tww</value>
+    <data name="add_kubeconfig" xml:space="preserve">
+        <value>Aggiungi Kubeconfig</value>
+    </data>
+    <data name="create_template" xml:space="preserve">
+        <value>Salva come modello</value>
+    </data>
+    <data name="start_forward" xml:space="preserve">
+        <value>Apri senza salvare</value>
+    </data>
+    <data name="tab_pods" xml:space="preserve">
+        <value>Pods</value>
+    </data>
+    <data name="tab_services" xml:space="preserve">
+        <value>Servizi</value>
+    </data>
+    <data name="empty_title" xml:space="preserve">
+        <value>Nessun Cluster selezionato</value>
+    </data>
+    <data name="empty_subtitle" xml:space="preserve">
+        <value>Seleziona un cluster per vederne i pod e servizi.</value>
     </data>
 </root>
