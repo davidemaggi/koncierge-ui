@@ -1,0 +1,57 @@
+@using KonciergeUI.Translations.Services
+@inject ILocalizationService L
+
+<MudDialog ContentClass="border-none pa-0" Style="height: 400px; width: 400px;">
+    @*
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.Navigation["AppName"]</MudText>
+    </TitleContent>
+    *@
+    <DialogContent>
+        <MudStack AlignItems="AlignItems.Center">
+            <MudContainer Style="background-color: #0a53be">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@KonciergeIcons.Filled.Logo" Style="font-size: 10rem"/>
+                    <MudText>Something Something</MudText>
+                </MudStack>
+            </MudContainer>
+            <MudStack AlignItems="AlignItems.Start">
+                <MudCard >
+                    <MudStack AlignItems="AlignItems.Center" Row>
+                        <MudIcon Icon="@KonciergeIcons.Color.Ananbelle" Style="font-size: 3rem"/>
+                        <MudStack>
+                            <MudText Style="font-weight: bold">Version 1.0.0</MudText>
+                            <MudText >Codename  <MudText Inline="true" Color="Color.Primary">Annabelle</MudText></MudText>
+                            <MudText >Released: February 2026</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudCard>
+
+            </MudStack>
+
+        </MudStack>
+    </DialogContent>
+    @*
+    <DialogActions>
+        <MudButton OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+    *@
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+
+    
+    
+    protected override async Task OnInitializedAsync()
+    {
+      
+    }
+    
+    
+    
+   
+    
+    private void Cancel() => MudDialog.Cancel();
+}

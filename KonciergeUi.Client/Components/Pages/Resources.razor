@@ -25,7 +25,7 @@
             <MudStack Row="true" Spacing="2"  AlignItems="AlignItems.Center" StretchItems="StretchItems.StartAndEnd">
                 <ClusterSelect SelectedCluster="_ui.SelectedCluster" _onClusterSelection="OnClusterSelection"  />
            
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                <MudButton OnClick="OpenAddKubeconfig" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
                     @L.Resources["add_kubeconfig"]
                 </MudButton>
                 <MudSpacer/>
@@ -193,6 +193,27 @@
 
     }
 
+    
+    private async Task OpenAddKubeconfig()
+    {
+        var parameters = new DialogParameters<FilePickerDialog>
+        {
+            { x => x._multi, false },
+        { x => x._amount, 1 },
+
+           
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
+
+        var dialog= await DialogService.ShowAsync<FilePickerDialog>(null, parameters, options);
+        
+        var result = await dialog.Result;
+
+       
+
+    }
+    
 }
 
 
