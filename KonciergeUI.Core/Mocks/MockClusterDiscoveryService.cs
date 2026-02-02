@@ -46,6 +46,11 @@ namespace KonciergeUI.Core.Mocks
             return Task.FromResult(customClusters);
         }
 
+        public bool IsValidKubeconfig(Stream kubeconfigStream)
+        {
+            throw new NotImplementedException();
+        }
+
         private static List<ClusterConnectionInfo> GenerateMockClusters()
         {
             var clusters = new List<ClusterConnectionInfo>();

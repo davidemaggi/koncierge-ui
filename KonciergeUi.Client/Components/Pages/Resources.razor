@@ -1,5 +1,4 @@
-﻿
-@page "/"
+﻿@page "/"
 
 @using KonciergeUI.Models.Kube
 @using KonciergeUi.Client.Components.Layout.FormFields
@@ -13,11 +12,16 @@
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Translations.Services
 @using OneOf.Types
+@using KonciergeUI.Data
+@using Microsoft.Maui.Storage
+@using System.IO
 @inject UiState _ui
 @inject IPortForwardingService _fwd;
 @inject IDialogService DialogService;
 @inject ISnackbar Snackbar;
 @inject ILocalizationService L
+@inject IClusterDiscoveryService _clusterDiscoveryService;
+@inject IPreferencesStorage _preferencesStorage;
 
 <MudStack Class="ma-4">
     <MudGrid Spacing="2">
@@ -199,7 +203,7 @@
         var parameters = new DialogParameters<FilePickerDialog>
         {
             { x => x._multi, false },
-        { x => x._amount, 1 },
+            { x => x._amount, 1 },
 
            
         };
@@ -210,10 +214,41 @@
         
         var result = await dialog.Result;
 
-       
+        if (result.Canceled || result.Data is not List<string> filePaths || filePaths.Count == 0)
+        {
+            return;
+        }
+ 
+        foreach (var path in filePaths)
+        {
+            var validation = await ValidateKubeconfigAsync(path);
 
+            if (!validation.Success)
+            {
+                Snackbar.Add(validation.ErrorMessage ?? $"{Path.GetFileName(path)} is not a valid kubeconfig.", Severity.Error);
+                continue;
+            }
+
+            await _preferencesStorage.AddCustomKubeconfigPathAsync(path);
+            Snackbar.Add($"{Path.GetFileName(path)} imported successfully.", Severity.Success);
+         }
+      }
+ 
+    private async Task<(bool Success, string? ErrorMessage)> ValidateKubeconfigAsync(string path)
+    {
+        try
+        {
+            await using var stream = File.OpenRead(path);
+            if (!_clusterDiscoveryService.IsValidKubeconfig(stream))
+            {
+                return (false, $"{Path.GetFileName(path)} is not a valid kubeconfig file.");
+            }
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Failed to validate {Path.GetFileName(path)}: {ex.Message}");
+        }
     }
-    
 }
-
-

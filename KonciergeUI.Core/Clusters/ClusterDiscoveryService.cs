@@ -152,7 +152,7 @@ namespace KonciergeUI.Core.Clusters
                     var clusterInfo = new ClusterConnectionInfo
                     {
                         Id = GenerateClusterId(path, context.Name),
-                        Name = context.Name,
+                        Name = cluster.Name,
                         KubeconfigPath = path,
                         ContextName = context.Name,
                         ClusterUrl = cluster.ClusterEndpoint?.Server,
@@ -202,5 +202,38 @@ namespace KonciergeUI.Core.Clusters
             var hash = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(combined));
             return Convert.ToHexString(hash).ToLowerInvariant();
         }
-    }
-}
+
+        public bool IsValidKubeconfig(Stream kubeconfigStream)
+        {
+            if (kubeconfigStream == null)
+            {
+                return false;
+            }
+
+            var canSeek = kubeconfigStream.CanSeek;
+            var originalPosition = canSeek ? kubeconfigStream.Position : 0;
+
+            try
+            {
+                if (canSeek)
+                {
+                    kubeconfigStream.Position = 0;
+                }
+
+                var kubeconfig = KubernetesClientConfiguration.LoadKubeConfig(kubeconfigStream);
+                return kubeconfig?.Contexts?.Any() == true;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (canSeek)
+                {
+                    kubeconfigStream.Position = originalPosition;
+                }
+            }
+        }
+     }
+ }

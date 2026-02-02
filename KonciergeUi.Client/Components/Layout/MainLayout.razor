@@ -3,6 +3,7 @@
 @using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
 @inherits LayoutComponentBase
+@implements IDisposable
 
 @inject UiState Ui
 
@@ -49,6 +50,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Ui.LanguageChanged += OnLanguageChanged;
         // Load saved preferences (theme + language)
         await Ui.LoadPreferencesAsync();
     }
@@ -94,5 +96,15 @@
         
         await Js.InvokeVoidAsync("koncierge.setThemeClass", _isDarkMode);
         
+    }
+
+    private void OnLanguageChanged(object? sender, string culture)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Ui.LanguageChanged -= OnLanguageChanged;
     }
 }

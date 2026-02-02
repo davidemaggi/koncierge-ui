@@ -9,6 +9,8 @@
 @inject ISnackbar _snakbar
 @inject IPortForwardingService _fwdService;
 
+@implements IAsyncDisposable
+
 <MudCard Outlined="false">
     <MudStack>
     <MudStack AlignItems="AlignItems.Center" Row>
@@ -71,8 +73,7 @@
     @if (_showLog)
     {
         
-        <Output _logs="@_fwdService.GetForwardLogsAsync(_instance.Id).Result.ToList()"></Output>
-    }
+        <Output _logs="@_logs"></Output>    }
     </MudStack>
 </MudCard>
 @code {
@@ -80,6 +81,7 @@
     public ForwardInstance _instance { get; set; }
     [Parameter]
     public ClusterConnectionInfo _cluster { get; set; }
+    private System.Timers.Timer _logRefreshTimer;
 
     private bool _showLog = false;
 
@@ -87,6 +89,47 @@
     [Parameter] 
     public EventCallback<Guid> OnForwardRemoveAsync { get; set; }
 
+    private List<string> _logs = new();
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _logRefreshTimer = new System.Timers.Timer(1000); // Refresh ogni 1 secondo
+        _logRefreshTimer.Elapsed += async (s, e) => await RefreshLogs();
+        _logRefreshTimer.AutoReset = true;
+        _logRefreshTimer.Start();
+    }
+
+    private async Task RefreshLogs()
+    {
+        try
+        {
+            var newLogs = await _fwdService.GetForwardLogsAsync(_instance.Id);
+            _logs = newLogs.ToList();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+        }
+    }
+
+    private async Task ShowLog(MouseEventArgs arg)
+    {
+        _showLog = !_showLog;
+        if (_showLog)
+        {
+            await RefreshLogs();
+        }
+        StateHasChanged();
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        _logRefreshTimer?.Dispose();
+    }
+    
+    
     private async Task RemoveClicked()
     {
         await OnForwardRemoveAsync.InvokeAsync(_instance.Definition.Id);
@@ -135,13 +178,6 @@
 
     }
 
-    private Task ShowLog(MouseEventArgs arg)
-    {
-        _showLog = !_showLog;
-        
-        StateHasChanged();
-        
-        return Task.CompletedTask;
-    }
+    
 
 }

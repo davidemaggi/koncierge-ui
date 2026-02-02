@@ -1,4 +1,6 @@
 ﻿@using System.Globalization
+@using System.Linq
+@using System.Threading
 @using KonciergeUi.Client.Shared
 @using KonciergeUi.Client.State
 @using KonciergeUI.Core.Abstractions
@@ -12,6 +14,7 @@
 @inject IPortForwardingService _fwd;
 
 @implements IDisposable
+@implements IAsyncDisposable
 
 <MudAppBar Elevation="1">
     <MudStack AlignItems="AlignItems.Center" Spacing="3" Row>
@@ -30,7 +33,7 @@
         <MudButton Color="Color.Info" Variant="@GetVariant("")" StartIcon="@KonciergeIcons.Outlined.Resources" Href="/">@L.Navigation["NavResources"]</MudButton>
         <MudButton Color="Color.Info" Variant="@GetVariant("templates")" StartIcon="@KonciergeIcons.Outlined.Templates" Href="/templates">@L.Navigation["NavTemplates"]</MudButton>
         
-        @if (getFwdCount()>0)
+        @if (_fwdCount > 0)
         {
             <MudBadge Content="@_fwdCount" Color="Color.Secondary" Overlap="true" Class="mx-6 my-4">
                 <MudButton Color="Color.Info" Variant="@GetVariant("activeforwards")" StartIcon="@KonciergeIcons.Outlined.ActiveForwards" Href="/activeforwards">@L.Navigation["NavForwards"]</MudButton>
@@ -81,14 +84,20 @@
 
 
     private int _fwdCount;
+    private PeriodicTimer? _forwardCountTimer;
+    private CancellationTokenSource? _forwardCountCts;
+    private Task? _forwardCountLoopTask;
     
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
         _nav.LocationChanged += OnLocationChanged;
         Ui.LanguageChanged += OnLanguageChanged;
-    }
 
-   
+        await RefreshForwardCountAsync();
+        _forwardCountCts = new CancellationTokenSource();
+        _forwardCountLoopTask = RunForwardCountLoopAsync(_forwardCountCts.Token);
+    }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
@@ -103,6 +112,29 @@
     public void Dispose()
     {
         _nav.LocationChanged -= OnLocationChanged;
+        Ui.LanguageChanged -= OnLanguageChanged;
+
+        _forwardCountCts?.Cancel();
+        _forwardCountTimer?.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Dispose();
+
+        if (_forwardCountLoopTask is not null)
+        {
+            try
+            {
+                await _forwardCountLoopTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore cancellation
+            }
+        }
+
+        _forwardCountCts?.Dispose();
     }
 
     private string CurrentPath => _nav.ToBaseRelativePath(_nav.Uri); 
@@ -124,23 +156,43 @@
     {
         Ui.CurrentLanguage = culture;           // persists to preferences
 
-        // Force a full Blazor pipeline rebuild under the new culture
-        _nav.NavigateTo(_nav.Uri, forceLoad: true);
 
         _langMenuOpen = false;
     }
 
-
-    private int getFwdCount()
+    private async Task RunForwardCountLoopAsync(CancellationToken token)
     {
-        _fwdCount= 0;
-
-        foreach (var tmp in _fwd.GetAllRunningTemplates())
+        _forwardCountTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        try
         {
-            _fwdCount += tmp.Forwards.Count(x => x.Status == Enums.ForwardStatus.Running);
+            while (await _forwardCountTimer.WaitForNextTickAsync(token))
+            {
+                await RefreshForwardCountAsync();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // expected when disposing
+        }
+    }
+
+    private Task RefreshForwardCountAsync()
+    {
+        var runningTemplates = _fwd.GetAllRunningTemplates();
+        var currentCount = 0;
+
+        foreach (var template in runningTemplates)
+        {
+            currentCount += template.Forwards.Count(x => x.Status == Enums.ForwardStatus.Running);
         }
 
-        return _fwdCount;
+        if (currentCount != _fwdCount)
+        {
+            _fwdCount = currentCount;
+            return InvokeAsync(StateHasChanged);
+        }
+
+        return Task.CompletedTask;
     }
 
 }

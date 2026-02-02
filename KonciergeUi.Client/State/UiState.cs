@@ -3,12 +3,14 @@ using KonciergeUI.Models.Kube;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using KonciergeUI.Data;
+using KonciergeUI.Translations.Services;
 
 namespace KonciergeUi.Client.State;
 
 public class UiState : INotifyPropertyChanged
 {
     private readonly IPreferencesStorage _preferencesStorage;
+    private readonly ILocalizationService _localizationService;
     private ClusterConnectionInfo? _selectedCluster;
     private string _currentTheme = "System";
     private string _currentLanguage = "en";
@@ -19,9 +21,10 @@ public class UiState : INotifyPropertyChanged
     private string? _searchString = null;
     
 
-    public UiState(IPreferencesStorage preferencesStorage)
+    public UiState(IPreferencesStorage preferencesStorage, ILocalizationService localizationService)
     {
         _preferencesStorage = preferencesStorage;
+        _localizationService = localizationService;
     }
 
     public ClusterConnectionInfo? SelectedCluster
@@ -68,6 +71,7 @@ public class UiState : INotifyPropertyChanged
             if (_currentLanguage != value)
             {
                 _currentLanguage = value;
+                _localizationService.SetCulture(value);
                 OnPropertyChanged();
                 LanguageChanged?.Invoke(this, value);
 
@@ -100,6 +104,8 @@ public class UiState : INotifyPropertyChanged
         {
             _currentLanguage = language;
         }
+
+        _localizationService.SetCulture(_currentLanguage);
     }
 
     public async Task<string?> GetLastSelectedClusterIdAsync()

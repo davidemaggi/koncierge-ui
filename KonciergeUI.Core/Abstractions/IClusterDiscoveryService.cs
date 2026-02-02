@@ -1,6 +1,7 @@
 ﻿using KonciergeUI.Models.Kube;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace KonciergeUI.Core.Abstractions
@@ -26,5 +27,10 @@ namespace KonciergeUI.Core.Abstractions
         /// Scan a directory for kubeconfig files and load all clusters.
         /// </summary>
         Task<List<ClusterConnectionInfo>> ScanDirectoryAsync(string directoryPath);
+
+        /// <summary>
+        /// Validate whether the provided kubeconfig content can be parsed.
+        /// </summary>
+        bool IsValidKubeconfig(Stream kubeconfigStream);
     }
 }
