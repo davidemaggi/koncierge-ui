@@ -30,7 +30,7 @@ The app retrieves the computed values through `IAppVersionProvider`, which wraps
 - Trigger: every push (including merges) into `main`.
 - Steps:
   1. Resolve the next semantic version with GitVersion.
-  2. Install the .NET 8 SDK + MAUI workloads and publish the Windows (win-x64) binaries for both the portable ZIP and MSI installer.
+  2. Install the .NET 9 SDK + MAUI workloads and publish the Windows (win-x64) binaries for both the portable ZIP and MSI installer.
   3. Compress the publish directory and upload it as a workflow artifact.
   4. Create/Update a GitHub Release with tag `v<semver>` and attach the zip.
 
