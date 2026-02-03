@@ -52,10 +52,10 @@ jobs:
           dotnet publish KonciergeUi.Client/KonciergeUi.Client.csproj
           -c Release
           -f net9.0-windows10.0.19041.0
-          -r win-x64
-          --self-contained true
-          -p:PublishTrimmed=false
+          -p:RuntimeIdentifierOverride=win10-x64
           -p:WindowsPackageType=None
+          -p:WindowsAppSDKSelfContained=true
+          -p:PublishTrimmed=false
           -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.semver }}
 
       - name: Publish Windows MSI
@@ -63,10 +63,10 @@ jobs:
           dotnet publish KonciergeUi.Client/KonciergeUi.Client.csproj
           -c Release
           -f net9.0-windows10.0.19041.0
-          -r win-x64
-          --self-contained true
-          -p:PublishTrimmed=false
+          -p:RuntimeIdentifierOverride=win10-x64
           -p:WindowsPackageType=msi
+          -p:WindowsAppSDKSelfContained=true
+          -p:PublishTrimmed=false
           -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.semver }}
 
       - name: Package artifacts
@@ -74,7 +74,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win-x64/publish'
+          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish'
           if (-not (Test-Path $publishDir)) {
             throw "Publish directory not found: $publishDir"
           }
@@ -85,7 +85,7 @@ jobs:
           $itemsToZip = Get-ChildItem -Path $publishDir -Force
           Compress-Archive -Path $itemsToZip -DestinationPath $zipPath
 
-          $msiPath = Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win-x64/AppPackages') -Recurse -Filter '*.msi' | Select-Object -First 1
+          $msiPath = Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/AppPackages') -Recurse -Filter '*.msi' | Select-Object -First 1
           if (-not $msiPath) {
             throw 'MSI artifact not found'
           }
