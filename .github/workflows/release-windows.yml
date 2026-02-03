@@ -60,13 +60,13 @@ jobs:
           -p:PublishTrimmed=false
           -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
 
-      - name: Publish Windows MSI
+      - name: Publish Windows MSIX
         run: >-
           dotnet publish KonciergeUi.Client/KonciergeUi.Client.csproj
           -c Release
           -f net9.0-windows10.0.19041.0
           -p:RuntimeIdentifierOverride=win10-x64
-          -p:WindowsPackageType=msi
+          -p:WindowsPackageType=MSIX
           -p:WindowsAppSDKSelfContained=true
           -p:WindowsAppSDKSelfContainedPlatforms=x64
           -p:PublishTrimmed=false
@@ -88,13 +88,13 @@ jobs:
           $itemsToZip = Get-ChildItem -Path $publishDir -Force
           Compress-Archive -Path $itemsToZip -DestinationPath $zipPath
 
-          $msiPath = Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/AppPackages') -Recurse -Filter '*.msi' | Select-Object -First 1
-          if (-not $msiPath) {
-            throw 'MSI artifact not found'
+          $msixPath = Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/AppPackages') -Recurse -Filter '*.msix' | Select-Object -First 1
+          if (-not $msixPath) {
+            throw 'MSIX artifact not found'
           }
 
           "zip_path=$zipPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          "msi_path=$($msiPath.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "msix_path=$($msixPath.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
@@ -106,6 +106,6 @@ jobs:
             Automated Windows build via GitHub Actions.
           files: |
             ${{ steps.package.outputs.zip_path }}
-            ${{ steps.package.outputs.msi_path }}
+            ${{ steps.package.outputs.msix_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
