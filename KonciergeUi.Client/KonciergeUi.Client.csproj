@@ -27,7 +27,9 @@
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <ApplicationDisplayVersion Condition="'$(GitVersion_SemVer)' != ''">$(GitVersion_SemVer)</ApplicationDisplayVersion>
         <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationVersion Condition="'$(GitVersion_MajorMinorPatch)' != ''">$([System.String]::Copy('$(GitVersion_MajorMinorPatch)').Replace('.', ''))</ApplicationVersion>
 
         <!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
         <WindowsPackageType>None</WindowsPackageType>
@@ -72,6 +74,10 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
         <PackageReference Include="MudBlazor" Version="8.15.0" />
         <PackageReference Include="MudBlazor.Extensions" Version="8.15.0" />
+        <PackageReference Include="GitVersion.MsBuild" Version="6.5.1">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>

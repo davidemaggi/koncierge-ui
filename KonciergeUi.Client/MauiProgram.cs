@@ -1,4 +1,5 @@
 ﻿using KonciergeUi.Client.Extensions;
+using KonciergeUi.Client.Services;
 using KonciergeUi.Client.State;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
@@ -40,6 +41,7 @@ public static class MauiProgram
 
         // Register app services
         builder.Services.RegisterKonciergeServices();
+        builder.Services.AddSingleton<IAppVersionProvider, AppVersionProvider>();
         
         var app= builder.Build();
 

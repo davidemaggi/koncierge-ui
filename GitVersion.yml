@@ -1,0 +1,15 @@
+mode: ContinuousDelivery
+branches:
+  main:
+    regex: ^main$
+    increment: patch
+    track-merge-target: true
+  feature:
+    regex: ^(feature|bugfix|chore)/
+    increment: Inherit
+    source-branches: [main]
+ignore:
+  sha: []
+commit-message-incrementing: Enabled
+merge-message-formats: {}
+assembly-informational-format: '{FullSemVer}+{ShortSha}'

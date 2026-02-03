@@ -1,5 +1,6 @@
 @using KonciergeUI.Translations.Services
 @inject ILocalizationService L
+@inject IAppVersionProvider VersionProvider
 
 <MudDialog ContentClass="border-none pa-0" Style="height: 400px; width: 400px;">
     @*
@@ -20,9 +21,9 @@
                     <MudStack AlignItems="AlignItems.Center" Row>
                         <MudIcon Icon="@KonciergeIcons.Color.Ananbelle" Style="font-size: 5rem"/>
                         <MudStack>
-                            <MudText Style="font-weight: bold">Version 1.0.0</MudText>
-                            <MudText >Codename  <MudText Inline="true" Color="Color.Primary">Annabelle</MudText></MudText>
-                            <MudText >Released: February 2026</MudText>
+                            <MudText Style="font-weight: bold">Version @VersionProvider.DisplayVersion</MudText>
+                            <MudText>Build @VersionProvider.BuildVersion</MudText>
+                            <MudText>Channel <MudText Inline="true" Color="Color.Primary">main</MudText></MudText>
                         </MudStack>
                     </MudStack>
                 </MudContainer>
