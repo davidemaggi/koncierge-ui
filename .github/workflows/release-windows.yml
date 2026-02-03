@@ -39,6 +39,7 @@ jobs:
           $data = $json | ConvertFrom-Json
           "semver=$($data.SemVer)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "nugetversion=$($data.NuGetVersionV2)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "majorminorpatch=$($data.MajorMinorPatch)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Install MAUI workloads
         run: |
@@ -57,7 +58,7 @@ jobs:
           -p:WindowsAppSDKSelfContained=true
           -p:WindowsAppSDKSelfContainedPlatforms=x64
           -p:PublishTrimmed=false
-          -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.semver }}
+          -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
 
       - name: Publish Windows MSI
         run: >-
@@ -69,7 +70,7 @@ jobs:
           -p:WindowsAppSDKSelfContained=true
           -p:WindowsAppSDKSelfContainedPlatforms=x64
           -p:PublishTrimmed=false
-          -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.semver }}
+          -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
 
       - name: Package artifacts
         id: package

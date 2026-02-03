@@ -27,7 +27,7 @@
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-        <ApplicationDisplayVersion Condition="'$(GitVersion_SemVer)' != ''">$(GitVersion_SemVer)</ApplicationDisplayVersion>
+        <ApplicationDisplayVersion Condition="'$(GitVersion_MajorMinorPatch)' != ''">$(GitVersion_MajorMinorPatch)</ApplicationDisplayVersion>
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationVersion Condition="'$(GitVersion_MajorMinorPatch)' != ''">$([System.String]::Copy('$(GitVersion_MajorMinorPatch)').Replace('.', ''))</ApplicationVersion>
 
