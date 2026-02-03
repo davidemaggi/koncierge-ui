@@ -1,6 +1,7 @@
 ﻿using KonciergeUI.Models.Forwarding;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 
@@ -23,15 +24,7 @@ namespace KonciergeUI.Data
 
         public JsonFilePreferencesStorage()
         {
-            // Get AppData directory - works on both Windows and macOS
-            var appDataDir = FileSystem.Current.AppDataDirectory;
-
-            // Create koncierge folder
-            if (!Directory.Exists(appDataDir))
-            {
-                Directory.CreateDirectory(appDataDir);
-            }
-
+            var appDataDir = ResolveAppDataDirectory();
             _filePath = Path.Combine(appDataDir, "koncierge_preferences.json");
             _data = LoadFromFile();
         }
@@ -173,6 +166,25 @@ namespace KonciergeUI.Data
             {
                 await SaveToFileAsync();
             }
+        }
+
+        private static string ResolveAppDataDirectory()
+        {
+            var basePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+            if (string.IsNullOrWhiteSpace(basePath))
+            {
+                basePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            }
+
+            if (string.IsNullOrWhiteSpace(basePath))
+            {
+                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".koncierge");
+            }
+
+            var targetPath = Path.Combine(basePath, "koncierge");
+            Directory.CreateDirectory(targetPath);
+            return targetPath;
         }
     }
 }
