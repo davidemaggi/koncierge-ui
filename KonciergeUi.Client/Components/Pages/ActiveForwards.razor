@@ -49,7 +49,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _templates =  _forwardService.GetAllRunningTemplates().ToList();
+        _templates =  _forwardService.GetAllRunningTemplates()
+            .OrderBy(x => x.Sorting)
+            .ToList();
     }
 
 

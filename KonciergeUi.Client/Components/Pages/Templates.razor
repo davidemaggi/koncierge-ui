@@ -18,10 +18,15 @@
             <MudCardContent>
                 <MudStack>
                     <MudGrid>
-                        @foreach (var template in _templates)
+                        @foreach (var (template, index) in _templates.Select((t, index) => (t, index)))
                         {
                             <MudItem xs="12">
-                                <TemplateSummary _template="template"/>
+                                <MudStack StretchItems="StretchItems.End" Row>
+                                    <MudIconButton Ripple="false" Size="Size.Small" Disabled="index.Equals(0)" Color="Color.Primary" Icon="@Icons.Material.Outlined.ArrowUpward" OnClick="@(() => MoveTemplateAsync(index, -1))"/>
+                                    <MudIconButton Ripple="false" Size="Size.Small" Disabled="index.Equals(_templates.Count - 1) " Color="Color.Primary" Icon="@Icons.Material.Outlined.ArrowDownward" OnClick="@(() => MoveTemplateAsync(index, 1))"/>
+                                    <MudIconButton Ripple="false" Size="Size.Small" Color="Color.Primary" Icon="@(template.Favorite ? Icons.Material.Filled.Star : Icons.Material.Filled.StarBorder)" OnClick="@(() => ToggleFavoriteAsync(template))"/>
+                                    <TemplateSummary _template="template"/>
+                                </MudStack>
                             </MudItem>
                         }
                     </MudGrid>
@@ -49,10 +54,53 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _templates = await _storage.GetForwardTemplatesAsync();
+        _templates = (await _storage.GetForwardTemplatesAsync())
+            .OrderBy(x => x.Sorting)
+            .ToList();      
     }
 
+    private async Task MoveTemplateAsync(int index, int offset)
+    {
+        var targetIndex = index + offset;
+        if (targetIndex < 0 || targetIndex >= _templates.Count)
+        {
+            return;
+        }
+
+        (_templates[index], _templates[targetIndex]) = (_templates[targetIndex], _templates[index]);
+
+        var changedTemplates = new List<ForwardTemplate>();
+        for (var i = 0; i < _templates.Count; i++)
+        {
+            var template = _templates[i];
+            if (template.Sorting == i)
+            {
+                continue;
+            }
+
+            template.Sorting = i;
+            template.ModifiedAt = DateTimeOffset.UtcNow;
+            changedTemplates.Add(template);
+        }
+
+        if (changedTemplates.Count > 0)
+        {
+            await Task.WhenAll(changedTemplates.Select(_storage.UpdateForwardTemplateAsync));
+        }
+
+        _templates = _templates.OrderBy(t => t.Sorting).ToList();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleFavoriteAsync(ForwardTemplate template)
+    {
+        template.Favorite = !template.Favorite;
+        template.ModifiedAt = DateTimeOffset.UtcNow;
+
+        await _storage.UpdateForwardTemplateAsync(template);
+
+        _templates = _templates.OrderBy(t => t.Sorting).ToList();
+        await InvokeAsync(StateHasChanged);
+    }
 
 }
-
-

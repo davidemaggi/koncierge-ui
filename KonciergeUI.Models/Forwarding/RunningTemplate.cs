@@ -9,4 +9,5 @@ public sealed record RunningTemplate
     public IReadOnlyCollection<ForwardInstance> Forwards { get; init; } = Array.Empty<ForwardInstance>();
     public DateTimeOffset StartedAt { get; init; }
     public ClusterConnectionInfo ClusterInfo { get; init; } = default!; // NEW: Track which cluster
+    public int Sorting { get; set; } = 0;
 }
