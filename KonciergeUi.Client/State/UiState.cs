@@ -4,6 +4,9 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using KonciergeUI.Data;
 using KonciergeUI.Translations.Services;
+using KonciergeUI.Models.Security;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace KonciergeUi.Client.State;
 
@@ -19,7 +22,7 @@ public class UiState : INotifyPropertyChanged
     private string? _selectedType = null;
     private string? _selectedStatus = null;
     private string? _searchString = null;
-    
+    private ForwardTemplate? _templateDraft;
 
     public UiState(IPreferencesStorage preferencesStorage, ILocalizationService localizationService)
     {
@@ -170,6 +173,49 @@ public class UiState : INotifyPropertyChanged
 
             }
         }
+    }
+
+    public void SetTemplateDraft(ForwardTemplate template)
+    {
+        TemplateDraft = CloneTemplate(template);
+    }
+
+    public ForwardTemplate? ConsumeTemplateDraft()
+    {
+        var draft = TemplateDraft;
+        TemplateDraft = null;
+        return draft;
+    }
+
+    public ForwardTemplate? TemplateDraft
+    {
+        get => _templateDraft;
+        private set
+        {
+            if (_templateDraft == value)
+            {
+                return;
+            }
+
+            _templateDraft = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private static ForwardTemplate CloneTemplate(ForwardTemplate template)
+    {
+        return template with
+        {
+            Tags = template.Tags is null ? null : new List<string>(template.Tags),
+            Forwards = template.Forwards
+                .Select(fwd => fwd with
+                {
+                    LinkedSecrets = fwd.LinkedSecrets is null
+                        ? new List<SecretReference>()
+                        : new List<SecretReference>(fwd.LinkedSecrets)
+                })
+                .ToList()
+        };
     }
 
 }

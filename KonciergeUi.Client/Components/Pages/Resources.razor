@@ -47,7 +47,11 @@
                         @foreach (var fwd in _currentTemplate.Forwards)
                         {
                             <MudItem xs="12">
-                                <ForwardSummary _definition="fwd" _showRemove="true" OnForwardRemoveAsync="RemoveForwardFromList"/>
+                                <ForwardSummary _definition="fwd"
+                                                _showEdit="true"
+                                                _showRemove="true"
+                                                OnForwardRemoveAsync="RemoveForwardFromList"
+                                                OnForwardUpdated="HandleForwardUpdated"/>
                             </MudItem>
                         }
 
@@ -66,6 +70,7 @@
         <MudTabs Elevation="2" Rounded="true" Class="mt-4" ApplyEffectsToContainer="true">
             <MudTabPanel Text="@L.Resources["tab_pods"]" Icon="@KonciergeIcons.Outlined.Pod">
                 <PodsList Cluster="@_ui.SelectedCluster"
+                          ExistingForwards="@_currentTemplate.Forwards"
                           OnCreateForwardClicked="HandleCreateForward"
                           OnViewLogsClicked="HandleViewLogs"
                           OnShowDetailsClicked="HandleShowDetails" />
@@ -73,6 +78,7 @@
             
             <MudTabPanel Text="@L.Resources["tab_services"]" Icon="@KonciergeIcons.Outlined.Service">
                 <ServicesList Cluster="@_ui.SelectedCluster"
+                              ExistingForwards="@_currentTemplate.Forwards"
                               OnCreateForwardClicked="HandleCreateForward" />
             </MudTabPanel>
         </MudTabs>
@@ -88,8 +94,15 @@
 
     private ForwardTemplate _currentTemplate { get; set; } = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
+        var draft = _ui.ConsumeTemplateDraft();
+        if (draft is not null)
+        {
+            _currentTemplate = draft;
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task OnClusterSelection(ClusterConnectionInfo? sel)
@@ -138,7 +151,28 @@
 
     private void RemoveForwardFromList(Guid toRemove)
     {
-        _currentTemplate.Forwards.RemoveAll(fwd => fwd.Id != toRemove);
+        var removed = _currentTemplate.Forwards.RemoveAll(fwd => fwd.Id == toRemove);
+        if (removed == 0)
+        {
+            return;
+        }
+
+        _currentTemplate.ModifiedAt = DateTimeOffset.UtcNow;
+        _currentTemplate = _currentTemplate with { Forwards = _currentTemplate.Forwards.ToList() };
+        StateHasChanged();
+    }
+
+    private void HandleForwardUpdated(PortForwardDefinition updatedForward)
+    {
+        var index = _currentTemplate.Forwards.FindIndex(f => f.Id == updatedForward.Id);
+        if (index < 0)
+        {
+            return;
+        }
+
+        _currentTemplate.Forwards[index] = updatedForward;
+        _currentTemplate.ModifiedAt = DateTimeOffset.UtcNow;
+        _currentTemplate = _currentTemplate with { Forwards = _currentTemplate.Forwards.ToList() };
         StateHasChanged();
     }
 

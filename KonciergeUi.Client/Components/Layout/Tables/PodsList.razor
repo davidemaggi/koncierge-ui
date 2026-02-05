@@ -6,6 +6,8 @@
 @using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
 @using static KonciergeUI.Models.Forwarding.Enums
+@using System
+
 @inject IKubeRepository KubeRepo
 @inject IDialogService DialogService
 @inject UiState _ui
@@ -152,7 +154,8 @@
                                 <MudChip T="string" Size="Size.Small"
                                          Variant="Variant.Filled"
                                          Color="Color.Info"
-                                         OnClick="()=>OpenForwardCreate(port, context)"
+                                         Disabled="@IsForwardDisabled(port, context)"
+                                         OnClick="() => OpenForwardCreate(port, context)"
                                          Style="margin-right: 4px;">
                                     Forward :@port.Port
                                 </MudChip>
@@ -212,6 +215,8 @@
 
     [Parameter]
     public EventCallback<PodInfo> OnShowDetailsClicked { get; set; }
+    [Parameter]
+    public IReadOnlyCollection<PortForwardDefinition>? ExistingForwards { get; set; }
     
     
 
@@ -340,6 +345,20 @@
     private void OnShowDetails(PodInfo pod)
     {
         OnShowDetailsClicked.InvokeAsync(pod);
+    }
+
+    private bool IsForwardDisabled(ContainerPort port, PodInfo pod)
+    {
+        if (ExistingForwards is null)
+        {
+            return false;
+        }
+
+        return ExistingForwards.Any(fwd =>
+            fwd.ResourceType == ResourceType.Pod &&
+            string.Equals(fwd.Namespace, pod.Namespace, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(fwd.ResourceName, pod.Name, StringComparison.OrdinalIgnoreCase) &&
+            fwd.TargetPort == port.Port);
     }
 
     private Color GetStatusColor(PodStatus status) => status switch

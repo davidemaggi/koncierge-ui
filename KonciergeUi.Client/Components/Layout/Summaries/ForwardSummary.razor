@@ -3,8 +3,9 @@
 @using KonciergeUi.Client.Shared
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.State
+@using KonciergeUi.Client.Components.Layout.Modals
 
-@inject UiState _ui;
+@inject UiState _ui
 @inject IDialogService Dialog
 
 
@@ -29,8 +30,15 @@
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_definition.LinkedSecrets.Count} linked secret(s)")</MudText>
             }
         </MudStack>
-        @if(_showRemove){
+        @if (_showRemove || _showEdit)
+        {
             <MudSpacer></MudSpacer>
+        }
+        @if (_showEdit)
+        {
+            <MudButton StartIcon="@Icons.Material.Outlined.Edit" Color="Color.Primary" OnClick="EditClicked">Edit</MudButton>
+        }
+        @if(_showRemove){
         <MudButton StartIcon="@Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="RemoveClicked">Remove</MudButton>
         }
     </MudStack>
@@ -42,8 +50,14 @@
     [Parameter] 
     public bool _showRemove { get; set; } = false;
 
+    [Parameter]
+    public bool _showEdit { get; set; } = false;
+
     [Parameter] 
     public EventCallback<Guid> OnForwardRemoveAsync { get; set; }
+
+    [Parameter]
+    public EventCallback<PortForwardDefinition> OnForwardUpdated { get; set; }
 
     private async Task RemoveClicked()
     {
@@ -54,6 +68,34 @@
     }
     private MudTheme Theme = new MudTheme();
 
-    
+    private async Task EditClicked()
+    {
+        if (_ui.SelectedCluster is null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters<CreateForwardDialog>
+        {
+            { x => x._kind, _definition.ResourceType },
+            { x => x._namespace, _definition.Namespace },
+            { x => x._resourceName, _definition.ResourceName },
+            { x => x._cluster, _ui.SelectedCluster },
+            { x => x._existingForward, _definition }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium };
+        var dialog = await Dialog.ShowAsync<CreateForwardDialog>("Edit Forward", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is PortForwardDefinition updatedForward)
+        {
+            if (OnForwardUpdated.HasDelegate)
+            {
+                await OnForwardUpdated.InvokeAsync(updatedForward);
+            }
+        }
+    }
+
 
 }

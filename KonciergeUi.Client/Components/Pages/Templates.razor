@@ -10,6 +10,7 @@
 @using KonciergeUI.Models.Forwarding
 @inject UiState _ui
 @inject IPreferencesStorage _storage;
+@inject NavigationManager Navigation;
 
 <MudStack Class="ma-4">
     @if (_templates.Any())
@@ -25,7 +26,7 @@
                                     <MudIconButton Ripple="false" Size="Size.Small" Disabled="index.Equals(0)" Color="Color.Primary" Icon="@Icons.Material.Outlined.ArrowUpward" OnClick="@(() => MoveTemplateAsync(index, -1))"/>
                                     <MudIconButton Ripple="false" Size="Size.Small" Disabled="index.Equals(_templates.Count - 1) " Color="Color.Primary" Icon="@Icons.Material.Outlined.ArrowDownward" OnClick="@(() => MoveTemplateAsync(index, 1))"/>
                                     <MudIconButton Ripple="false" Size="Size.Small" Color="Color.Primary" Icon="@(template.Favorite ? Icons.Material.Filled.Star : Icons.Material.Filled.StarBorder)" OnClick="@(() => ToggleFavoriteAsync(template))"/>
-                                    <TemplateSummary _template="template"/>
+                                    <TemplateSummary _template="template" OnEditTemplate="EditTemplateAsync"/>
                                 </MudStack>
                             </MudItem>
                         }
@@ -101,6 +102,13 @@
 
         _templates = _templates.OrderBy(t => t.Sorting).ToList();
         await InvokeAsync(StateHasChanged);
+    }
+
+    private Task EditTemplateAsync(ForwardTemplate template)
+    {
+        _ui.SetTemplateDraft(template);
+        Navigation.NavigateTo("/");
+        return Task.CompletedTask;
     }
 
 }

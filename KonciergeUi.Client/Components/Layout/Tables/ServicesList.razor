@@ -5,6 +5,7 @@
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
+@using System
 @inject IKubeRepository KubeRepo
 @inject IDialogService DialogService
 @inject UiState _ui
@@ -146,7 +147,7 @@
                             <MudTooltip Text="@($"{port.Name}: {port.Protocol}")">
                                 <MudChip T="string" Size="Size.Small"
                                          Variant="Variant.Filled"
-                                         OnClick="()=>OpenForwardCreate(port, context)"                                         Color="Color.Info"
+                                         Disabled="@IsForwardDisabled(port, context)"                                         OnClick="() => OpenForwardCreate(port, context)"                                         Color="Color.Info"
                                          Style="margin-right: 4px;">
                                     Forward :@port.Port
                                 </MudChip>
@@ -199,6 +200,8 @@
 
     [Parameter]
     public EventCallback<PortForwardDefinition> OnCreateForwardClicked { get; set; }
+    [Parameter]
+    public IReadOnlyCollection<PortForwardDefinition>? ExistingForwards { get; set; }
 
 
 
@@ -331,6 +334,20 @@
             await OnCreateForwardClicked.InvokeAsync(xxx);
         }
 
+    }
+
+    private bool IsForwardDisabled(ServicePort port, ServiceInfo service)
+    {
+        if (ExistingForwards is null)
+        {
+            return false;
+        }
+
+        return ExistingForwards.Any(fwd =>
+            fwd.ResourceType == Enums.ResourceType.Service &&
+            string.Equals(fwd.Namespace, service.Namespace, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(fwd.ResourceName, service.Name, StringComparison.OrdinalIgnoreCase) &&
+            fwd.TargetPort == port.Port);
     }
 
     private Color GetServiceTypeColor(ServiceType type) => type switch

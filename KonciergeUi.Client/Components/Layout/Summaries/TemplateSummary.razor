@@ -13,19 +13,22 @@
                 
                     <MudIcon Icon="@KonciergeIcons.Outlined.Templates" Color="Color.Primary" />
                     <MudStack>
-                        <MudText Typo="Typo.body1">@_template.Name</MudText>
+                        
+                            <MudText Typo="Typo.body1">@_template.Name</MudText>
+                     
                         <MudText Typo="Typo.body2">@_template.Description</MudText>
                         <MudStack Row>
                             <MudText Typo="Typo.body2">@_template.Forwards.Count Forward(s)</MudText>
                             <MudText Typo="Typo.body2"> - </MudText>
                             <MudText Typo="Typo.body2">Modified @_template.ModifiedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudText>
-                            
+
                         </MudStack>
                     </MudStack>
                     
                 <MudSpacer/>
                 
                     <MudButton OnClick="StartTemplate" Color="Color.Success" StartIcon="@Icons.Material.Outlined.PlayArrow">Start Template</MudButton>
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"  Size="Size.Small" OnClick="EditTemplate" />
                     <MudIconButton OnClick="DeleteTemplate" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete" />
             </MudStack>
         </TitleContent>
@@ -43,6 +46,8 @@
 
     [Parameter]
     public ForwardTemplate _template { get; set; }
+    [Parameter]
+    public EventCallback<ForwardTemplate> OnEditTemplate { get; set; }
 
     private async Task DeleteTemplate(MouseEventArgs arg)
     {
@@ -76,6 +81,11 @@
             //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
            
         }
+    }
+
+    private Task EditTemplate(MouseEventArgs _)
+    {
+        return OnEditTemplate.HasDelegate ? OnEditTemplate.InvokeAsync(_template) : Task.CompletedTask;
     }
 
 }
