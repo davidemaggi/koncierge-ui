@@ -26,7 +26,7 @@ public static class MauiProgram
         
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug(); // Debug → Rider Debug window
-        //builder.Logging.SetMinimumLevel(LogLevel.Trace);
+        //builder.Logging.SetMinimumLevel(LogLevel.Trace); 
         
         builder.Services.AddBlazorWebViewDeveloperTools();
         AppDomain.CurrentDomain.FirstChanceException += (_, args) =>
