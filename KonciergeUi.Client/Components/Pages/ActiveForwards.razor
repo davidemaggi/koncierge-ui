@@ -21,7 +21,7 @@
                         @foreach (var template in _templates)
                         {
                             <MudItem xs="12">
-                                <RunningTemplateSummary _template="template" />
+                                <RunningTemplateSummary _template="template" OnTemplateStopped="HandleTemplateStopped" />
                             </MudItem>
                         }
                     </MudGrid>
@@ -54,6 +54,11 @@
             .ToList();
     }
 
+    private void HandleTemplateStopped(Guid templateId)
+    {
+        _templates.RemoveAll(t => t.TemplateId == templateId);
+        StateHasChanged();
+    }
 
 }
 

@@ -1,9 +1,11 @@
 ﻿using KonciergeUI.Models.Forwarding;
+using KonciergeUI.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace KonciergeUI.Data
 {
@@ -15,9 +17,17 @@ namespace KonciergeUI.Data
 
         private class PreferencesData
         {
-            public string CurrentTheme { get; set; } = "System";
-            public string CurrentLanguage { get; set; } = "en";
+            public KonciergeConfig Config { get; set; } = new();
+
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            public string? CurrentTheme { get; set; } = "System";
+
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            public string? CurrentLanguage { get; set; } = "en";
+
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             public string? LastSelectedClusterId { get; set; }
+
             public List<string> CustomKubeconfigPaths { get; set; } = new();
             public List<ForwardTemplate> ForwardTemplates { get; set; } = new();
         }
@@ -41,7 +51,9 @@ namespace KonciergeUI.Data
                 try
                 {
                     var json = File.ReadAllText(_filePath);
-                    return JsonSerializer.Deserialize<PreferencesData>(json) ?? new PreferencesData();
+                    var data = JsonSerializer.Deserialize<PreferencesData>(json) ?? new PreferencesData();
+                    MigrateLegacyConfig(data);
+                    return data;
                 }
                 catch
                 {
@@ -49,6 +61,33 @@ namespace KonciergeUI.Data
                     return new PreferencesData();
                 }
             }
+        }
+
+        private void MigrateLegacyConfig(PreferencesData data)
+        {
+            if (data.Config == null)
+            {
+                data.Config = new KonciergeConfig();
+            }
+
+            if (!string.IsNullOrWhiteSpace(data.CurrentTheme))
+            {
+                data.Config.CurrentTheme = data.CurrentTheme;
+            }
+
+            if (!string.IsNullOrWhiteSpace(data.CurrentLanguage))
+            {
+                data.Config.CurrentLanguage = data.CurrentLanguage;
+            }
+
+            if (!string.IsNullOrWhiteSpace(data.LastSelectedClusterId))
+            {
+                data.Config.LastSelectedClusterId = data.LastSelectedClusterId;
+            }
+
+            data.CurrentTheme = null;
+            data.CurrentLanguage = null;
+            data.LastSelectedClusterId = null;
         }
 
         private async Task SaveToFileAsync()
@@ -66,39 +105,15 @@ namespace KonciergeUI.Data
             await Task.CompletedTask;
         }
 
-        // Theme methods
-        public async Task<string?> GetCurrentThemeAsync()
+        // Configuration
+        public Task<KonciergeConfig> GetConfigAsync()
         {
-            return _data.CurrentTheme;
+            return Task.FromResult(_data.Config.Copy());
         }
 
-        public async Task SetCurrentThemeAsync(string theme)
+        public async Task UpdateConfigAsync(KonciergeConfig config)
         {
-            _data.CurrentTheme = theme;
-            await SaveToFileAsync();
-        }
-
-        // Language methods
-        public async Task<string?> GetCurrentLanguageAsync()
-        {
-            return _data.CurrentLanguage;
-        }
-
-        public async Task SetCurrentLanguageAsync(string language)
-        {
-            _data.CurrentLanguage = language;
-            await SaveToFileAsync();
-        }
-
-        // Cluster methods
-        public async Task<string?> GetLastSelectedClusterIdAsync()
-        {
-            return _data.LastSelectedClusterId;
-        }
-
-        public async Task SetLastSelectedClusterIdAsync(string clusterId)
-        {
-            _data.LastSelectedClusterId = clusterId;
+            _data.Config = config.Copy();
             await SaveToFileAsync();
         }
 
@@ -166,6 +181,12 @@ namespace KonciergeUI.Data
             {
                 await SaveToFileAsync();
             }
+        }
+
+        public async Task ResetAsync()
+        {
+            _data = new PreferencesData();
+            await SaveToFileAsync();
         }
 
         private static string ResolveAppDataDirectory()

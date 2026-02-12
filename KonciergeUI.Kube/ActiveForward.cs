@@ -7,10 +7,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using System.Diagnostics;
 
 namespace KonciergeUI.Kube
 {
-    public class ActiveForward
+    public class ActiveForward : IActiveForward
     {
         private readonly Guid _instanceId;
         private readonly string _podName;
@@ -20,11 +21,14 @@ namespace KonciergeUI.Kube
         private readonly IKubernetes _k8sClient;
         private readonly ILogger _logger;
         private readonly CancellationTokenSource _cts = new();
-        private readonly ConcurrentBag<string> _logs = new();
+        private readonly ConcurrentQueue<string> _logs = new();
         private readonly SemaphoreSlim _logSemaphore = new(1, 1);
+        private readonly object _startStopLock = new();
         private const int MaxLogEntries = 1000;
 
         private TcpListener? _listener;
+        private Task? _acceptLoopTask;
+        private bool _isStarted;
         public int BoundPort { get; private set; }
 
         public ActiveForward(
@@ -47,28 +51,36 @@ namespace KonciergeUI.Kube
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var localPort = _requestedLocalPort == 0 ? FindAvailablePort() : _requestedLocalPort;
+            cancellationToken.ThrowIfCancellationRequested();
 
-            var ipAddress = IPAddress.Loopback;
-            var localEndPoint = new IPEndPoint(ipAddress, localPort);
+            lock (_startStopLock)
+            {
+                if (_isStarted)
+                {
+                    return;
+                }
 
-            _listener = new TcpListener(localEndPoint);
-            _listener.Start(100);
+                var localPort = _requestedLocalPort == 0 ? FindAvailablePort() : _requestedLocalPort;
+                var localEndPoint = new IPEndPoint(IPAddress.Loopback, localPort);
 
-            BoundPort = ((IPEndPoint)_listener.LocalEndpoint).Port;
+                _listener = new TcpListener(localEndPoint);
+                _listener.Start(100);
 
-            await AddLogAsync($"✓ Port forward started: localhost:{BoundPort} -> {_podName}:{_targetPort}");
+                BoundPort = ((IPEndPoint)_listener.LocalEndpoint).Port;
+                _isStarted = true;
+            }
+
+            await AddLogAsync($"✓ Port forward started: localhost:{BoundPort} -> {_podName}:{_targetPort}").ConfigureAwait(false);
 
             _logger.LogInformation("Forward {InstanceId} listening on localhost:{Port} -> {Pod}:{TargetPort}",
                 _instanceId, BoundPort, _podName, _targetPort);
 
-            // Accept connections in background
-            _ = Task.Run(() => AcceptConnectionsLoop(), _cts.Token);
+            _acceptLoopTask = Task.Run(() => AcceptConnectionsLoopAsync(_cts.Token), _cts.Token);
         }
 
         public async Task StopAsync()
         {
-            await AddLogAsync("⚠ Port forward stopping...");
+            await AddLogAsync("⚠ Port forward stopping...").ConfigureAwait(false);
 
             try
             {
@@ -82,54 +94,79 @@ namespace KonciergeUI.Kube
             }
             catch { }
 
-            await AddLogAsync("✓ Port forward stopped");
+            if (_acceptLoopTask is not null)
+            {
+                try
+                {
+                    await _acceptLoopTask.ConfigureAwait(false);
+                }
+                catch { }
+            }
+
+            lock (_startStopLock)
+            {
+                _isStarted = false;
+                _listener = null;
+            }
+
+            await AddLogAsync("✓ Port forward stopped").ConfigureAwait(false);
             _logger.LogInformation("Forward {InstanceId} stopped", _instanceId);
         }
 
-        private void AcceptConnectionsLoop()
+        private async Task AcceptConnectionsLoopAsync(CancellationToken cancellationToken)
         {
-            AddLogAsync("✓ Accept loop started, waiting for connections...").Wait();
+            await AddLogAsync("✓ Accept loop started, waiting for connections...").ConfigureAwait(false);
 
             try
             {
-                while (!_cts.Token.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
-                        // Blocking accept
-                        var client = _listener!.AcceptTcpClient();
+                        if (_listener is null)
+                        {
+                            break;
+                        }
+
+                        var client = await _listener.AcceptTcpClientAsync(cancellationToken).ConfigureAwait(false);
 
                         var remoteEndpoint = client.Client.RemoteEndPoint?.ToString() ?? "unknown";
-                        AddLogAsync($"✓ New connection from {remoteEndpoint}").Wait();
+                        await AddLogAsync($"✓ New connection from {remoteEndpoint}").ConfigureAwait(false);
 
-                        // Handle each connection on a separate thread - each gets its own WebSocket!
-                        _ = Task.Run(() => HandleClientConnection(client), _cts.Token);
+                        // Handle each connection on a separate task - each gets its own WebSocket
+                        _ = Task.Run(() => HandleClientConnectionAsync(client, cancellationToken), cancellationToken);
                     }
-                    catch (SocketException) when (_cts.Token.IsCancellationRequested)
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                     {
                         break;
                     }
-                    catch (Exception ex) when (!_cts.Token.IsCancellationRequested)
+                    catch (SocketException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                    catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                     {
                         _logger.LogError(ex, "Error accepting connection for forward {InstanceId}", _instanceId);
-                        AddLogAsync($"✗ Error accepting connection: {ex.Message}").Wait();
+                        await AddLogAsync($"✗ Error accepting connection: {ex.Message}").ConfigureAwait(false);
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Accept loop failed for forward {InstanceId}", _instanceId);
-                AddLogAsync($"✗ Accept loop failed: {ex.Message}").Wait();
+                await AddLogAsync($"✗ Accept loop failed: {ex.Message}").ConfigureAwait(false);
             }
         }
 
-        private void HandleClientConnection(TcpClient client)
+        private async Task HandleClientConnectionAsync(TcpClient client, CancellationToken cancellationToken)
         {
             var connectionId = Guid.NewGuid().ToString("N")[..8];
-            AddLogAsync($"[{connectionId}] Connection handler started").Wait();
+            var connectionStopwatch = Stopwatch.StartNew();
+            long bytesFromClient = 0;
+            long bytesToClient = 0;
+            await AddLogAsync($"[{connectionId}] Connection handler started").ConfigureAwait(false);
 
             WebSocket? webSocket = null;
-            StreamDemuxer? demux = null;
 
             try
             {
@@ -137,141 +174,260 @@ namespace KonciergeUI.Kube
                 client.ReceiveBufferSize = 65536;
                 client.SendBufferSize = 65536;
 
-                AddLogAsync($"[{connectionId}] Creating WebSocket...").Wait();
+                await AddLogAsync($"[{connectionId}] Creating WebSocket...").ConfigureAwait(false);
 
-                // Create a NEW WebSocket for THIS connection
-                webSocket = _k8sClient.WebSocketNamespacedPodPortForwardAsync(
+                var handshakeStopwatch = Stopwatch.StartNew();
+                webSocket = await _k8sClient.WebSocketNamespacedPodPortForwardAsync(
                     _podName,
                     _namespace,
                     new[] { _targetPort },
                     "v4.channel.k8s.io",
-                    cancellationToken: _cts.Token
-                ).GetAwaiter().GetResult();
+                    cancellationToken: cancellationToken
+                ).ConfigureAwait(false);
+                handshakeStopwatch.Stop();
 
-                AddLogAsync($"[{connectionId}] ✓ WebSocket connected, state: {webSocket.State}").Wait();
-
-                demux = new StreamDemuxer(webSocket, StreamType.PortForward);
-                demux.Start();
-
-                var podStream = demux.GetStream((byte?)0, (byte?)0);
-
-                if (podStream == null)
-                {
-                    AddLogAsync($"[{connectionId}] ✗ Failed to get pod stream").Wait();
-                    return;
-                }
-
-                AddLogAsync($"[{connectionId}] ✓ Got streams, starting forwarding...").Wait();
+                await AddLogAsync($"[{connectionId}] ✓ WebSocket connected in {handshakeStopwatch.ElapsedMilliseconds}ms, state: {webSocket.State}")
+                    .ConfigureAwait(false);
 
                 var clientStream = client.GetStream();
 
-                // Both copy operations run on separate threads with BLOCKING I/O
-                var clientToPodTask = Task.Run(() =>
+                using var forwardCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                var token = forwardCts.Token;
+
+                await AddLogAsync($"[{connectionId}] ✓ Starting forwarding...").ConfigureAwait(false);
+
+                // Track if we've received the initial port confirmation on each channel
+                var dataChannelReady = false;
+                var errorChannelReady = false;
+
+                // Start client->pod copy (reads from TCP, sends to WebSocket channel 0)
+                var clientToPod = Task.Run(async () =>
                 {
-                    var buffer = new byte[4096];
-                    long totalBytes = 0;
+                    var buffer = new byte[65536];
+                    var sendBuffer = new byte[65537]; // +1 for channel byte
                     try
                     {
-                        while (!_cts.Token.IsCancellationRequested)
+                        while (!token.IsCancellationRequested && webSocket.State == WebSocketState.Open)
                         {
-                            // Blocking read
-                            var bytesRead = clientStream.Read(buffer, 0, buffer.Length);
-                            if (bytesRead == 0)
+                            var read = await clientStream.ReadAsync(buffer.AsMemory(), token).ConfigureAwait(false);
+                            if (read == 0)
                             {
-                                AddLogAsync($"[{connectionId}] C→P: Client closed ({totalBytes} bytes)").Wait();
+                                await AddLogAsync($"[{connectionId}] C→P: Client closed").ConfigureAwait(false);
                                 break;
                             }
 
-                            // Blocking write
-                            podStream.Write(buffer, 0, bytesRead);
-                            podStream.Flush();
+                            bytesFromClient += read;
 
-                            totalBytes += bytesRead;
-
-                            if (totalBytes == bytesRead)
+                            if (bytesFromClient == read)
                             {
-                                AddLogAsync($"[{connectionId}] C→P: Started, first {bytesRead} bytes").Wait();
+                                var firstLine = TryGetFirstLine(buffer, read);
+                                if (!string.IsNullOrEmpty(firstLine))
+                                {
+                                    await AddLogAsync($"[{connectionId}] C→P: {firstLine}").ConfigureAwait(false);
+                                }
                             }
+
+                            // Prepend channel byte (0 for data)
+                            sendBuffer[0] = 0;
+                            Buffer.BlockCopy(buffer, 0, sendBuffer, 1, read);
+                            await webSocket.SendAsync(new ArraySegment<byte>(sendBuffer, 0, read + 1), 
+                                WebSocketMessageType.Binary, true, token).ConfigureAwait(false);
                         }
                     }
-                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    catch (OperationCanceledException)
                     {
-                        AddLogAsync($"[{connectionId}] C→P: Error after {totalBytes} bytes: {ex.Message}").Wait();
+                        await AddLogAsync($"[{connectionId}] C→P: Canceled").ConfigureAwait(false);
                     }
-                }, _cts.Token);
+                    catch (Exception ex)
+                    {
+                        await AddLogAsync($"[{connectionId}] C→P error: {ex.GetType().Name}: {ex.Message}").ConfigureAwait(false);
+                    }
+                }, token);
 
-                var podToClientTask = Task.Run(() =>
+                // Start pod->client copy (reads from WebSocket, writes to TCP)
+                var podToClient = Task.Run(async () =>
                 {
-                    var buffer = new byte[4096];
-                    long totalBytes = 0;
+                    var buffer = new byte[65537];
                     try
                     {
-                        while (!_cts.Token.IsCancellationRequested)
+                        while (!token.IsCancellationRequested && webSocket.State == WebSocketState.Open)
                         {
-                            // Blocking read
-                            var bytesRead = podStream.Read(buffer, 0, buffer.Length);
-                            if (bytesRead == 0)
+                            var result = await webSocket.ReceiveAsync(buffer, token).ConfigureAwait(false);
+                            
+                            if (result.MessageType == WebSocketMessageType.Close)
                             {
-                                AddLogAsync($"[{connectionId}] P→C: Pod closed ({totalBytes} bytes)").Wait();
+                                await AddLogAsync($"[{connectionId}] P→C: WebSocket closed").ConfigureAwait(false);
                                 break;
                             }
 
-                            // Blocking write
-                            clientStream.Write(buffer, 0, bytesRead);
-                            clientStream.Flush();
+                            if (result.Count < 1) continue;
 
-                            totalBytes += bytesRead;
+                            var channel = buffer[0];
+                            var dataStart = 1;
+                            var dataLength = result.Count - 1;
 
-                            if (totalBytes == bytesRead)
+                            // First message on each channel is the port confirmation (2 bytes)
+                            if (channel == 0 && !dataChannelReady)
                             {
-                                AddLogAsync($"[{connectionId}] P→C: Started, first {bytesRead} bytes").Wait();
+                                dataChannelReady = true;
+                                // Skip the 2-byte port confirmation
+                                if (dataLength <= 2)
+                                {
+                                    continue;
+                                }
+                                // If there's more data after the port, forward it
+                                dataStart = 3; // skip channel byte + 2 port bytes
+                                dataLength = result.Count - 3;
+                            }
+                            else if (channel == 1 && !errorChannelReady)
+                            {
+                                errorChannelReady = true;
+                                // Skip the 2-byte port confirmation on error channel
+                                if (dataLength <= 2)
+                                {
+                                    continue;
+                                }
+                                // If there's actual error data after the port, process it
+                                dataStart = 3;
+                                dataLength = result.Count - 3;
+                                if (dataLength > 0)
+                                {
+                                    var errorMsg = Encoding.UTF8.GetString(buffer, dataStart, dataLength).Trim();
+                                    if (!string.IsNullOrEmpty(errorMsg))
+                                    {
+                                        await AddLogAsync($"[{connectionId}] K8s error: {errorMsg}").ConfigureAwait(false);
+                                    }
+                                }
+                                continue;
+                            }
+
+                            if (channel == 0 && dataLength > 0)
+                            {
+                                // Data channel
+                                bytesToClient += dataLength;
+
+                                if (bytesToClient == dataLength)
+                                {
+                                    var firstLine = TryGetFirstLine(buffer.AsSpan(dataStart, dataLength).ToArray(), dataLength);
+                                    if (!string.IsNullOrEmpty(firstLine))
+                                    {
+                                        await AddLogAsync($"[{connectionId}] P→C: {firstLine}").ConfigureAwait(false);
+                                    }
+                                }
+
+                                await clientStream.WriteAsync(buffer.AsMemory(dataStart, dataLength), token).ConfigureAwait(false);
+                                await clientStream.FlushAsync(token).ConfigureAwait(false);
+                            }
+                            else if (channel == 1 && dataLength > 0)
+                            {
+                                // Error channel
+                                var errorMsg = Encoding.UTF8.GetString(buffer, dataStart, dataLength).Trim();
+                                if (!string.IsNullOrEmpty(errorMsg))
+                                {
+                                    await AddLogAsync($"[{connectionId}] K8s error: {errorMsg}").ConfigureAwait(false);
+                                }
                             }
                         }
                     }
-                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    catch (OperationCanceledException)
                     {
-                        AddLogAsync($"[{connectionId}] P→C: Error after {totalBytes} bytes: {ex.Message}").Wait();
+                        await AddLogAsync($"[{connectionId}] P→C: Canceled").ConfigureAwait(false);
                     }
-                }, _cts.Token);
+                    catch (Exception ex)
+                    {
+                        await AddLogAsync($"[{connectionId}] P→C error: {ex.GetType().Name}: {ex.Message}").ConfigureAwait(false);
+                    }
+                }, token);
 
                 // Wait for either direction to complete
-                Task.WaitAny(clientToPodTask, podToClientTask);
+                await Task.WhenAny(clientToPod, podToClient).ConfigureAwait(false);
 
-                AddLogAsync($"[{connectionId}] ✓ Connection closed").Wait();
+                // Cancel the other direction and cleanup
+                forwardCts.Cancel();
+
+                // Give a moment for graceful shutdown
+                try
+                {
+                    await Task.WhenAll(clientToPod, podToClient).WaitAsync(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+                }
+                catch { }
+
+                await AddLogAsync($"[{connectionId}] ✓ Connection closed (C→P: {bytesFromClient}, P→C: {bytesToClient}, {connectionStopwatch.Elapsed.TotalSeconds:F1}s)")
+                    .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                await AddLogAsync($"[{connectionId}] ⚠ Connection canceled ({connectionStopwatch.Elapsed.TotalSeconds:F1}s)")
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error handling connection {ConnectionId}", connectionId);
-                AddLogAsync($"[{connectionId}] ✗ Error: {ex.GetType().Name}: {ex.Message}").Wait();
+                await AddLogAsync($"[{connectionId}] ✗ Error: {ex.GetType().Name}: {ex.Message}").ConfigureAwait(false);
             }
             finally
             {
-                try { client?.Close(); } catch { }
-                try { demux?.Dispose(); } catch { }
-                try { webSocket?.Dispose(); } catch { }
+                try { client.Close(); } catch { }
+                if (webSocket != null)
+                {
+                    try
+                    {
+                        if (webSocket.State == WebSocketState.Open)
+                        {
+                            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Connection closed", CancellationToken.None);
+                        }
+                        webSocket.Dispose();
+                    }
+                    catch { }
+                }
             }
+        }
+
+        private static string? TryGetFirstLine(byte[] buffer, int bytesRead)
+        {
+            if (bytesRead <= 0)
+            {
+                return null;
+            }
+
+            var lineEnd = Array.IndexOf(buffer, (byte)'\n', 0, bytesRead);
+            if (lineEnd < 0)
+            {
+                return null;
+            }
+
+            var length = lineEnd;
+            if (length > 0 && buffer[length - 1] == '\r')
+            {
+                length--;
+            }
+
+            if (length <= 0)
+            {
+                return null;
+            }
+
+            return Encoding.ASCII.GetString(buffer, 0, length);
         }
 
         private int FindAvailablePort()
         {
-            var listener = new TcpListener(IPAddress.Loopback, 0);
+            using var listener = new TcpListener(IPAddress.Loopback, 0);
             listener.Start();
             var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-            listener.Stop();
             return port;
         }
 
         private async Task AddLogAsync(string message)
         {
-            await _logSemaphore.WaitAsync();
+            await _logSemaphore.WaitAsync().ConfigureAwait(false);
             try
             {
                 var logEntry = $"[{DateTimeOffset.UtcNow:HH:mm:ss.fff}] {message}";
-                _logs.Add(logEntry);
+                _logs.Enqueue(logEntry);
 
-                while (_logs.Count > MaxLogEntries)
+                while (_logs.Count > MaxLogEntries && _logs.TryDequeue(out _))
                 {
-                    _logs.TryTake(out _);
                 }
             }
             finally
@@ -280,9 +436,11 @@ namespace KonciergeUI.Kube
             }
         }
 
+
         public IReadOnlyCollection<string> GetLogs(int maxLines)
         {
-            return _logs.TakeLast(maxLines).ToList().AsReadOnly();
+            var snapshot = _logs.ToArray();
+            return snapshot.TakeLast(maxLines).ToList().AsReadOnly();
         }
     }
 

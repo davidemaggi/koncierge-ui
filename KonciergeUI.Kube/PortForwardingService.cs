@@ -15,7 +15,7 @@ namespace KonciergeUI.Kube
     {
         private readonly ILogger<PortForwardingService> _logger;
         private readonly ConcurrentDictionary<Guid, RunningTemplate> _runningTemplates = new();
-        private readonly ConcurrentDictionary<Guid, ActiveForward> _activeForwards = new();
+        private readonly ConcurrentDictionary<Guid, IActiveForward> _activeForwards = new();
         private readonly ConcurrentDictionary<Guid, IKubernetes> _k8sClients = new(); // Track clients per template
         private readonly IKubeRepository _kube;
 
@@ -58,7 +58,7 @@ namespace KonciergeUI.Kube
             }
 
             var forwardInstances = new List<ForwardInstance>();
-            var activeForwards = new List<ActiveForward>();
+            var activeForwards = new List<(Guid InstanceId, ActiveForward Forward)>();
 
             try
             {
@@ -78,7 +78,7 @@ namespace KonciergeUI.Kube
                     forwardInstances.Add(instance);
 
                     var activeForward = await StartForwardInternalAsync(instance, k8sClient, cancellationToken);
-                    activeForwards.Add(activeForward);
+                    activeForwards.Add((instance.Id, activeForward));
                     _activeForwards[instance.Id] = activeForward;
 
                     instance.Status = ForwardStatus.Running;
@@ -109,11 +109,18 @@ namespace KonciergeUI.Kube
                     template.Name, cluster.Name);
 
                 // Cleanup any started forwards
-                foreach (var activeForward in activeForwards)
+                foreach (var (instanceId, activeForward) in activeForwards)
                 {
                     try
                     {
-                        await activeForward.StopAsync();
+                        if (_activeForwards.TryRemove(instanceId, out _))
+                        {
+                            await activeForward.StopAsync();
+                        }
+                        else
+                        {
+                            await activeForward.StopAsync();
+                        }
                     }
                     catch (Exception cleanupEx)
                     {

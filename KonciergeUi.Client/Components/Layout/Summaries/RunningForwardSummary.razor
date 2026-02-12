@@ -59,6 +59,8 @@
             }
         </MudStack>
         <MudSpacer/>
+        
+        <MudIconButton OnClick="(() => OnCopyLogClicked(_logs))"  Icon="@Icons.Material.Filled.ContentCopy"/>
         <MudIconButton OnClick="ShowLog" Icon="@Icons.Material.Filled.Terminal"/>
         @if (_instance.Status != Enums.ForwardStatus.Stopped)
         {
@@ -145,7 +147,15 @@
         }
     }
 
+    private async Task OnCopyLogClicked(List<string> s)
+    {
+        if (Clipboard.Default.HasText)
+        {
+            await Clipboard.Default.SetTextAsync(String.Join(Environment.NewLine, s));
 
+            _snakbar.Add("Added to Clipboard", Severity.Info);
+        }
+    }
     private string? GetLinkedIcon(ResolvedSecret rs)
 
     {

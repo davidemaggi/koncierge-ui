@@ -1,4 +1,4 @@
-﻿@using KonciergeUi.Client.Components.Layout.Modals
+﻿﻿@using KonciergeUi.Client.Components.Layout.Modals
 @using KonciergeUi.Client.Extensions
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Data
@@ -51,13 +51,20 @@
     [Parameter]
     public RunningTemplate _template { get; set; }
 
+    [Parameter]
+    public EventCallback<Guid> OnTemplateStopped { get; set; }
+
     
 
     private async Task Stoptemplate(MouseEventArgs arg)
     {
     
         
-                await DialogService.ShowConfirmationActionAsync(() => _fwdService.StopTemplateAsync(_template.TemplateId));
+                await DialogService.ShowConfirmationActionAsync(async () => 
+                {
+                    await _fwdService.StopTemplateAsync(_template.TemplateId);
+                    await OnTemplateStopped.InvokeAsync(_template.TemplateId);
+                });
 
     }
 

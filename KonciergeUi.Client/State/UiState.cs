@@ -7,6 +7,7 @@ using KonciergeUI.Translations.Services;
 using KonciergeUI.Models.Security;
 using System.Collections.Generic;
 using System.Linq;
+using KonciergeUI.Models;
 
 namespace KonciergeUi.Client.State;
 
@@ -17,6 +18,7 @@ public class UiState : INotifyPropertyChanged
     private ClusterConnectionInfo? _selectedCluster;
     private string _currentTheme = "System";
     private string _currentLanguage = "en";
+    private KonciergeConfig _config = new();
 
     private string? _selectedNamespace = null;
     private string? _selectedType = null;
@@ -40,10 +42,10 @@ public class UiState : INotifyPropertyChanged
                 _selectedCluster = value;
                 OnPropertyChanged();
 
-                // Persist to storage
                 if (value != null)
                 {
-                    _ = _preferencesStorage.SetLastSelectedClusterIdAsync(value.Id);
+                    _config.LastSelectedClusterId = value.Id;
+                    _ = _preferencesStorage.UpdateConfigAsync(_config);
                 }
             }
         }
@@ -60,8 +62,8 @@ public class UiState : INotifyPropertyChanged
                 OnPropertyChanged();
                 ThemeChanged?.Invoke(this, value);
 
-                // Persist to storage
-                _ = _preferencesStorage.SetCurrentThemeAsync(value);
+                _config.CurrentTheme = value;
+                _ = _preferencesStorage.UpdateConfigAsync(_config);
             }
         }
     }
@@ -78,8 +80,8 @@ public class UiState : INotifyPropertyChanged
                 OnPropertyChanged();
                 LanguageChanged?.Invoke(this, value);
 
-                // Persist to storage
-                _ = _preferencesStorage.SetCurrentLanguageAsync(value);
+                _config.CurrentLanguage = value;
+                _ = _preferencesStorage.UpdateConfigAsync(_config);
             }
         }
     }
@@ -96,24 +98,24 @@ public class UiState : INotifyPropertyChanged
     // Load saved preferences on startup
     public async Task LoadPreferencesAsync()
     {
-        var theme = await _preferencesStorage.GetCurrentThemeAsync();
-        if (!string.IsNullOrEmpty(theme))
+        _config = await _preferencesStorage.GetConfigAsync();
+
+        if (!string.IsNullOrEmpty(_config.CurrentTheme))
         {
-            _currentTheme = theme;
+            _currentTheme = _config.CurrentTheme;
         }
 
-        var language = await _preferencesStorage.GetCurrentLanguageAsync();
-        if (!string.IsNullOrEmpty(language))
+        if (!string.IsNullOrEmpty(_config.CurrentLanguage))
         {
-            _currentLanguage = language;
+            _currentLanguage = _config.CurrentLanguage;
         }
 
         _localizationService.SetCulture(_currentLanguage);
     }
 
-    public async Task<string?> GetLastSelectedClusterIdAsync()
+    public Task<string?> GetLastSelectedClusterIdAsync()
     {
-        return await _preferencesStorage.GetLastSelectedClusterIdAsync();
+        return Task.FromResult(_config.LastSelectedClusterId);
     }
 
 
