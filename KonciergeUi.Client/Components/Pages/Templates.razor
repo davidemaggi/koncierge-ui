@@ -8,6 +8,7 @@
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
+@using MudBlazor.Utilities
 @inject UiState _ui
 @inject IPreferencesStorage _storage;
 @inject NavigationManager Navigation;
@@ -17,29 +18,21 @@
     {
         <MudCard>
             <MudCardContent>
-                <MudStack>
-                    <MudGrid>
-                        @foreach (var (template, index) in _templates.Select((t, index) => (t, index)))
-                        {
-                            <MudItem xs="12">
-                                <MudStack StretchItems="StretchItems.End" Row>
-                                    <MudIconButton Ripple="false" Size="Size.Small" Disabled="index.Equals(0)" Color="Color.Primary" Icon="@Icons.Material.Outlined.ArrowUpward" OnClick="@(() => MoveTemplateAsync(index, -1))"/>
-                                    <MudIconButton Ripple="false" Size="Size.Small" Disabled="index.Equals(_templates.Count - 1) " Color="Color.Primary" Icon="@Icons.Material.Outlined.ArrowDownward" OnClick="@(() => MoveTemplateAsync(index, 1))"/>
-                                    <MudIconButton Ripple="false" Size="Size.Small" Color="Color.Primary" Icon="@(template.Favorite ? Icons.Material.Filled.Star : Icons.Material.Filled.StarBorder)" OnClick="@(() => ToggleFavoriteAsync(template))"/>
-                                    <TemplateSummary _template="template" OnEditTemplate="EditTemplateAsync"/>
-                                </MudStack>
-                            </MudItem>
-                        }
-                    </MudGrid>
-                </MudStack>
+                <MudDropContainer T="ForwardTemplate" Items="_templates" ItemsSelector="@((item, zone) => true)" ItemDropped="OnItemDropped" Class="d-flex flex-column" ApplyDropClassesOnDragStarted="true">
+                    <ChildContent>
+                        <MudDropZone T="ForwardTemplate" Identifier="templates" Class="d-flex flex-column gap-3" AllowReorder="true" DraggingClass="mud-alert-text-info" />
+                    </ChildContent>
+                    <ItemRenderer>
+                        <MudPaper Class="pa-2 my-1 d-flex align-center flex-grow-1" Elevation="1" Style="width: 100%;">
+                            <MudIconButton Icon="@Icons.Material.Filled.DragIndicator" Class="mud-drop-item-drag-handle cursor-grab" Color="Color.Default" />
+                            <MudIconButton Ripple="false" Size="Size.Small" Color="Color.Primary" Icon="@(context.Favorite ? Icons.Material.Filled.Star : Icons.Material.Filled.StarBorder)" OnClick="@(() => ToggleFavoriteAsync(context))"/>
+                            <div class="flex-grow-1">
+                                <TemplateSummary _template="context" OnEditTemplate="EditTemplateAsync"/>
+                            </div>
+                        </MudPaper>
+                    </ItemRenderer>
+                </MudDropContainer>
             </MudCardContent>
-        @*
-            <MudCardActions>
-                <MudButton OnClick="StartForward"  StartIcon="@Icons.Material.Filled.PlayArrow" Color="Color.Success">Start Forward</MudButton>
-                <MudButton  StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">Create Template</MudButton>
-
-            </MudCardActions>
-            *@
         </MudCard>
     }
     else
@@ -60,16 +53,17 @@
             .ToList();      
     }
 
-    private async Task MoveTemplateAsync(int index, int offset)
+    private async Task OnItemDropped(MudItemDropInfo<ForwardTemplate> dropInfo)
     {
-        var targetIndex = index + offset;
-        if (targetIndex < 0 || targetIndex >= _templates.Count)
+        if (dropInfo.Item == null)
         {
             return;
         }
 
-        (_templates[index], _templates[targetIndex]) = (_templates[targetIndex], _templates[index]);
+        // Use MudBlazor's built-in reorder functionality
+        _templates.UpdateOrder(dropInfo, item => item.Sorting);
 
+        // Update sorting for all templates based on new positions
         var changedTemplates = new List<ForwardTemplate>();
         for (var i = 0; i < _templates.Count; i++)
         {
@@ -88,9 +82,6 @@
         {
             await Task.WhenAll(changedTemplates.Select(_storage.UpdateForwardTemplateAsync));
         }
-
-        _templates = _templates.OrderBy(t => t.Sorting).ToList();
-        await InvokeAsync(StateHasChanged);
     }
 
     private async Task ToggleFavoriteAsync(ForwardTemplate template)

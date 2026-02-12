@@ -1,0 +1,32 @@
+@using KonciergeUi.Client.Components.Theme
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">
+        <MudText Typo="Typo.h6">An error occurred</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">@Exception.Message</MudText>
+    </MudAlert>
+    <MudExpansionPanels>
+        <MudExpansionPanel Text="Stack Trace">
+            <MudText Typo="Typo.caption" Style="white-space: pre-wrap; font-family: monospace;">@Exception.StackTrace</MudText>
+        </MudExpansionPanel>
+        @if (Exception.InnerException != null)
+        {
+            <MudExpansionPanel Text="Inner Exception">
+                <MudText Typo="Typo.body2">@Exception.InnerException.Message</MudText>
+                <MudText Typo="Typo.caption" Style="white-space: pre-wrap; font-family: monospace;" Class="mt-2">@Exception.InnerException.StackTrace</MudText>
+            </MudExpansionPanel>
+        }
+    </MudExpansionPanels>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" Class="mt-4" OnClick="OnRecover">
+        Try Again
+    </MudButton>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public required Exception Exception { get; set; }
+
+    [Parameter]
+    public EventCallback OnRecover { get; set; }
+}
+

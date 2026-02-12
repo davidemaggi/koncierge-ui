@@ -109,3 +109,28 @@ h1:focus {
         padding-left: env(safe-area-inset-left);
     }
 }
+
+/* Drag and drop handle styles */
+.mud-drop-item {
+    -webkit-user-drag: none;
+    user-select: none;
+    width: 100%;
+}
+
+.mud-drop-item * {
+    -webkit-user-drag: none;
+}
+
+.mud-drop-item-drag-handle {
+    cursor: grab !important;
+    -webkit-user-drag: element;
+}
+
+.mud-drop-item-drag-handle:active {
+    cursor: grabbing !important;
+}
+
+.mud-drop-zone {
+    width: 100%;
+}
+

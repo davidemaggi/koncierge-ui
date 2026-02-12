@@ -21,7 +21,7 @@
 
 @* Needed for snackbars *@
 <MudSnackbarProvider />
-<ErrorBoundary>
+<ErrorBoundary @ref="_errorBoundary">
     <ChildContent>
         <MudLayout>
 <MudStack StretchItems="StretchItems.Middle" Style="height: 100vh">
@@ -36,12 +36,23 @@
 </MudStack>
         </MudLayout>
     </ChildContent>
-    
+    <ErrorContent Context="ex">
+        <MudLayout>
+            <MudStack StretchItems="StretchItems.Middle" Style="height: 100vh">
+                <NavMenu _isDark="_isDarkMode" OnThemeChangedAsync="ToggleTheme" />
+                <MudMainContent>
+                    <ErrorView Exception="ex" OnRecover="RecoverFromError" />
+                </MudMainContent>
+                <Footer></Footer>
+            </MudStack>
+        </MudLayout>
+    </ErrorContent>
 </ErrorBoundary>
 
 
 @code {
     private MudThemeProvider? _mudThemeProvider;
+    private ErrorBoundary? _errorBoundary;
     private bool _isDarkMode;
 
     [Inject] IJSRuntime Js { get; set; } = default!;
@@ -101,6 +112,11 @@
     private void OnLanguageChanged(object? sender, string culture)
     {
         InvokeAsync(StateHasChanged);
+    }
+
+    private void RecoverFromError()
+    {
+        _errorBoundary?.Recover();
     }
 
     public void Dispose()
