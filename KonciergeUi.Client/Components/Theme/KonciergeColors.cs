@@ -7,7 +7,7 @@ public static class KonciergeColors
 
     public static string GetSummayCardBackground(UiState ui)
     {
-        if (ui.CurrentTheme=="Dark")
+        if (ui.IsDarkMode)
         {
             
             return $"background:#2E2E2E;";

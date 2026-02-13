@@ -28,14 +28,16 @@
             
             <!-- Namespace filter -->
             <MudSelect T="string"
-                       Value="@_ui.SelectedNamespace"
-                       ValueChanged="@(value => OnNamespaceChanged(value))"
+                       MultiSelection="true"
+                       Clearable="true"
+                       SelectedValues="@_ui.SelectedNamespaces"
+                       SelectedValuesChanged="@(values => OnNamespacesChanged(values))"
                        Label="Namespace" 
                        Variant="Variant.Outlined" 
                        Dense="true"
                        Class="mr-2"
-                       Style="min-width: 150px;">
-                <MudSelectItem T="string" Value="@("")">All namespaces</MudSelectItem>
+                       Style="min-width: 200px;"
+                       MultiSelectionTextFunc="@(new Func<List<string>, string>(GetNamespaceSelectionText))">
                 @foreach (var ns in _namespaces)
                 {
                     <MudSelectItem T="string" Value="@ns">@ns</MudSelectItem>
@@ -43,15 +45,17 @@
             </MudSelect>
 
             <!-- Type filter -->
-            <MudSelect T="string" 
-                       Value="@_ui.SelectedType"
-                       ValueChanged="@(value => OnTypeChanged(value))"
+            <MudSelect T="string"
+                       MultiSelection="true"
+                       Clearable="true"
+                       SelectedValues="@_ui.SelectedTypes"
+                       SelectedValuesChanged="@(values => OnTypesChanged(values))"
                        Label="Type" 
                        Variant="Variant.Outlined" 
                        Dense="true"
                        Class="mr-2"
-                       Style="min-width: 150px;">
-                <MudSelectItem T="string" Value="@("")">All types</MudSelectItem>
+                       Style="min-width: 200px;"
+                       MultiSelectionTextFunc="@(new Func<List<string>, string>(GetTypeSelectionText))">
                 @foreach (var type in Enum.GetValues<ServiceType>())
                 {
                     <MudSelectItem T="string" Value="@type.ToString()">@type</MudSelectItem>
@@ -171,7 +175,7 @@
                 {
                     <MudText>Loading services...</MudText>
                 }
-                else if (!string.IsNullOrEmpty(_ui.SearchString) || !string.IsNullOrEmpty(_ui.SelectedNamespace) || !string.IsNullOrEmpty(_ui.SelectedType))
+                else if (!string.IsNullOrEmpty(_ui.SearchString) || _ui.SelectedNamespaces.Any() || _ui.SelectedTypes.Any())
                 {
                     <MudText>No services match the current filters.</MudText>
                 }
@@ -182,7 +186,7 @@
             </MudAlert>
         </NoRecordsContent>
                 <PagerContent>
-            <MudTablePager />
+            <MudTablePager PageSizeOptions="@(new int[] { 15, 30, 50, int.MaxValue })" />
         </PagerContent>
     </MudTable>
 </MudPaper>
@@ -206,12 +210,13 @@
 
 
  private bool _hasLoaded = false;
+    private ClusterConnectionInfo? _previousCluster;
 
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && Cluster != null && !_hasLoaded)
+        if (Cluster != null && !_hasLoaded)
         {
             _hasLoaded = true;
             await LoadServicesAsync();
@@ -226,22 +231,34 @@
             _filteredServices.Clear();
             _namespaces.Clear();
             _hasLoaded = false;
+            _previousCluster = null;
+            ClearFilters();
         }
-        else
+        else if (_previousCluster?.Id != Cluster.Id)
         {
-            _hasLoaded = false; // Trigger reload on next render
+            // Cluster changed, trigger reload and clear filters
+            _hasLoaded = false;
+            _previousCluster = Cluster;
+            ClearFilters();
         }
     }
 
-    private void OnNamespaceChanged(string value)
+    private void ClearFilters()
     {
-        _ui.SelectedNamespace = value;
+        _ui.SelectedNamespaces = new HashSet<string>();
+        _ui.SelectedTypes = new HashSet<string>();
+        _ui.SearchString = null;
+    }
+
+    private void OnNamespacesChanged(IEnumerable<string> values)
+    {
+        _ui.SelectedNamespaces = values;
         ApplyFilters();
     }
 
-    private void OnTypeChanged(string value)
+    private void OnTypesChanged(IEnumerable<string> values)
     {
-        _ui.SelectedType = value;
+        _ui.SelectedTypes = values;
         ApplyFilters();
     }
 
@@ -249,6 +266,24 @@
     {
         _ui.SearchString = value;
         ApplyFilters();
+    }
+
+    private string GetNamespaceSelectionText(List<string> selectedValues)
+    {
+        if (!selectedValues.Any())
+            return "All namespaces";
+        if (selectedValues.Count == 1)
+            return selectedValues.First();
+        return $"{selectedValues.Count} namespaces";
+    }
+
+    private string GetTypeSelectionText(List<string> selectedValues)
+    {
+        if (!selectedValues.Any())
+            return "All types";
+        if (selectedValues.Count == 1)
+            return selectedValues.First();
+        return $"{selectedValues.Count} types";
     }
 
     private async Task LoadServicesAsync()
@@ -286,12 +321,12 @@
     {
         _filteredServices = _services.Where(service =>
         {
-            // Namespace filter
-            if (!string.IsNullOrEmpty(_ui.SelectedNamespace) && service.Namespace != _ui.SelectedNamespace)
+            // Namespace filter (multi-select)
+            if (_ui.SelectedNamespaces.Any() && !_ui.SelectedNamespaces.Contains(service.Namespace))
                 return false;
 
-            // Type filter
-            if (!string.IsNullOrEmpty(_ui.SelectedType) && service.Type.ToString() != _ui.SelectedType)
+            // Type filter (multi-select)
+            if (_ui.SelectedTypes.Any() && !_ui.SelectedTypes.Contains(service.Type.ToString()))
                 return false;
 
             // Search filter

@@ -4,6 +4,7 @@
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.State
 @using KonciergeUi.Client.Components.Layout.Modals
+@implements IDisposable
 
 @inject UiState _ui
 @inject IDialogService Dialog
@@ -24,7 +25,7 @@
                 }
                 <MudText Style="font-family: monospace;" Typo="Typo.body1">@_definition.ResourceName</MudText>
             </MudStack>
-            <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{_definition.LocalPort} -> {_definition.TargetPort}({_definition.Protocol.ToString()})")</MudText>
+            <MudText Style="font-family: monospace;" Typo="Typo.body2">@GetPortDisplay()</MudText>
             @if (_definition.LinkedSecrets.Any()) 
             {
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_definition.LinkedSecrets.Count} linked secret(s)")</MudText>
@@ -58,6 +59,30 @@
 
     [Parameter]
     public EventCallback<PortForwardDefinition> OnForwardUpdated { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _ui.PropertyChanged += OnUiStateChanged;
+    }
+
+    private void OnUiStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(UiState.IsDarkMode))
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        _ui.PropertyChanged -= OnUiStateChanged;
+    }
+
+    private string GetPortDisplay()
+    {
+        var localPort = _definition.LocalPort == 0 ? "Random" : _definition.LocalPort.ToString();
+        return $"localhost:{localPort} -> {_definition.TargetPort}({_definition.Protocol.ToString()})";
+    }
 
     private async Task RemoveClicked()
     {

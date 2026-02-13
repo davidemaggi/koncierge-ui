@@ -1,9 +1,11 @@
 @using KonciergeUi.Client.Components.Layout.Modals
+@using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.Extensions
 @inject IPreferencesStorage _storage
 @inject IDialogService DialogService
+@inject IPortForwardingService _fwdService
 
 
 <MudExpansionPanels Elevation="0">
@@ -26,8 +28,20 @@
                     </MudStack>
                     
                 <MudSpacer/>
-                
+                @{
+                    var conflictingPorts = GetConflictingPorts();
+                    var hasConflict = conflictingPorts.Any();
+                }
+                @if (hasConflict)
+                {
+                    <MudTooltip Text="@($"Port(s) already in use: {string.Join(", ", conflictingPorts)}")">
+                        <MudButton Disabled="true" Color="Color.Success" StartIcon="@Icons.Material.Outlined.PlayArrow">Start Template</MudButton>
+                    </MudTooltip>
+                }
+                else
+                {
                     <MudButton OnClick="StartTemplate" Color="Color.Success" StartIcon="@Icons.Material.Outlined.PlayArrow">Start Template</MudButton>
+                }
                     <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"  Size="Size.Small" OnClick="EditTemplate" />
                     <MudIconButton OnClick="DeleteTemplate" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete" />
             </MudStack>
@@ -48,6 +62,23 @@
     public ForwardTemplate _template { get; set; }
     [Parameter]
     public EventCallback<ForwardTemplate> OnEditTemplate { get; set; }
+
+    private List<int> GetConflictingPorts()
+    {
+        // Get all ports currently in use by running forwards
+        var portsInUse = _fwdService.GetAllRunningTemplates()
+            .SelectMany(t => t.Forwards)
+            .Where(f => f.BoundLocalPort.HasValue)
+            .Select(f => f.BoundLocalPort!.Value)
+            .ToHashSet();
+
+        // Find ports in this template that are non-zero and already in use
+        return _template.Forwards
+            .Where(f => f.LocalPort != 0 && portsInUse.Contains(f.LocalPort))
+            .Select(f => f.LocalPort)
+            .Distinct()
+            .ToList();
+    }
 
     private async Task DeleteTemplate(MouseEventArgs arg)
     {

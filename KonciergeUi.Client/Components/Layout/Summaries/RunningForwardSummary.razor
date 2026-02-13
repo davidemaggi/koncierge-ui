@@ -34,7 +34,7 @@
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_cluster.ContextName}:{_instance.Definition.TargetPort}")</MudText>
 
                 <MudText Typo="Typo.body2">@($"Destination: ")</MudText>
-                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{_instance.Definition.LocalPort}")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{_instance.BoundLocalPort ?? _instance.Definition.LocalPort}")</MudText>
 
                 <MudText Typo="Typo.body2">@($"Protocol: ")</MudText>
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_instance.Definition.Protocol.ToString().ToUpper()}")</MudText>

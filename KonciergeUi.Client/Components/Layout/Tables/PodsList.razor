@@ -31,14 +31,16 @@
             
             <!-- Namespace filter -->
             <MudSelect T="string"
-                       Value="@_ui.SelectedNamespace"
-                       ValueChanged="@(value => OnNamespaceChanged(value))"
+                       MultiSelection="true"
+                       Clearable="true"
+                       SelectedValues="@_ui.SelectedNamespaces"
+                       SelectedValuesChanged="@(values => OnNamespacesChanged(values))"
                        Label="Namespace" 
                        Variant="Variant.Outlined" 
                        Dense="true"
                        Class="mr-2"
-                       Style="min-width: 150px;">
-                <MudSelectItem T="string" Value="@("")">All namespaces</MudSelectItem>
+                       Style="min-width: 200px;"
+                       MultiSelectionTextFunc="@(new Func<List<string>, string>(GetNamespaceSelectionText))">
                 @foreach (var ns in _namespaces)
                 {
                     <MudSelectItem T="string" Value="@ns">@ns</MudSelectItem>
@@ -46,15 +48,17 @@
             </MudSelect>
 
             <!-- Status filter -->
-            <MudSelect T="string" 
-                       Value="@_ui.SelectedStatus"
-                       ValueChanged="@(value => OnStatusChanged(value))"
+            <MudSelect T="string"
+                       MultiSelection="true"
+                       Clearable="true"
+                       SelectedValues="@_ui.SelectedStatuses"
+                       SelectedValuesChanged="@(values => OnStatusesChanged(values))"
                        Label="Status" 
                        Variant="Variant.Outlined" 
                        Dense="true"
                        Class="mr-2"
-                       Style="min-width: 150px;">
-                <MudSelectItem T="string" Value="@("")">All statuses</MudSelectItem>
+                       Style="min-width: 200px;"
+                       MultiSelectionTextFunc="@(new Func<List<string>, string>(GetStatusSelectionText))">
                 @foreach (var status in Enum.GetValues<PodStatus>())
                 {
                     <MudSelectItem T="string" Value="@status.ToString()">@status</MudSelectItem>
@@ -178,7 +182,7 @@
                 {
                     <MudText>Loading pods...</MudText>
                 }
-                else if (!string.IsNullOrEmpty(_ui.SearchString) || !string.IsNullOrEmpty(_ui.SelectedNamespace) || !string.IsNullOrEmpty(_ui.SelectedStatus))
+                else if (!string.IsNullOrEmpty(_ui.SearchString) || _ui.SelectedNamespaces.Any() || _ui.SelectedStatuses.Any())
                 {
                     <MudText>No pods match the current filters.</MudText>
                 }
@@ -189,7 +193,7 @@
             </MudAlert>
         </NoRecordsContent>
         <PagerContent>
-            <MudTablePager />
+            <MudTablePager PageSizeOptions="@(new int[] { 15, 30, 50, int.MaxValue })" />
         </PagerContent>
     </MudTable>
 </MudPaper>
@@ -223,12 +227,13 @@
     
     
     private bool _hasLoaded = false;
+    private ClusterConnectionInfo? _previousCluster;
 
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && Cluster != null && !_hasLoaded)
+        if (Cluster != null && !_hasLoaded)
         {
             _hasLoaded = true;
             await LoadPodsAsync();
@@ -243,11 +248,23 @@
             _filteredPods.Clear();
             _namespaces.Clear();
             _hasLoaded = false;
+            _previousCluster = null;
+            ClearFilters();
         }
-        else
+        else if (_previousCluster?.Id != Cluster.Id)
         {
-            _hasLoaded = false; // Trigger reload on next render
+            // Cluster changed, trigger reload and clear filters
+            _hasLoaded = false;
+            _previousCluster = Cluster;
+            ClearFilters();
         }
+    }
+
+    private void ClearFilters()
+    {
+        _ui.SelectedNamespaces = new HashSet<string>();
+        _ui.SelectedStatuses = new HashSet<string>();
+        _ui.SearchString = null;
     }
 
     protected override void OnInitialized()
@@ -256,15 +273,15 @@
         StateHasChanged();
     }
 
-    private void OnNamespaceChanged(string value)
+    private void OnNamespacesChanged(IEnumerable<string> values)
     {
-        _ui.SelectedNamespace = value;
+        _ui.SelectedNamespaces = values;
         ApplyFilters();
     }
 
-    private void OnStatusChanged(string value)
+    private void OnStatusesChanged(IEnumerable<string> values)
     {
-        _ui.SelectedStatus = value;
+        _ui.SelectedStatuses = values;
         ApplyFilters();
     }
 
@@ -272,6 +289,24 @@
     {
         _ui.SearchString = value;
         ApplyFilters();
+    }
+
+    private string GetNamespaceSelectionText(List<string> selectedValues)
+    {
+        if (!selectedValues.Any())
+            return "All namespaces";
+        if (selectedValues.Count == 1)
+            return selectedValues.First();
+        return $"{selectedValues.Count} namespaces";
+    }
+
+    private string GetStatusSelectionText(List<string> selectedValues)
+    {
+        if (!selectedValues.Any())
+            return "All statuses";
+        if (selectedValues.Count == 1)
+            return selectedValues.First();
+        return $"{selectedValues.Count} statuses";
     }
 
 
@@ -310,12 +345,12 @@
     {
         _filteredPods = _pods.Where(pod =>
         {
-            // Namespace filter
-            if (!string.IsNullOrEmpty(_ui.SelectedNamespace) && pod.Namespace != _ui.SelectedNamespace)
+            // Namespace filter (multi-select)
+            if (_ui.SelectedNamespaces.Any() && !_ui.SelectedNamespaces.Contains(pod.Namespace))
                 return false;
 
-            // Status filter
-            if (!string.IsNullOrEmpty(_ui.SelectedStatus) && pod.Status.ToString() != _ui.SelectedStatus)
+            // Status filter (multi-select)
+            if (_ui.SelectedStatuses.Any() && !_ui.SelectedStatuses.Contains(pod.Status.ToString()))
                 return false;
 
             // Search filter

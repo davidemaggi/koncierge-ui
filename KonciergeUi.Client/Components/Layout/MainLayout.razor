@@ -29,7 +29,7 @@
             <NavMenu _isDark="_isDarkMode" OnThemeChangedAsync="ToggleTheme" />
 
             <!-- MAIN CONTENT -->
-            <MudMainContent >
+            <MudMainContent @key="_languageKey">
                 @Body
             </MudMainContent>
             <Footer></Footer>
@@ -54,6 +54,7 @@
     private MudThemeProvider? _mudThemeProvider;
     private ErrorBoundary? _errorBoundary;
     private bool _isDarkMode;
+    private string _languageKey = Guid.NewGuid().ToString();
 
     [Inject] IJSRuntime Js { get; set; } = default!;
 
@@ -83,6 +84,9 @@
             _ => systemPrefersDark  // Default to system
         };
 
+        // Sync to UiState so other components can access the resolved dark mode state
+        Ui.IsDarkMode = _isDarkMode;
+
         // Watch OS changes
         await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
 
@@ -95,6 +99,7 @@
         if (Ui.CurrentTheme == "System")
         {
             _isDarkMode = prefersDark;
+            Ui.IsDarkMode = _isDarkMode;
             StateHasChanged();
         }
         return Task.CompletedTask;
@@ -104,6 +109,7 @@
     {
         _isDarkMode = !_isDarkMode;
         Ui.CurrentTheme = _isDarkMode ? "Dark" : "Light";
+        Ui.IsDarkMode = _isDarkMode;
         
         await Js.InvokeVoidAsync("koncierge.setThemeClass", _isDarkMode);
         
@@ -111,6 +117,7 @@
 
     private void OnLanguageChanged(object? sender, string culture)
     {
+        _languageKey = Guid.NewGuid().ToString();
         InvokeAsync(StateHasChanged);
     }
 

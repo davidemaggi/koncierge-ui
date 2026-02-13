@@ -475,19 +475,33 @@ namespace KonciergeUI.Kube
         {
             var definition = instance.Definition;
 
-            // Resolve pod name if targeting a service
-            string podName = definition.ResourceType == ResourceType.Service
-                ? await ResolvePodFromServiceAsync(definition.ResourceName, definition.Namespace, k8sClient, cancellationToken)
-                : definition.ResourceName;
+            // Resolve pod name and actual container port if targeting a service
+            string podName;
+            int containerPort;
+
+            if (definition.ResourceType == ResourceType.Service)
+            {
+                (podName, containerPort) = await ResolvePodFromServiceAsync(
+                    definition.ResourceName, 
+                    definition.Namespace, 
+                    definition.TargetPort,
+                    k8sClient, 
+                    cancellationToken);
+            }
+            else
+            {
+                podName = definition.ResourceName;
+                containerPort = definition.TargetPort;
+            }
 
             _logger.LogInformation("Starting forward {ForwardName} to pod {PodName} port {Port}",
-                definition.Name, podName, definition.TargetPort);
+                definition.Name, podName, containerPort);
 
             var activeForward = new ActiveForward(
                 instance.Id,
                 podName,
                 definition.Namespace,
-                definition.TargetPort,
+                containerPort,
                 definition.LocalPort,
                 k8sClient,
                 _logger
@@ -499,11 +513,12 @@ namespace KonciergeUI.Kube
         }
 
         /// <summary>
-        /// Resolve a pod name from a service selector.
+        /// Resolve a pod name and container port from a service.
         /// </summary>
-        private async Task<string> ResolvePodFromServiceAsync(
+        private async Task<(string PodName, int ContainerPort)> ResolvePodFromServiceAsync(
             string serviceName,
             string @namespace,
+            int servicePort,
             IKubernetes k8sClient,
             CancellationToken cancellationToken)
         {
@@ -518,6 +533,36 @@ namespace KonciergeUI.Kube
                 {
                     throw new InvalidOperationException($"Service {serviceName} has no selector");
                 }
+
+                // Find the matching port and get the targetPort (container port)
+                var matchingPort = service.Spec.Ports?.FirstOrDefault(p => p.Port == servicePort);
+                int containerPort;
+                
+                if (matchingPort?.TargetPort != null)
+                {
+                    // TargetPort can be a string (named port) or int
+                    if (int.TryParse(matchingPort.TargetPort.Value, out var parsedPort))
+                    {
+                        containerPort = parsedPort;
+                    }
+                    else
+                    {
+                        // Named port - for now fall back to service port, could resolve from pod spec
+                        _logger.LogWarning(
+                            "Service {ServiceName} uses named targetPort '{NamedPort}', falling back to service port {ServicePort}",
+                            serviceName, matchingPort.TargetPort.Value, servicePort);
+                        containerPort = servicePort;
+                    }
+                }
+                else
+                {
+                    // If targetPort is not specified, it defaults to the same as port
+                    containerPort = servicePort;
+                }
+
+                _logger.LogInformation(
+                    "Service {ServiceName} port {ServicePort} maps to container port {ContainerPort}",
+                    serviceName, servicePort, containerPort);
 
                 var labelSelector = string.Join(",", service.Spec.Selector.Select(kvp => $"{kvp.Key}={kvp.Value}"));
                 var pods = await k8sClient.CoreV1.ListNamespacedPodAsync(
@@ -534,7 +579,8 @@ namespace KonciergeUI.Kube
 
                 _logger.LogInformation("Resolved service {ServiceName} to pod {PodName}",
                     serviceName, runningPod.Metadata.Name);
-                return runningPod.Metadata.Name;
+                    
+                return (runningPod.Metadata.Name, containerPort);
             }
             catch (Exception ex)
             {

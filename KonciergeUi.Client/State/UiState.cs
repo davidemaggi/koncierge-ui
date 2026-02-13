@@ -19,10 +19,11 @@ public class UiState : INotifyPropertyChanged
     private string _currentTheme = "System";
     private string _currentLanguage = "en";
     private KonciergeConfig _config = new();
+    private bool _isDarkMode;
 
-    private string? _selectedNamespace = null;
-    private string? _selectedType = null;
-    private string? _selectedStatus = null;
+    private IEnumerable<string> _selectedNamespaces = new HashSet<string>();
+    private IEnumerable<string> _selectedTypes = new HashSet<string>();
+    private IEnumerable<string> _selectedStatuses = new HashSet<string>();
     private string? _searchString = null;
     private ForwardTemplate? _templateDraft;
 
@@ -64,6 +65,22 @@ public class UiState : INotifyPropertyChanged
 
                 _config.CurrentTheme = value;
                 _ = _preferencesStorage.UpdateConfigAsync(_config);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The actual dark mode state (resolved from CurrentTheme and system preference).
+    /// </summary>
+    public bool IsDarkMode
+    {
+        get => _isDarkMode;
+        set
+        {
+            if (_isDarkMode != value)
+            {
+                _isDarkMode = value;
+                OnPropertyChanged();
             }
         }
     }
@@ -119,45 +136,41 @@ public class UiState : INotifyPropertyChanged
     }
 
 
-    public string? SelectedType
+    public IEnumerable<string> SelectedTypes
     {
-        get => _selectedType;
+        get => _selectedTypes;
         set
         {
-            if (_selectedType != value)
+            if (!_selectedTypes.SequenceEqual(value))
             {
-                _selectedType = value;
+                _selectedTypes = value;
                 OnPropertyChanged();
-
-                
             }
         }
     }
 
-    public string? SelectedNamespace
+    public IEnumerable<string> SelectedNamespaces
     {
-        get => _selectedNamespace;
+        get => _selectedNamespaces;
         set
         {
-            if (_selectedNamespace != value)
+            if (!_selectedNamespaces.SequenceEqual(value))
             {
-                _selectedNamespace = value;
+                _selectedNamespaces = value;
                 OnPropertyChanged();
-
-
             }
         }
     }
-    public string? SelectedStatus
+
+    public IEnumerable<string> SelectedStatuses
     {
-        get => _selectedStatus;
+        get => _selectedStatuses;
         set
         {
-            if (_selectedStatus != value)
+            if (!_selectedStatuses.SequenceEqual(value))
             {
-                _selectedStatus = value;
+                _selectedStatuses = value;
                 OnPropertyChanged();
-
 
             }
         }
