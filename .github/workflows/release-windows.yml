@@ -41,6 +41,53 @@ jobs:
           "nugetversion=$($data.NuGetVersionV2)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "majorminorpatch=$($data.MajorMinorPatch)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
+      - name: Import code signing certificate
+        id: cert
+        if: env.WINDOWS_CERTIFICATE != ''
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          
+          # Check if certificate secrets are available
+          if ([string]::IsNullOrEmpty($env:WINDOWS_CERTIFICATE)) {
+            Write-Host "Code signing certificate not configured - signing will be skipped" -ForegroundColor Yellow
+            "cert_imported=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            exit 0
+          }
+          
+          try {
+            Write-Host "Importing code signing certificate..." -ForegroundColor Green
+            
+            # Decode base64 certificate
+            $certBytes = [System.Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
+            $pfxPath = Join-Path $env:RUNNER_TEMP "cert.pfx"
+            [System.IO.File]::WriteAllBytes($pfxPath, $certBytes)
+            
+            # Import certificate to user store
+            $securePassword = ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -Force -AsPlainText
+            $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword
+            
+            # Output certificate info (not sensitive data)
+            Write-Host "✓ Certificate imported successfully" -ForegroundColor Green
+            Write-Host "  Subject: $($cert.Subject)" -ForegroundColor Gray
+            Write-Host "  Thumbprint: $($cert.Thumbprint)" -ForegroundColor Gray
+            Write-Host "  Valid From: $($cert.NotBefore)" -ForegroundColor Gray
+            Write-Host "  Valid To: $($cert.NotAfter)" -ForegroundColor Gray
+            
+            # Store outputs for later steps
+            "cert_thumbprint=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            "cert_path=$pfxPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            "cert_imported=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            
+          } catch {
+            Write-Error "Failed to import certificate: $_"
+            "cert_imported=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            throw
+          }
+
       - name: Install MAUI workloads
         run: |
           dotnet workload install maui maui-windows
@@ -60,6 +107,61 @@ jobs:
           -p:PublishTrimmed=false
           -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
 
+      - name: Sign ZIP binaries
+        if: steps.cert.outputs.cert_imported == 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          
+          Write-Host "Signing binaries in ZIP publish directory..." -ForegroundColor Green
+          
+          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish'
+          
+          # Find all .exe and .dll files to sign
+          $filesToSign = Get-ChildItem -Path $publishDir -Recurse -Include *.exe,*.dll | Where-Object { !$_.PSIsContainer }
+          
+          if ($filesToSign.Count -eq 0) {
+            Write-Warning "No files found to sign"
+            exit 0
+          }
+          
+          Write-Host "Found $($filesToSign.Count) files to sign" -ForegroundColor Cyan
+          
+          # Sign each file
+          $signedCount = 0
+          $failedCount = 0
+          
+          foreach ($file in $filesToSign) {
+            try {
+              Write-Host "  Signing: $($file.Name)" -ForegroundColor Gray
+              
+              # Use signtool to sign the file
+              & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign `
+                /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
+                /fd SHA256 `
+                /tr "http://timestamp.sectigo.com" `
+                /td SHA256 `
+                /v `
+                "$($file.FullName)" 2>&1 | Out-Null
+              
+              if ($LASTEXITCODE -eq 0) {
+                $signedCount++
+              } else {
+                Write-Warning "Failed to sign $($file.Name)"
+                $failedCount++
+              }
+            } catch {
+              Write-Warning "Error signing $($file.Name): $_"
+              $failedCount++
+            }
+          }
+          
+          Write-Host ""
+          Write-Host "✓ Signed $signedCount files successfully" -ForegroundColor Green
+          if ($failedCount -gt 0) {
+            Write-Warning "Failed to sign $failedCount files"
+          }
+
       - name: Publish Windows MSIX
         run: >-
           dotnet publish KonciergeUi.Client/KonciergeUi.Client.csproj
@@ -71,6 +173,54 @@ jobs:
           -p:WindowsAppSDKSelfContainedPlatforms=x64
           -p:PublishTrimmed=false
           -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
+
+      - name: Sign MSIX package
+        if: steps.cert.outputs.cert_imported == 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          
+          Write-Host "Signing MSIX package..." -ForegroundColor Green
+          
+          # Find the MSIX file
+          $msixPath = Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/AppPackages') -Recurse -Filter '*.msix' | Select-Object -First 1
+          
+          if (-not $msixPath) {
+            Write-Warning "MSIX file not found - skipping signing"
+            exit 0
+          }
+          
+          Write-Host "Found MSIX: $($msixPath.Name)" -ForegroundColor Cyan
+          
+          try {
+            # Sign the MSIX package
+            & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign `
+              /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
+              /fd SHA256 `
+              /tr "http://timestamp.sectigo.com" `
+              /td SHA256 `
+              /v `
+              "$($msixPath.FullName)" 2>&1 | Out-Null
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "✓ MSIX package signed successfully" -ForegroundColor Green
+              
+              # Verify the signature
+              & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" verify /pa "$($msixPath.FullName)" 2>&1 | Out-Null
+              
+              if ($LASTEXITCODE -eq 0) {
+                Write-Host "✓ MSIX signature verified" -ForegroundColor Green
+              } else {
+                Write-Warning "MSIX signature verification failed"
+              }
+            } else {
+              Write-Error "Failed to sign MSIX package"
+              exit 1
+            }
+          } catch {
+            Write-Error "Error signing MSIX: $_"
+            throw
+          }
 
       - name: Package artifacts
         id: package
@@ -109,3 +259,39 @@ jobs:
             ${{ steps.package.outputs.msix_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup certificate
+        if: always() && steps.cert.outputs.cert_imported == 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          
+          Write-Host "Cleaning up certificate..." -ForegroundColor Yellow
+          
+          # Remove certificate from store
+          try {
+            if ("${{ steps.cert.outputs.cert_thumbprint }}" -ne "") {
+              $certPath = "Cert:\CurrentUser\My\${{ steps.cert.outputs.cert_thumbprint }}"
+              if (Test-Path $certPath) {
+                Remove-Item -Path $certPath -Force
+                Write-Host "✓ Certificate removed from store" -ForegroundColor Green
+              }
+            }
+          } catch {
+            Write-Warning "Failed to remove certificate from store: $_"
+          }
+          
+          # Remove temporary PFX file
+          try {
+            if ("${{ steps.cert.outputs.cert_path }}" -ne "") {
+              $pfxPath = "${{ steps.cert.outputs.cert_path }}"
+              if (Test-Path $pfxPath) {
+                Remove-Item -Path $pfxPath -Force
+                Write-Host "✓ Temporary PFX file removed" -ForegroundColor Green
+              }
+            }
+          } catch {
+            Write-Warning "Failed to remove PFX file: $_"
+          }
+          
+          Write-Host "Certificate cleanup complete" -ForegroundColor Green

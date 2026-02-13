@@ -63,6 +63,14 @@ Koncierge UI is a desktop application that simplifies Kubernetes port-forwarding
 ### From Releases
 Download the latest release for your platform from the [Releases](https://github.com/davidemaggi/koncierge-ui/releases) page.
 
+#### Windows Code Signing
+Windows releases are signed with a self-signed certificate. To avoid security warnings:
+1. Download `KonciergeUI-CodeSigning.cer` from the release
+2. Install it to your **Trusted Root Certification Authorities** store
+3. See [docs/SIGNING.md](docs/SIGNING.md) for detailed instructions
+
+**Note**: Self-signed certificates require manual trust installation. This is normal for open-source projects. See the signing documentation for security implications and instructions.
+
 ### Build from Source
 
 ```bash
