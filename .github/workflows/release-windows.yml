@@ -43,7 +43,6 @@ jobs:
 
       - name: Import code signing certificate
         id: cert
-        if: env.WINDOWS_CERTIFICATE != ''
         shell: pwsh
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
@@ -115,6 +114,18 @@ jobs:
           
           Write-Host "Signing binaries in ZIP publish directory..." -ForegroundColor Green
           
+          # Find signtool.exe
+          $signtoolPath = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin\" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue | 
+            Where-Object { $_.FullName -like "*\x64\signtool.exe" } | 
+            Select-Object -First 1 -ExpandProperty FullName
+          
+          if (-not $signtoolPath) {
+            Write-Warning "signtool.exe not found - skipping signing"
+            exit 0
+          }
+          
+          Write-Host "Using signtool: $signtoolPath" -ForegroundColor Cyan
+          
           $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish'
           
           # Find all .exe and .dll files to sign
@@ -136,7 +147,7 @@ jobs:
               Write-Host "  Signing: $($file.Name)" -ForegroundColor Gray
               
               # Use signtool to sign the file
-              & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign `
+              & $signtoolPath sign `
                 /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
                 /fd SHA256 `
                 /tr "http://timestamp.sectigo.com" `
@@ -182,6 +193,18 @@ jobs:
           
           Write-Host "Signing MSIX package..." -ForegroundColor Green
           
+          # Find signtool.exe
+          $signtoolPath = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin\" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue | 
+            Where-Object { $_.FullName -like "*\x64\signtool.exe" } | 
+            Select-Object -First 1 -ExpandProperty FullName
+          
+          if (-not $signtoolPath) {
+            Write-Warning "signtool.exe not found - skipping signing"
+            exit 0
+          }
+          
+          Write-Host "Using signtool: $signtoolPath" -ForegroundColor Cyan
+          
           # Find the MSIX file
           $msixPath = Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/AppPackages') -Recurse -Filter '*.msix' | Select-Object -First 1
           
@@ -194,7 +217,7 @@ jobs:
           
           try {
             # Sign the MSIX package
-            & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign `
+            & $signtoolPath sign `
               /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
               /fd SHA256 `
               /tr "http://timestamp.sectigo.com" `
@@ -206,7 +229,7 @@ jobs:
               Write-Host "✓ MSIX package signed successfully" -ForegroundColor Green
               
               # Verify the signature
-              & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" verify /pa "$($msixPath.FullName)" 2>&1 | Out-Null
+              & $signtoolPath verify /pa "$($msixPath.FullName)" 2>&1 | Out-Null
               
               if ($LASTEXITCODE -eq 0) {
                 Write-Host "✓ MSIX signature verified" -ForegroundColor Green
