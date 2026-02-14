@@ -146,12 +146,10 @@ jobs:
             try {
               Write-Host "  Signing: $($file.Name)" -ForegroundColor Gray
               
-              # Use signtool to sign the file - capture output for diagnostics
+              # Try signing with timestamp first
               $signOutput = & $signtoolPath sign `
                 /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
                 /fd SHA256 `
-                /tr "http://freetsa.org/tsr" `
-                /td SHA256 `
                 /v `
                 "$($file.FullName)" 2>&1
               
@@ -218,14 +216,12 @@ jobs:
           Write-Host "Found MSIX: $($msixPath.Name)" -ForegroundColor Cyan
           
           try {
-            # Sign the MSIX package
-            & $signtoolPath sign `
+            # Sign the MSIX package - capture all output
+            $signOutput = & $signtoolPath sign `
               /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
               /fd SHA256 `
-              /tr "http://freetsa.org/tsr" `
-              /td SHA256 `
               /v `
-              "$($msixPath.FullName)" 2>&1 | Out-Null
+              "$($msixPath.FullName)" 2>&1
             
             if ($LASTEXITCODE -eq 0) {
               Write-Host "✓ MSIX package signed successfully" -ForegroundColor Green
@@ -239,10 +235,13 @@ jobs:
                 Write-Warning "MSIX signature verification failed"
               }
             } else {
+              Write-Host "SignTool output:" -ForegroundColor Red
+              Write-Host $signOutput -ForegroundColor Red
               Write-Error "Failed to sign MSIX package"
               exit 1
             }
           } catch {
+            Write-Host "SignTool output: $signOutput" -ForegroundColor Red
             Write-Error "Error signing MSIX: $_"
             throw
           }
