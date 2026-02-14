@@ -4,6 +4,10 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using KonciergeUI.Data;
 using KonciergeUI.Translations.Services;
+using KonciergeUI.Models.Security;
+using System.Collections.Generic;
+using System.Linq;
+using KonciergeUI.Models;
 
 namespace KonciergeUi.Client.State;
 
@@ -14,12 +18,14 @@ public class UiState : INotifyPropertyChanged
     private ClusterConnectionInfo? _selectedCluster;
     private string _currentTheme = "System";
     private string _currentLanguage = "en";
+    private KonciergeConfig _config = new();
+    private bool _isDarkMode;
 
-    private string? _selectedNamespace = null;
-    private string? _selectedType = null;
-    private string? _selectedStatus = null;
+    private IEnumerable<string> _selectedNamespaces = new HashSet<string>();
+    private IEnumerable<string> _selectedTypes = new HashSet<string>();
+    private IEnumerable<string> _selectedStatuses = new HashSet<string>();
     private string? _searchString = null;
-    
+    private ForwardTemplate? _templateDraft;
 
     public UiState(IPreferencesStorage preferencesStorage, ILocalizationService localizationService)
     {
@@ -37,10 +43,10 @@ public class UiState : INotifyPropertyChanged
                 _selectedCluster = value;
                 OnPropertyChanged();
 
-                // Persist to storage
                 if (value != null)
                 {
-                    _ = _preferencesStorage.SetLastSelectedClusterIdAsync(value.Id);
+                    _config.LastSelectedClusterId = value.Id;
+                    _ = _preferencesStorage.UpdateConfigAsync(_config);
                 }
             }
         }
@@ -57,8 +63,24 @@ public class UiState : INotifyPropertyChanged
                 OnPropertyChanged();
                 ThemeChanged?.Invoke(this, value);
 
-                // Persist to storage
-                _ = _preferencesStorage.SetCurrentThemeAsync(value);
+                _config.CurrentTheme = value;
+                _ = _preferencesStorage.UpdateConfigAsync(_config);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The actual dark mode state (resolved from CurrentTheme and system preference).
+    /// </summary>
+    public bool IsDarkMode
+    {
+        get => _isDarkMode;
+        set
+        {
+            if (_isDarkMode != value)
+            {
+                _isDarkMode = value;
+                OnPropertyChanged();
             }
         }
     }
@@ -75,8 +97,8 @@ public class UiState : INotifyPropertyChanged
                 OnPropertyChanged();
                 LanguageChanged?.Invoke(this, value);
 
-                // Persist to storage
-                _ = _preferencesStorage.SetCurrentLanguageAsync(value);
+                _config.CurrentLanguage = value;
+                _ = _preferencesStorage.UpdateConfigAsync(_config);
             }
         }
     }
@@ -93,66 +115,62 @@ public class UiState : INotifyPropertyChanged
     // Load saved preferences on startup
     public async Task LoadPreferencesAsync()
     {
-        var theme = await _preferencesStorage.GetCurrentThemeAsync();
-        if (!string.IsNullOrEmpty(theme))
+        _config = await _preferencesStorage.GetConfigAsync();
+
+        if (!string.IsNullOrEmpty(_config.CurrentTheme))
         {
-            _currentTheme = theme;
+            _currentTheme = _config.CurrentTheme;
         }
 
-        var language = await _preferencesStorage.GetCurrentLanguageAsync();
-        if (!string.IsNullOrEmpty(language))
+        if (!string.IsNullOrEmpty(_config.CurrentLanguage))
         {
-            _currentLanguage = language;
+            _currentLanguage = _config.CurrentLanguage;
         }
 
         _localizationService.SetCulture(_currentLanguage);
     }
 
-    public async Task<string?> GetLastSelectedClusterIdAsync()
+    public Task<string?> GetLastSelectedClusterIdAsync()
     {
-        return await _preferencesStorage.GetLastSelectedClusterIdAsync();
+        return Task.FromResult(_config.LastSelectedClusterId);
     }
 
 
-    public string? SelectedType
+    public IEnumerable<string> SelectedTypes
     {
-        get => _selectedType;
+        get => _selectedTypes;
         set
         {
-            if (_selectedType != value)
+            if (!_selectedTypes.SequenceEqual(value))
             {
-                _selectedType = value;
+                _selectedTypes = value;
                 OnPropertyChanged();
-
-                
             }
         }
     }
 
-    public string? SelectedNamespace
+    public IEnumerable<string> SelectedNamespaces
     {
-        get => _selectedNamespace;
+        get => _selectedNamespaces;
         set
         {
-            if (_selectedNamespace != value)
+            if (!_selectedNamespaces.SequenceEqual(value))
             {
-                _selectedNamespace = value;
+                _selectedNamespaces = value;
                 OnPropertyChanged();
-
-
             }
         }
     }
-    public string? SelectedStatus
+
+    public IEnumerable<string> SelectedStatuses
     {
-        get => _selectedStatus;
+        get => _selectedStatuses;
         set
         {
-            if (_selectedStatus != value)
+            if (!_selectedStatuses.SequenceEqual(value))
             {
-                _selectedStatus = value;
+                _selectedStatuses = value;
                 OnPropertyChanged();
-
 
             }
         }
@@ -170,6 +188,49 @@ public class UiState : INotifyPropertyChanged
 
             }
         }
+    }
+
+    public void SetTemplateDraft(ForwardTemplate template)
+    {
+        TemplateDraft = CloneTemplate(template);
+    }
+
+    public ForwardTemplate? ConsumeTemplateDraft()
+    {
+        var draft = TemplateDraft;
+        TemplateDraft = null;
+        return draft;
+    }
+
+    public ForwardTemplate? TemplateDraft
+    {
+        get => _templateDraft;
+        private set
+        {
+            if (_templateDraft == value)
+            {
+                return;
+            }
+
+            _templateDraft = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private static ForwardTemplate CloneTemplate(ForwardTemplate template)
+    {
+        return template with
+        {
+            Tags = template.Tags is null ? null : new List<string>(template.Tags),
+            Forwards = template.Forwards
+                .Select(fwd => fwd with
+                {
+                    LinkedSecrets = fwd.LinkedSecrets is null
+                        ? new List<SecretReference>()
+                        : new List<SecretReference>(fwd.LinkedSecrets)
+                })
+                .ToList()
+        };
     }
 
 }

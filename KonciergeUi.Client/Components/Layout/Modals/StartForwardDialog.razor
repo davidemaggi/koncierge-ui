@@ -70,10 +70,18 @@
 
     private async Task StartForward()
     {
-        var client =  KubeRepo.GetClient(_cluster);
-        
-        await _fwd.StartTemplateAsync(_template, _cluster);
-        MudDialog.Close();
+        try
+        {
+            var client = KubeRepo.GetClient(_cluster);
+            
+            await _fwd.StartTemplateAsync(_template, _cluster);
+            MudDialog.Close();
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = ex.InnerException?.Message ?? ex.Message;
+            Snackbar.Add($"Failed to start template: {errorMessage}", Severity.Error);
+        }
     }
 
 }

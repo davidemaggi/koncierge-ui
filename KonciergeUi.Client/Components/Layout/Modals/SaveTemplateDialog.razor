@@ -53,6 +53,12 @@
     {
         
         
+        var templates = await _storage.GetForwardTemplatesAsync();
+        var last = templates
+            .OrderByDescending(t => t.Sorting)
+            .FirstOrDefault();
+        
+        _template.Sorting= (last?.Sorting ?? 0) + 1;
         
         await _storage.AddForwardTemplateAsync(_template);
         

@@ -4,6 +4,7 @@
 @using KonciergeUI.Models.Kube
 @using KonciergeUI.Models.Security
 @using static KonciergeUI.Models.Forwarding.Enums
+@using System.Linq
 @inject ISnackbar Snackbar
 @inject IKubeRepository KubeRepo
 
@@ -124,6 +125,9 @@
     [Parameter]
     public ClusterConnectionInfo _cluster { get; set; }
 
+    [Parameter]
+    public PortForwardDefinition? _existingForward { get; set; }
+
     private void Cancel() => MudDialog.Cancel();
 
     private PortForwardDefinition _newForwardRequest;
@@ -145,6 +149,14 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (_existingForward is not null)
+        {
+            _newForwardRequest = CloneForward(_existingForward);
+            SelectedLinks = _newForwardRequest.LinkedSecrets.ToList();
+            await base.OnInitializedAsync();
+            return;
+        }
+
         _newForwardRequest = new PortForwardDefinition
         {
             ResourceName = _resourceName,
@@ -158,8 +170,6 @@
             Name = $"{_namespace}.{_resourceName}:xxx",
             Id = Guid.CreateVersion7()
         };
-
-
 
         await base.OnInitializedAsync();
     }
@@ -209,13 +219,18 @@
 
     private async Task CreateForward()
     {
-        
-        
-        
-        
-        
         _newForwardRequest.LinkedSecrets = SelectedLinks.ToList();
         MudDialog.Close(DialogResult.Ok(_newForwardRequest));
+    }
+
+    private static PortForwardDefinition CloneForward(PortForwardDefinition forward)
+    {
+        return forward with
+        {
+            LinkedSecrets = forward.LinkedSecrets is null
+                ? new List<SecretReference>()
+                : new List<SecretReference>(forward.LinkedSecrets)
+        };
     }
 
 }

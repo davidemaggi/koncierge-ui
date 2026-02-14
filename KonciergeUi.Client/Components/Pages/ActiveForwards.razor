@@ -21,7 +21,7 @@
                         @foreach (var template in _templates)
                         {
                             <MudItem xs="12">
-                                <RunningTemplateSummary _template="template" />
+                                <RunningTemplateSummary _template="template" OnTemplateStopped="HandleTemplateStopped" />
                             </MudItem>
                         }
                     </MudGrid>
@@ -49,9 +49,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _templates =  _forwardService.GetAllRunningTemplates().ToList();
+        _templates =  _forwardService.GetAllRunningTemplates()
+            .OrderBy(x => x.Sorting)
+            .ToList();
     }
 
+    private void HandleTemplateStopped(Guid templateId)
+    {
+        _templates.RemoveAll(t => t.TemplateId == templateId);
+        StateHasChanged();
+    }
 
 }
 

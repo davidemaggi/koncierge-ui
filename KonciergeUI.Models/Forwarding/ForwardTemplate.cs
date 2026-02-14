@@ -49,6 +49,9 @@ namespace KonciergeUI.Models.Forwarding
         /// Tags for organizing templates (e.g., "dev", "staging", "backend").
         /// </summary>
         public List<string>? Tags { get; set; }
+        public int Sorting { get; set; } = 0;
+        public bool Favorite { get; set; } = false;
+
     }
 
     

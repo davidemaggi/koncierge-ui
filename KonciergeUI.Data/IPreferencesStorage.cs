@@ -4,22 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KonciergeUI.Models.Forwarding;
+using KonciergeUI.Models;
 
 namespace KonciergeUI.Data
 {
     public interface IPreferencesStorage
     {
-        // Theme
-        Task<string?> GetCurrentThemeAsync();
-        Task SetCurrentThemeAsync(string theme);
-
-        // Language
-        Task<string?> GetCurrentLanguageAsync();
-        Task SetCurrentLanguageAsync(string language);
-
-        // Selected cluster
-        Task<string?> GetLastSelectedClusterIdAsync();
-        Task SetLastSelectedClusterIdAsync(string clusterId);
+        // Configuration
+        Task<KonciergeConfig> GetConfigAsync();
+        Task UpdateConfigAsync(KonciergeConfig config);
 
         // Custom kubeconfig paths (now using Preferences too)
         Task<List<string>> GetCustomKubeconfigPathsAsync();
@@ -32,5 +25,8 @@ namespace KonciergeUI.Data
         Task RemoveForwardTemplateAsync(Guid id);
 
         Task<List<ForwardTemplate>> GetForwardTemplatesAsync();
+
+        // Reset
+        Task ResetAsync();
     }
 }

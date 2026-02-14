@@ -6,7 +6,7 @@
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 
-@inject ISnackbar _snakbar
+@inject ISnackbar _snackbar
 @inject IPortForwardingService _fwdService;
 
 @implements IAsyncDisposable
@@ -34,7 +34,7 @@
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_cluster.ContextName}:{_instance.Definition.TargetPort}")</MudText>
 
                 <MudText Typo="Typo.body2">@($"Destination: ")</MudText>
-                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{_instance.Definition.LocalPort}")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{_instance.BoundLocalPort ?? _instance.Definition.LocalPort}")</MudText>
 
                 <MudText Typo="Typo.body2">@($"Protocol: ")</MudText>
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_instance.Definition.Protocol.ToString().ToUpper()}")</MudText>
@@ -59,6 +59,8 @@
             }
         </MudStack>
         <MudSpacer/>
+        
+        <MudIconButton OnClick="(() => OnCopyLogClicked(_logs))"  Icon="@Icons.Material.Filled.ContentCopy"/>
         <MudIconButton OnClick="ShowLog" Icon="@Icons.Material.Filled.Terminal"/>
         @if (_instance.Status != Enums.ForwardStatus.Stopped)
         {
@@ -137,15 +139,29 @@
 
     private async Task OnCopyClicked(ResolvedSecret s)
     {
-        if (Clipboard.Default.HasText)
+        try
         {
             await Clipboard.Default.SetTextAsync(s.Value);
-
-            _snakbar.Add("Added to Clipboard", Severity.Info);
+            _snackbar.Add("Added to Clipboard", Severity.Info);
+        }
+        catch
+        {
+            _snackbar.Add("Failed to copy to clipboard", Severity.Error);
         }
     }
 
-
+    private async Task OnCopyLogClicked(List<string> s)
+    {
+        try
+        {
+            await Clipboard.Default.SetTextAsync(String.Join(Environment.NewLine, s));
+            _snackbar.Add("Added to Clipboard", Severity.Info);
+        }
+        catch
+        {
+            _snackbar.Add("Failed to copy to clipboard", Severity.Error);
+        }
+    }
     private string? GetLinkedIcon(ResolvedSecret rs)
 
     {
