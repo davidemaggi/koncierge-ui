@@ -76,7 +76,9 @@ This section is for repository maintainers who need to set up code signing for t
 
 ### Step 1: Generate a Self-Signed Certificate
 
-On a Windows machine with PowerShell, run:
+You can generate the certificate on **Windows** or **macOS/Linux**.
+
+#### Option A: On Windows (PowerShell)
 
 ```powershell
 # Navigate to the repository scripts directory
@@ -91,7 +93,27 @@ cd scripts
 - `-Password`: Password to protect the PFX file (use a strong password!)
 - `-OutputPath`: Where to save the certificate files (default: current directory)
 
-**Output files:**
+#### Option B: On macOS/Linux (Bash)
+
+```bash
+# Navigate to the repository scripts directory
+cd scripts
+
+# Make the script executable (first time only)
+chmod +x new-self-signed-code-cert.sh
+
+# Generate the certificate
+./new-self-signed-code-cert.sh --name "Koncierge UI" --password "YourStrongPassword123!" --output ~/certs
+```
+
+**Parameters:**
+- `--name` or `-n`: The subject name for the certificate (default: "Koncierge UI")
+- `--password` or `-p`: Password to protect the PFX file (auto-generated if not provided)
+- `--output` or `-o`: Where to save the certificate files (default: current directory)
+
+> **Note:** The macOS/Linux script requires `openssl` to be installed. On macOS, you can install it with `brew install openssl`.
+
+**Output files (both scripts):**
 - `KonciergeUI-CodeSigning.pfx` - Private key (password-protected) - **KEEP THIS SECRET!**
 - `KonciergeUI-CodeSigning.cer` - Public key - Distribute to users
 - `cert-base64.txt` - Base64-encoded PFX for GitHub secrets
