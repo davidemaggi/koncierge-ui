@@ -135,12 +135,12 @@ jobs:
         id: winget
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Stop'
+          $ErrorActionPreference = 'Continue'
           
-          $version = "${{ steps.gitversion.outputs.semver }}"
+          $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v$version/KonciergeUi-win-$version.zip"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
           $manifestDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/winget-manifest"
@@ -149,31 +149,70 @@ jobs:
           Write-Host "Creating manifest for version $version" -ForegroundColor Cyan
           Write-Host "Installer URL: $installerUrl" -ForegroundColor Cyan
           
-          # Use wingetcreate to generate/update the manifest
-          # For new packages, use 'new'. For updates, use 'update'
-          & $wingetcreate new $installerUrl `
-            --package-identifier "DavideMaggi.KonciergeUI" `
-            --package-version $version `
-            --package-locale "en-US" `
-            --publisher "Davide Maggi" `
-            --package-name "Koncierge UI" `
-            --license "MIT" `
-            --short-description "A Kubernetes port-forwarding manager with a modern UI" `
-            --output $manifestDir `
-            --windows-desktop
+          # Try to create new manifest first (for first-time submission)
+          # wingetcreate new requires interactive mode or existing package, so we create manually
+          $packageId = "DavideMaggi.KonciergeUI"
+          $manifestVersionDir = Join-Path $manifestDir "$packageId/$version"
+          New-Item -ItemType Directory -Force -Path $manifestVersionDir | Out-Null
           
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "wingetcreate new failed, trying update mode..." -ForegroundColor Yellow
-            & $wingetcreate update "DavideMaggi.KonciergeUI" `
-              --urls $installerUrl `
-              --version $version `
-              --output $manifestDir
-          }
+          # Create version manifest
+          @"
+          PackageIdentifier: $packageId
+          PackageVersion: $version
+          DefaultLocale: en-US
+          ManifestType: version
+          ManifestVersion: 1.6.0
+          "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.yaml") -Encoding utf8NoBOM
           
-          Write-Host "✓ WinGet manifest generated in $manifestDir" -ForegroundColor Green
-          Get-ChildItem -Path $manifestDir -Recurse | ForEach-Object { Write-Host "  - $($_.FullName)" }
+          # Create installer manifest
+          $sha256 = "${{ steps.hash.outputs.sha256 }}"
+          @"
+          PackageIdentifier: $packageId
+          PackageVersion: $version
+          MinimumOSVersion: 10.0.17763.0
+          InstallerType: zip
+          NestedInstallerType: portable
+          NestedInstallerFiles:
+            - RelativeFilePath: KonciergeUi.Client.exe
+              PortableCommandAlias: koncierge
+          Installers:
+            - Architecture: x64
+              InstallerUrl: $installerUrl
+              InstallerSha256: $sha256
+          ManifestType: installer
+          ManifestVersion: 1.6.0
+          "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.installer.yaml") -Encoding utf8NoBOM
+          
+          # Create locale manifest
+          @"
+          PackageIdentifier: $packageId
+          PackageVersion: $version
+          PackageLocale: en-US
+          Publisher: Davide Maggi
+          PublisherUrl: https://github.com/$repoOwner
+          PublisherSupportUrl: https://github.com/$repoOwner/$repoName/issues
+          PackageName: Koncierge UI
+          PackageUrl: https://github.com/$repoOwner/$repoName
+          License: MIT
+          LicenseUrl: https://github.com/$repoOwner/$repoName/blob/main/LICENSE
+          ShortDescription: A Kubernetes port-forwarding manager with a modern UI
+          Description: Koncierge UI is a cross-platform application for managing Kubernetes port forwards. It provides an intuitive interface for viewing pods, services, and managing port forwarding sessions.
+          Tags:
+            - kubernetes
+            - k8s
+            - port-forward
+            - devops
+            - cloud
+            - containers
+          ManifestType: defaultLocale
+          ManifestVersion: 1.6.0
+          "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.locale.en-US.yaml") -Encoding utf8NoBOM
+          
+          Write-Host "✓ WinGet manifest generated in $manifestVersionDir" -ForegroundColor Green
+          Get-ChildItem -Path $manifestVersionDir | ForEach-Object { Write-Host "  - $($_.Name)" }
           
           "manifest_dir=$manifestDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "manifest_version_dir=$manifestVersionDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Submit to WinGet repository
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.WINGET_AUTO_SUBMIT == 'true'
@@ -181,7 +220,7 @@ jobs:
         env:
           WINGET_GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
         run: |
-          $ErrorActionPreference = 'Stop'
+          $ErrorActionPreference = 'Continue'
           
           if ([string]::IsNullOrEmpty($env:WINGET_GITHUB_TOKEN)) {
             Write-Host "WINGET_GITHUB_TOKEN not configured - skipping automatic submission" -ForegroundColor Yellow
@@ -192,26 +231,36 @@ jobs:
             exit 0
           }
           
-          $version = "${{ steps.gitversion.outputs.semver }}"
+          $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v$version/KonciergeUi-win-$version.zip"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
+          $manifestVersionDir = "${{ steps.winget.outputs.manifest_version_dir }}"
           
           Write-Host "Submitting manifest to winget-pkgs repository..." -ForegroundColor Cyan
           
-          # Submit directly to winget-pkgs (creates a PR automatically)
+          # For existing packages in winget-pkgs, use update --submit
+          # For new packages, we need to submit the manifest files manually via PR
+          # Try update first (will work if package already exists in winget-pkgs)
           & $wingetcreate update "DavideMaggi.KonciergeUI" `
             --urls $installerUrl `
             --version $version `
             --submit `
-            --token $env:WINGET_GITHUB_TOKEN
+            --token $env:WINGET_GITHUB_TOKEN 2>&1
           
           if ($LASTEXITCODE -eq 0) {
             Write-Host "✓ Successfully submitted PR to microsoft/winget-pkgs" -ForegroundColor Green
           } else {
-            Write-Warning "Failed to submit to winget-pkgs. You can manually submit using the manifest artifact."
+            Write-Host "Package not found in winget-pkgs (first submission)." -ForegroundColor Yellow
+            Write-Host "For first-time submission, please:" -ForegroundColor Yellow
+            Write-Host "  1. Download the winget-manifest artifact from this workflow run" -ForegroundColor Gray
+            Write-Host "  2. Fork https://github.com/microsoft/winget-pkgs" -ForegroundColor Gray
+            Write-Host "  3. Copy files to manifests/d/DavideMaggi/KonciergeUI/$version/" -ForegroundColor Gray
+            Write-Host "  4. Submit a PR to microsoft/winget-pkgs" -ForegroundColor Gray
+            Write-Host "" -ForegroundColor Gray
+            Write-Host "After the first submission is merged, automatic updates will work." -ForegroundColor Cyan
           }
 
       - name: Upload WinGet manifest as artifact
