@@ -86,5 +86,215 @@ namespace KonciergeUI.Translations.Resources {
                 return ResourceManager.GetString("empty_subtitle", resourceCulture);
             }
         }
+        
+        public static string loading_cluster {
+            get {
+                return ResourceManager.GetString("loading_cluster", resourceCulture);
+            }
+        }
+        
+        public static string no_clusters_found {
+            get {
+                return ResourceManager.GetString("no_clusters_found", resourceCulture);
+            }
+        }
+        
+        public static string select_cluster {
+            get {
+                return ResourceManager.GetString("select_cluster", resourceCulture);
+            }
+        }
+        
+        public static string default_namespace {
+            get {
+                return ResourceManager.GetString("default_namespace", resourceCulture);
+            }
+        }
+        
+        public static string pod_search {
+            get {
+                return ResourceManager.GetString("pod_search", resourceCulture);
+            }
+        }
+        
+        public static string service_search {
+            get {
+                return ResourceManager.GetString("service_search", resourceCulture);
+            }
+        }
+        
+        public static string pod_namespace {
+            get {
+                return ResourceManager.GetString("pod_namespace", resourceCulture);
+            }
+        }
+        
+        public static string pod_status {
+            get {
+                return ResourceManager.GetString("pod_status", resourceCulture);
+            }
+        }
+        
+        public static string pod_name {
+            get {
+                return ResourceManager.GetString("pod_name", resourceCulture);
+            }
+        }
+        
+        public static string pod_ports {
+            get {
+                return ResourceManager.GetString("pod_ports", resourceCulture);
+            }
+        }
+        
+        public static string pod_actions {
+            get {
+                return ResourceManager.GetString("pod_actions", resourceCulture);
+            }
+        }
+        
+        public static string pod_loading {
+            get {
+                return ResourceManager.GetString("pod_loading", resourceCulture);
+            }
+        }
+        
+        public static string pod_notfound_search {
+            get {
+                return ResourceManager.GetString("pod_notfound_search", resourceCulture);
+            }
+        }
+        
+        public static string pod_notfound {
+            get {
+                return ResourceManager.GetString("pod_notfound", resourceCulture);
+            }
+        }
+        
+        public static string service_actions {
+            get {
+                return ResourceManager.GetString("service_actions", resourceCulture);
+            }
+        }
+        
+        public static string service_namespace {
+            get {
+                return ResourceManager.GetString("service_namespace", resourceCulture);
+            }
+        }
+        
+        public static string service_name {
+            get {
+                return ResourceManager.GetString("service_name", resourceCulture);
+            }
+        }
+        
+        public static string service_type {
+            get {
+                return ResourceManager.GetString("service_type", resourceCulture);
+            }
+        }
+        
+        public static string pod_refresh {
+            get {
+                return ResourceManager.GetString("pod_refresh", resourceCulture);
+            }
+        }
+        
+        public static string service_refresh {
+            get {
+                return ResourceManager.GetString("service_refresh", resourceCulture);
+            }
+        }
+        
+        public static string service_loading {
+            get {
+                return ResourceManager.GetString("service_loading", resourceCulture);
+            }
+        }
+        
+        public static string service_notfound_search {
+            get {
+                return ResourceManager.GetString("service_notfound_search", resourceCulture);
+            }
+        }
+        
+        public static string service_notfound {
+            get {
+                return ResourceManager.GetString("service_notfound", resourceCulture);
+            }
+        }
+        
+        public static string pod_all_namespaces {
+            get {
+                return ResourceManager.GetString("pod_all_namespaces", resourceCulture);
+            }
+        }
+        
+        public static string service_all_namespaces {
+            get {
+                return ResourceManager.GetString("service_all_namespaces", resourceCulture);
+            }
+        }
+        
+        public static string service_all_types {
+            get {
+                return ResourceManager.GetString("service_all_types", resourceCulture);
+            }
+        }
+        
+        public static string pod_all_statuses {
+            get {
+                return ResourceManager.GetString("pod_all_statuses", resourceCulture);
+            }
+        }
+        
+        public static string pod_namespaces {
+            get {
+                return ResourceManager.GetString("pod_namespaces", resourceCulture);
+            }
+        }
+        
+        public static string service_namespaces {
+            get {
+                return ResourceManager.GetString("service_namespaces", resourceCulture);
+            }
+        }
+        
+        public static string pod_statuses {
+            get {
+                return ResourceManager.GetString("pod_statuses", resourceCulture);
+            }
+        }
+        
+        public static string service_types {
+            get {
+                return ResourceManager.GetString("service_types", resourceCulture);
+            }
+        }
+        
+        public static string page_all {
+            get {
+                return ResourceManager.GetString("page_all", resourceCulture);
+            }
+        }
+        
+        public static string page_pod_per {
+            get {
+                return ResourceManager.GetString("page_pod_per", resourceCulture);
+            }
+        }
+        
+        public static string page_service_per {
+            get {
+                return ResourceManager.GetString("page_service_per", resourceCulture);
+            }
+        }
+        
+        public static string resource {
+            get {
+                return ResourceManager.GetString("resource", resourceCulture);
+            }
+        }
     }
 }

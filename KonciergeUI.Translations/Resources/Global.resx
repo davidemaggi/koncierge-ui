@@ -30,4 +30,46 @@
     <data name="confirm_dialog_cancel_label" xml:space="preserve">
         <value>Cancel</value>
     </data>
+    <data name="k8s_configmaps" xml:space="preserve">
+        <value>Config Maps</value>
+    </data>
+    <data name="k8s_secrets" xml:space="preserve">
+        <value>Secrets</value>
+    </data>
+    <data name="crud_cancel" xml:space="preserve">
+        <value>Cancel</value>
+    </data>
+    <data name="crud_create" xml:space="preserve">
+        <value>Create</value>
+    </data>
+    <data name="info_descrioption" xml:space="preserve">
+        <value>Something Something</value>
+    </data>
+    <data name="info_version" xml:space="preserve">
+        <value>Version</value>
+    </data>
+    <data name="info_build" xml:space="preserve">
+        <value>Build</value>
+    </data>
+    <data name="info_channel" xml:space="preserve">
+        <value>Channel</value>
+    </data>
+    <data name="crud_save" xml:space="preserve">
+        <value>Save</value>
+    </data>
+    <data name="crud_edit" xml:space="preserve">
+        <value>Edit</value>
+    </data>
+    <data name="crud_remove" xml:space="preserve">
+        <value>Remove</value>
+    </data>
+    <data name="random" xml:space="preserve">
+        <value>Random</value>
+    </data>
+    <data name="k8s_context" xml:space="preserve">
+        <value>Context</value>
+    </data>
+    <data name="modified" xml:space="preserve">
+        <value>Modified</value>
+    </data>
 </root>

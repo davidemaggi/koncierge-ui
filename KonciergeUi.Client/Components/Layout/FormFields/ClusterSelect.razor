@@ -2,8 +2,10 @@
 @using KonciergeUI.Models.Kube
 @using KonciergeUi.Client.State
 @using KonciergeUi.Client.Extensions
+@using KonciergeUI.Translations.Services
 @inject IClusterDiscoveryService ClusterService
 @inject UiState _ui
+@inject ILocalizationService L
 
 <MudStack StretchItems="StretchItems.Start" Row>
     @if (_selectionEnabled || SelectedCluster is null) {
@@ -18,19 +20,19 @@
     @if (IsLoading)
     {
         <MudSelectItem T="ClusterConnectionInfo?" Value="@null" Disabled="true">
-            Loading clusters...
+            @L.Resources["loading_cluster"]
         </MudSelectItem>
     }
     else if (!_groupedClusters.Any())
     {
         <MudSelectItem T="ClusterConnectionInfo?" Value="@null" Disabled="true">
-            No clusters found
+            @L.Resources["no_clusters_found"]
         </MudSelectItem>
     }
     else
     {
         <MudSelectItem T="ClusterConnectionInfo?" Value="@null">
-            Select a cluster...
+            @L.Resources["select_cluster"]
         </MudSelectItem>
 
         @foreach (var group in _groupedClusters)
@@ -60,7 +62,7 @@
                                  Color="@(cluster.IsCurrentContext ? Color.Success : Color.Default)" />
                         <MudStack>
                            <MudText>@cluster.Name</MudText>
-                           <MudText>@($"Default Namespace: {cluster.DefaultNamespace}")</MudText>
+                           <MudText>@($"{@L.Resources["default_namespace"]}: {cluster.DefaultNamespace}")</MudText>
 
                        
                         </MudStack>
@@ -82,7 +84,7 @@
                     @($"{_ui.SelectedCluster.Name} -> {_ui.SelectedCluster.ContextName}")
                 </MudText>
                  <MudText Style="font-style:italic" Typo="Typo.body2">
-                     @($"{GetGroupLabel(_ui.SelectedCluster.KubeconfigPath)} Default Namespace: {_ui.SelectedCluster.DefaultNamespace}")
+                     @($"{GetGroupLabel(_ui.SelectedCluster.KubeconfigPath)} {@L.Resources["default_namespace"]}: {_ui.SelectedCluster.DefaultNamespace}")
                 </MudText>
                 </MudStack>
                 </MudStack>

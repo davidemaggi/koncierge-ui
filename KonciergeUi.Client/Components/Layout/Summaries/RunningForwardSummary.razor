@@ -5,9 +5,11 @@
 @using KonciergeUi.Client.Shared
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Translations.Services
 
 @inject ISnackbar _snackbar
 @inject IPortForwardingService _fwdService;
+@inject ILocalizationService L
 
 @implements IAsyncDisposable
 
@@ -30,20 +32,20 @@
             </MudStack>
             <MudStack AlignItems="AlignItems.Center" Row>
 
-                <MudText Typo="Typo.body2">@($"Source: ")</MudText>
+                <MudText Typo="Typo.body2">@($"{L.Forwards["source"]}: ")</MudText>
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_cluster.ContextName}:{_instance.Definition.TargetPort}")</MudText>
 
-                <MudText Typo="Typo.body2">@($"Destination: ")</MudText>
+                <MudText Typo="Typo.body2">@($"{L.Forwards["destination"]}: ")</MudText>
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{_instance.BoundLocalPort ?? _instance.Definition.LocalPort}")</MudText>
 
-                <MudText Typo="Typo.body2">@($"Protocol: ")</MudText>
+                <MudText Typo="Typo.body2">@($"{L.Forwards["protocol"]}: ")</MudText>
                 <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_instance.Definition.Protocol.ToString().ToUpper()}")</MudText>
             </MudStack>
             @if (_instance.ResolvedSecrets.Any())
             {
                 <MudStack AlignItems="AlignItems.Center" Row>
 
-                    <MudText Typo="Typo.body2">@($"Links: ")</MudText>
+                    <MudText Typo="Typo.body2">@($"{L.Forwards["linked_secrets"]}: ")</MudText>
 
                     @foreach (var secret in _instance.ResolvedSecrets)
                     {
@@ -64,11 +66,11 @@
         <MudIconButton OnClick="ShowLog" Icon="@Icons.Material.Filled.Terminal"/>
         @if (_instance.Status != Enums.ForwardStatus.Stopped)
         {
-            <MudButton StartIcon="@Icons.Material.Outlined.StopCircle" Color="Color.Error" OnClick="StopForward">Stop Forward</MudButton>
+            <MudButton StartIcon="@Icons.Material.Outlined.StopCircle" Color="Color.Error" OnClick="StopForward">@L.Forwards["cmd_stop"]</MudButton>
         }
         else
         {
-            <MudButton StartIcon="@Icons.Material.Outlined.Start" Color="Color.Success" OnClick="StartForward">Start Forward</MudButton>
+            <MudButton StartIcon="@Icons.Material.Outlined.Start" Color="Color.Success" OnClick="StartForward">@L.Forwards["cmd_start"]</MudButton>
 
         }
     </MudStack>
@@ -142,11 +144,11 @@
         try
         {
             await Clipboard.Default.SetTextAsync(s.Value);
-            _snackbar.Add("Added to Clipboard", Severity.Info);
+            _snackbar.Add(L.Forwards["message_added_clipboard"], Severity.Info);
         }
         catch
         {
-            _snackbar.Add("Failed to copy to clipboard", Severity.Error);
+            _snackbar.Add(L.Forwards["message_fail_clipboard"], Severity.Error);
         }
     }
 
@@ -155,11 +157,11 @@
         try
         {
             await Clipboard.Default.SetTextAsync(String.Join(Environment.NewLine, s));
-            _snackbar.Add("Added to Clipboard", Severity.Info);
+            _snackbar.Add(L.Forwards["message_added_clipboard"], Severity.Info);
         }
         catch
         {
-            _snackbar.Add("Failed to copy to clipboard", Severity.Error);
+            _snackbar.Add(L.Forwards["message_fail_clipboard"], Severity.Error);
         }
     }
     private string? GetLinkedIcon(ResolvedSecret rs)

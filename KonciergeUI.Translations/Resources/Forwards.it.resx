@@ -11,7 +11,55 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="test" xml:space="preserve">
-        <value>te</value>
+    <data name="create_forward_title" xml:space="preserve">
+        <value>Crea un Forward</value>
+    </data>
+    <data name="local_port" xml:space="preserve">
+        <value>Porta Lcoale</value>
+    </data>
+    <data name="protocol" xml:space="preserve">
+        <value>Protocollo</value>
+    </data>
+    <data name="remote_port" xml:space="preserve">
+        <value>Porta Remota</value>
+    </data>
+    <data name="linked_secrets" xml:space="preserve">
+        <value>Secret(s) Collegati</value>
+    </data>
+    <data name="link_a_secret" xml:space="preserve">
+        <value>Aggiungi</value>
+    </data>
+    <data name="select_item_link" xml:space="preserve">
+        <value>Scegli cosa linkare</value>
+    </data>
+    <data name="start_forward" xml:space="preserve">
+        <value>Apri</value>
+    </data>
+    <data name="start_forward_title" xml:space="preserve">
+        <value>Apri il Forward</value>
+    </data>
+    <data name="message_failed_start" xml:space="preserve">
+        <value>Errore di apertura del modello</value>
+    </data>
+    <data name="edit_forward_title" xml:space="preserve">
+        <value>Modifica il Forward</value>
+    </data>
+    <data name="source" xml:space="preserve">
+        <value>Origine</value>
+    </data>
+    <data name="destination" xml:space="preserve">
+        <value>Destinazione</value>
+    </data>
+    <data name="cmd_start" xml:space="preserve">
+        <value>Apri il Forward</value>
+    </data>
+    <data name="cmd_stop" xml:space="preserve">
+        <value>Chiudi il Forward</value>
+    </data>
+    <data name="message_added_clipboard" xml:space="preserve">
+        <value>Aggiunto agli Appunti</value>
+    </data>
+    <data name="message_fail_clipboard" xml:space="preserve">
+        <value>Errore durante l'aggiunta agli appunti</value>
     </data>
 </root>

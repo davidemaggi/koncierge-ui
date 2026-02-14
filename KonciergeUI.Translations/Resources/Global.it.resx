@@ -23,4 +23,46 @@
     <data name="confirm_dialog_title" xml:space="preserve">
         <value>Confermi?</value>
     </data>
+    <data name="k8s_configmaps" xml:space="preserve">
+        <value>Configurazioni</value>
+    </data>
+    <data name="k8s_secrets" xml:space="preserve">
+        <value>Segreti</value>
+    </data>
+    <data name="crud_cancel" xml:space="preserve">
+        <value>Annulla</value>
+    </data>
+    <data name="crud_create" xml:space="preserve">
+        <value>Crea</value>
+    </data>
+    <data name="info_descrioption" xml:space="preserve">
+        <value>Qualcosa Qualcosa</value>
+    </data>
+    <data name="info_build" xml:space="preserve">
+        <value>Build</value>
+    </data>
+    <data name="info_channel" xml:space="preserve">
+        <value>Canale</value>
+    </data>
+    <data name="info_version" xml:space="preserve">
+        <value>Versione</value>
+    </data>
+    <data name="crud_save" xml:space="preserve">
+        <value>Salva</value>
+    </data>
+    <data name="crud_edit" xml:space="preserve">
+        <value>Modifica</value>
+    </data>
+    <data name="crud_remove" xml:space="preserve">
+        <value>Rimuovi</value>
+    </data>
+    <data name="random" xml:space="preserve">
+        <value>Casuale</value>
+    </data>
+    <data name="k8s_context" xml:space="preserve">
+        <value>Contesto</value>
+    </data>
+    <data name="modified" xml:space="preserve">
+        <value>Modificato</value>
+    </data>
 </root>

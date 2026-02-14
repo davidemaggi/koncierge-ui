@@ -11,7 +11,25 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="test" xml:space="preserve">
-        <value>twwttw</value>
+    <data name="save_template" xml:space="preserve">
+        <value>Salva il Modello</value>
+    </data>
+    <data name="template_name" xml:space="preserve">
+        <value>Nome</value>
+    </data>
+    <data name="template_description" xml:space="preserve">
+        <value>Descrizione</value>
+    </data>
+    <data name="cmd_start" xml:space="preserve">
+        <value>Avvia Modello</value>
+    </data>
+    <data name="cmd_stop" xml:space="preserve">
+        <value>Ferma Modello</value>
+    </data>
+    <data name="port_already_used" xml:space="preserve">
+        <value>Porte/a già in uso</value>
+    </data>
+    <data name="start_template_title" xml:space="preserve">
+        <value>Avvia Modello</value>
     </data>
 </root>

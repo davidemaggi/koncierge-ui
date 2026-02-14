@@ -5,14 +5,15 @@
 @using KonciergeUI.Models.Security
 @using static KonciergeUI.Models.Forwarding.Enums
 @using System.Linq
+@using KonciergeUI.Translations.Services
 @inject ISnackbar Snackbar
 @inject IKubeRepository KubeRepo
-
+@inject ILocalizationService L
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.ForwardToInbox" Class="mr-3 mb-n1"/>
-            Create Forward
+            @L.Forwards["create_forward_title"]
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -21,11 +22,11 @@
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
             <MudStack>
                 <MudStack Row>
-                    <MudNumericField Disabled="true" @bind-Value="_newForwardRequest.TargetPort" Label="Remote Port" Variant="Variant.Text" Min="0" Max="65535"/>
-                    <MudNumericField @bind-Value="_newForwardRequest.LocalPort" Label="Local Port" Variant="Variant.Text" Min="0" Max="65535"/>
+                    <MudNumericField Disabled="true" @bind-Value="_newForwardRequest.TargetPort" Label="@L.Forwards["remote_port"]" Variant="Variant.Text" Min="0" Max="65535"/>
+                    <MudNumericField @bind-Value="_newForwardRequest.LocalPort" Label="@L.Forwards["local_port"]" Variant="Variant.Text" Min="0" Max="65535"/>
                 </MudStack>
                 <MudSelect T="ForwardProtocol"
-                           Label="Protocol"
+                           Label="@L.Forwards["protocol"]"
                            Variant="Variant.Outlined"
                            @bind-Value="_newForwardRequest.Protocol"
                            Disabled="true"
@@ -38,19 +39,19 @@
             </MudStack>
         </MudForm>
             <MudStack StretchItems="StretchItems.Start" Row>
-                <MudText>Linked Secret(s)</MudText>
+                <MudText>@L.Forwards["linked_secrets"]</MudText>
                 <MudSpacer/>
-                <MudChip T="string" OnClick="ShowAddLinked">Link</MudChip>
+                <MudChip T="string" OnClick="ShowAddLinked">@L.Forwards["link_a_secret"]</MudChip>
             </MudStack>
             @if (_configMapsSel.Count != 0 || _secretsSel.Count != 0){
             <MudCard Outlined="true">
                     <MudList T="SecretReference" @bind-SelectedValues="SelectedLinks" SelectionMode="SelectionMode.MultiSelection" ReadOnly="false" CheckBoxColor="Color.Tertiary">
                         <MudListSubheader>
-                            Select items to link:
+                            @L.Forwards["select_item_link"]:
                         </MudListSubheader>
 
                         @if (_configMapsSel.Count>0){
-                        <MudListItem Text="Config Maps">
+                        <MudListItem Text="@L.Global["k8s_configmaps"]">
                             <NestedList>
                                 @foreach(var cm in _configMapsSel)
                                 {
@@ -74,7 +75,7 @@
                         }
                         @if (_secretsSel.Count > 0)
                         {
-                            <MudListItem Text="Secrets">
+                            <MudListItem Text="@L.Global["k8s_secrets"]">
                                 <NestedList>
                                     @foreach(var s in _secretsSel)
                                     {
@@ -102,8 +103,8 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Success" OnClick="CreateForward">Create</MudButton>
+        <MudButton OnClick="Cancel">@L.Global["crud_cancel"]</MudButton>
+        <MudButton Color="Color.Success" OnClick="CreateForward">@L.Global["crud_create"]</MudButton>
     </DialogActions>
 </MudDialog>
 @code {

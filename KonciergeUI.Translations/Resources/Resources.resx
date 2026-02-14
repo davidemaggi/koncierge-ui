@@ -39,4 +39,110 @@
     <data name="empty_subtitle" xml:space="preserve">
         <value>Select a cluster to view pods and services.</value>
     </data>
+    <data name="loading_cluster" xml:space="preserve">
+        <value>Loading clusters...</value>
+    </data>
+    <data name="no_clusters_found" xml:space="preserve">
+        <value>No Cluster Found...</value>
+    </data>
+    <data name="select_cluster" xml:space="preserve">
+        <value>Select a Cluster...</value>
+    </data>
+    <data name="default_namespace" xml:space="preserve">
+        <value>Default Namespace</value>
+    </data>
+    <data name="pod_search" xml:space="preserve">
+        <value>Search pods...</value>
+    </data>
+    <data name="service_search" xml:space="preserve">
+        <value>Search services...</value>
+    </data>
+    <data name="pod_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="pod_status" xml:space="preserve">
+        <value>Status</value>
+    </data>
+    <data name="pod_name" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="pod_ports" xml:space="preserve">
+        <value>Ports</value>
+    </data>
+    <data name="pod_actions" xml:space="preserve">
+        <value>Actions</value>
+    </data>
+    <data name="pod_loading" xml:space="preserve">
+        <value>Loading pods...</value>
+    </data>
+    <data name="pod_notfound_search" xml:space="preserve">
+        <value>No pods match the current filters.</value>
+    </data>
+    <data name="pod_notfound" xml:space="preserve">
+        <value>No pods found in this cluster.</value>
+    </data>
+    <data name="service_actions" xml:space="preserve">
+        <value>Actions</value>
+    </data>
+    <data name="service_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="service_name" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="service_type" xml:space="preserve">
+        <value>Type</value>
+    </data>
+    <data name="pod_refresh" xml:space="preserve">
+        <value>Refresh</value>
+    </data>
+    <data name="service_refresh" xml:space="preserve">
+        <value>Refresh</value>
+    </data>
+    <data name="service_loading" xml:space="preserve">
+        <value>Loading services...</value>
+    </data>
+    <data name="service_notfound_search" xml:space="preserve">
+        <value>No services match the current filters.</value>
+    </data>
+    <data name="service_notfound" xml:space="preserve">
+        <value>No services found in this cluster.</value>
+    </data>
+    <data name="pod_all_namespaces" xml:space="preserve">
+        <value>All Namespaces</value>
+    </data>
+    <data name="service_all_namespaces" xml:space="preserve">
+        <value>All Namespaces</value>
+    </data>
+    <data name="service_all_types" xml:space="preserve">
+        <value>All Types</value>
+    </data>
+    <data name="pod_all_statuses" xml:space="preserve">
+        <value>All Statuses</value>
+    </data>
+    <data name="pod_namespaces" xml:space="preserve">
+        <value>Namespaces</value>
+    </data>
+    <data name="service_namespaces" xml:space="preserve">
+        <value>Namespaces</value>
+    </data>
+   
+    <data name="pod_statuses" xml:space="preserve">
+        <value>Statuses</value>
+    </data>
+    <data name="service_types" xml:space="preserve">
+        <value>Types</value>
+    </data>
+    <data name="page_all" xml:space="preserve">
+        <value>All</value>
+    </data>
+    <data name="page_pod_per" xml:space="preserve">
+        <value>Pods per Page</value>
+    </data>
+    <data name="page_service_per" xml:space="preserve">
+        <value>Services per Page</value>
+    </data>
+    <data name="resource" xml:space="preserve">
+        <value>Resource</value>
+    </data>
 </root>
