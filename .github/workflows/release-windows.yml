@@ -173,7 +173,8 @@ jobs:
             exit 1
           }
 
-      - name: Publish Windows MSIX
+      - name: Publish Windows MSIX (signed)
+        if: steps.cert.outputs.cert_imported == 'true'
         run: >-
           dotnet publish KonciergeUi.Client/KonciergeUi.Client.csproj
           -c Release
@@ -184,67 +185,21 @@ jobs:
           -p:WindowsAppSDKSelfContainedPlatforms=x64
           -p:PublishTrimmed=false
           -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
+          -p:PackageCertificateThumbprint=${{ steps.cert.outputs.cert_thumbprint }}
 
-      - name: Sign MSIX package
-        if: steps.cert.outputs.cert_imported == 'true'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          
-          Write-Host "Signing MSIX package..." -ForegroundColor Green
-          
-          # Find signtool.exe
-          $signtoolPath = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin\" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue | 
-            Where-Object { $_.FullName -like "*\x64\signtool.exe" } | 
-            Select-Object -First 1 -ExpandProperty FullName
-          
-          if (-not $signtoolPath) {
-            Write-Warning "signtool.exe not found - skipping signing"
-            exit 0
-          }
-          
-          Write-Host "Using signtool: $signtoolPath" -ForegroundColor Cyan
-          
-          # Find the MSIX file
-          $msixPath = Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/AppPackages') -Recurse -Filter '*.msix' | Select-Object -First 1
-          
-          if (-not $msixPath) {
-            Write-Warning "MSIX file not found - skipping signing"
-            exit 0
-          }
-          
-          Write-Host "Found MSIX: $($msixPath.Name)" -ForegroundColor Cyan
-          
-          try {
-            # Sign the MSIX package - capture all output
-            $signOutput = & $signtoolPath sign `
-              /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
-              /fd SHA256 `
-              /v `
-              "$($msixPath.FullName)" 2>&1
-            
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "✓ MSIX package signed successfully" -ForegroundColor Green
-              
-              # Verify the signature
-              & $signtoolPath verify /pa "$($msixPath.FullName)" 2>&1 | Out-Null
-              
-              if ($LASTEXITCODE -eq 0) {
-                Write-Host "✓ MSIX signature verified" -ForegroundColor Green
-              } else {
-                Write-Warning "MSIX signature verification failed"
-              }
-            } else {
-              Write-Host "SignTool output:" -ForegroundColor Red
-              Write-Host $signOutput -ForegroundColor Red
-              Write-Error "Failed to sign MSIX package"
-              exit 1
-            }
-          } catch {
-            Write-Host "SignTool output: $signOutput" -ForegroundColor Red
-            Write-Error "Error signing MSIX: $_"
-            throw
-          }
+      - name: Publish Windows MSIX (unsigned)
+        if: steps.cert.outputs.cert_imported != 'true'
+        run: >-
+          dotnet publish KonciergeUi.Client/KonciergeUi.Client.csproj
+          -c Release
+          -f net9.0-windows10.0.19041.0
+          -p:RuntimeIdentifierOverride=win10-x64
+          -p:WindowsPackageType=MSIX
+          -p:WindowsAppSDKSelfContained=true
+          -p:WindowsAppSDKSelfContainedPlatforms=x64
+          -p:PublishTrimmed=false
+          -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
+          -p:AppxPackageSigningEnabled=false
 
       - name: Package artifacts
         id: package
