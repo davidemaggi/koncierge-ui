@@ -32,4 +32,109 @@
     <data name="empty_subtitle" xml:space="preserve">
         <value>Seleziona un cluster per vederne i pod e servizi.</value>
     </data>
+    <data name="loading_cluster" xml:space="preserve">
+        <value>Sto caricando i Cluster...</value>
+    </data>
+    <data name="no_clusters_found" xml:space="preserve">
+        <value>Non ho trovato cluster...</value>
+    </data>
+    <data name="select_cluster" xml:space="preserve">
+        <value>Scegli un Cluster...</value>
+    </data>
+    <data name="default_namespace" xml:space="preserve">
+        <value>Namespace Predefinito</value>
+    </data>
+    <data name="pod_search" xml:space="preserve">
+        <value>Cerca tra i pods...</value>
+    </data>
+    <data name="service_search" xml:space="preserve">
+        <value>Cerca tra i servizi</value>
+    </data>
+    <data name="pod_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="pod_status" xml:space="preserve">
+        <value>Stato</value>
+    </data>
+    <data name="pod_name" xml:space="preserve">
+        <value>Nome</value>
+    </data>
+    <data name="pod_ports" xml:space="preserve">
+        <value>Porte</value>
+    </data>
+    <data name="pod_actions" xml:space="preserve">
+        <value>Azioni</value>
+    </data>
+    <data name="pod_loading" xml:space="preserve">
+        <value>Sto caricando i pod...</value>
+    </data>
+    <data name="pod_notfound" xml:space="preserve">
+        <value>Nessun Pod presentu sul cluster</value>
+    </data>
+    <data name="pod_notfound_search" xml:space="preserve">
+        <value>Nessun Pod che soddisfi i filtri è stato trovato</value>
+    </data>
+    <data name="service_actions" xml:space="preserve">
+        <value>Azioni</value>
+    </data>
+    <data name="service_type" xml:space="preserve">
+        <value>Tipo</value>
+    </data>
+    <data name="service_name" xml:space="preserve">
+        <value>Nome</value>
+    </data>
+    <data name="service_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="service_refresh" xml:space="preserve">
+        <value>Aggiorna</value>
+    </data>
+    <data name="pod_refresh" xml:space="preserve">
+        <value>Aggiorna</value>
+    </data>
+    <data name="pod_all_namespaces" xml:space="preserve">
+        <value>Tutti i Namespace</value>
+    </data>
+    <data name="pod_all_statuses" xml:space="preserve">
+        <value>Tutti gli Stati</value>
+    </data>
+    <data name="service_all_namespaces" xml:space="preserve">
+        <value>Tutti i Namespace</value>
+    </data>
+    <data name="service_all_types" xml:space="preserve">
+        <value>Tutti i Tipi</value>
+    </data>
+    <data name="service_notfound" xml:space="preserve">
+        <value>Nessun Servizio trovato nel cluster</value>
+    </data>
+    <data name="service_notfound_search" xml:space="preserve">
+        <value>Nessun Servizio soddisfa i criteri di ricerca</value>
+    </data>
+    <data name="pod_namespaces" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="service_loading" xml:space="preserve">
+        <value>Carico i Servizi...</value>
+    </data>
+    <data name="service_namespaces" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="pod_statuses" xml:space="preserve">
+        <value>Stati</value>
+    </data>
+    <data name="service_types" xml:space="preserve">
+        <value>Tipi</value>
+    </data>
+    <data name="page_all" xml:space="preserve">
+        <value>Tutti</value>
+    </data>
+    <data name="page_pod_per" xml:space="preserve">
+        <value>Pods per Pagina</value>
+    </data>
+    <data name="page_service_per" xml:space="preserve">
+        <value>Servizi per Pagina</value>
+    </data>
+    <data name="resource" xml:space="preserve">
+        <value>Risorsa</value>
+    </data>
 </root>

@@ -150,7 +150,7 @@ jobs:
               $signOutput = & $signtoolPath sign `
                 /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
                 /fd SHA256 `
-                /tr "https://timestamp.sectigo.com" `
+                /tr "http://freetsa.org/tsr" `
                 /td SHA256 `
                 /v `
                 "$($file.FullName)" 2>&1
@@ -222,7 +222,7 @@ jobs:
             & $signtoolPath sign `
               /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
               /fd SHA256 `
-              /tr "https://timestamp.sectigo.com" `
+              /tr "http://freetsa.org/tsr" `
               /td SHA256 `
               /v `
               "$($msixPath.FullName)" 2>&1 | Out-Null

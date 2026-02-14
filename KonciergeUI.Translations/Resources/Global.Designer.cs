@@ -68,5 +68,89 @@ namespace KonciergeUI.Translations.Resources {
                 return ResourceManager.GetString("confirm_dialog_cancel_label", resourceCulture);
             }
         }
+        
+        public static string k8s_configmaps {
+            get {
+                return ResourceManager.GetString("k8s_configmaps", resourceCulture);
+            }
+        }
+        
+        public static string k8s_secrets {
+            get {
+                return ResourceManager.GetString("k8s_secrets", resourceCulture);
+            }
+        }
+        
+        public static string crud_cancel {
+            get {
+                return ResourceManager.GetString("crud_cancel", resourceCulture);
+            }
+        }
+        
+        public static string crud_create {
+            get {
+                return ResourceManager.GetString("crud_create", resourceCulture);
+            }
+        }
+        
+        public static string info_descrioption {
+            get {
+                return ResourceManager.GetString("info_descrioption", resourceCulture);
+            }
+        }
+        
+        public static string info_version {
+            get {
+                return ResourceManager.GetString("info_version", resourceCulture);
+            }
+        }
+        
+        public static string info_build {
+            get {
+                return ResourceManager.GetString("info_build", resourceCulture);
+            }
+        }
+        
+        public static string info_channel {
+            get {
+                return ResourceManager.GetString("info_channel", resourceCulture);
+            }
+        }
+        
+        public static string crud_save {
+            get {
+                return ResourceManager.GetString("crud_save", resourceCulture);
+            }
+        }
+        
+        public static string crud_edit {
+            get {
+                return ResourceManager.GetString("crud_edit", resourceCulture);
+            }
+        }
+        
+        public static string crud_remove {
+            get {
+                return ResourceManager.GetString("crud_remove", resourceCulture);
+            }
+        }
+        
+        public static string random {
+            get {
+                return ResourceManager.GetString("random", resourceCulture);
+            }
+        }
+        
+        public static string k8s_context {
+            get {
+                return ResourceManager.GetString("k8s_context", resourceCulture);
+            }
+        }
+        
+        public static string modified {
+            get {
+                return ResourceManager.GetString("modified", resourceCulture);
+            }
+        }
     }
 }

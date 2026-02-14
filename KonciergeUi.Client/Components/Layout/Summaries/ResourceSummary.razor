@@ -1,8 +1,10 @@
 @using KonciergeUi.Client.Shared
 @using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Translations.Services
+@inject ILocalizationService L
 <MudCard  Outlined="true">
     <MudStack>
-        <MudText Style="font-family: monospace;" Typo="Typo.body2" >Resource</MudText>
+        <MudText Style="font-family: monospace;" Typo="Typo.body2" >@L.Resources["resource"]</MudText>
 
         <MudStack AlignItems="AlignItems.Center"  Row>
             @if (_kind == Enums.ResourceType.Pod){

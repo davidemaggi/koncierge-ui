@@ -32,7 +32,7 @@
                        Clearable="true"
                        SelectedValues="@_ui.SelectedNamespaces"
                        SelectedValuesChanged="@(values => OnNamespacesChanged(values))"
-                       Label="Namespace" 
+                       Label="@L.Resources["service_namespace"]" 
                        Variant="Variant.Outlined" 
                        Dense="true"
                        Class="mr-2"
@@ -50,7 +50,7 @@
                        Clearable="true"
                        SelectedValues="@_ui.SelectedTypes"
                        SelectedValuesChanged="@(values => OnTypesChanged(values))"
-                       Label="Type" 
+                       Label="@L.Resources["service_type"]" 
                        Variant="Variant.Outlined" 
                        Dense="true"
                        Class="mr-2"
@@ -65,7 +65,7 @@
             <!-- Search -->
             <MudTextField T="string" Value="@_ui.SearchString"
                           ValueChanged="@(value => OnSearchChanged(value))"
-                          Placeholder="Search services..." 
+                          Placeholder="@L.Resources["service_search"]" 
                           Adornment="Adornment.Start" 
                           AdornmentIcon="@Icons.Material.Filled.Search" 
                           IconSize="Size.Medium"
@@ -76,7 +76,7 @@
                           Style="min-width: 200px;" />
 
             <!-- Refresh button -->
-            <MudTooltip Text="Refresh">
+            <MudTooltip Text="@L.Resources["service_refresh"]">
                 <MudIconButton Icon="@Icons.Material.Filled.Refresh" 
                                Color="Color.Primary" 
                                OnClick="RefreshAsync"
@@ -85,28 +85,28 @@
         </ToolBarContent>
 
         <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Namespace</MudTh>
-            <MudTh>Type</MudTh>
-            <MudTh>Ports</MudTh>
-            <MudTh Style="text-align: right;">Actions</MudTh>
+            <MudTh>@L.Resources["service_name"]</MudTh>
+            <MudTh>@L.Resources["service_namespace"]</MudTh>
+            <MudTh>@L.Resources["service_type"]</MudTh>
+            <MudTh>@L.Resources["service_ports"]</MudTh>
+            <MudTh Style="text-align: right;">@L.Resources["service_actions"]</MudTh>
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd DataLabel="Name">
+            <MudTd DataLabel="@L.Resources["service_name"]">
                 <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
                     <MudIcon Icon="@KonciergeIcons.Outlined.Service" Size="Size.Small" Color="Color.Secondary" />
                     <MudText Typo="Typo.body2" Style="font-family: monospace;">@context.Name</MudText>
                 </MudStack>
             </MudTd>
             
-            <MudTd DataLabel="Namespace">
+            <MudTd DataLabel="@L.Resources["service_namespace"]">
                 <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">
                     @context.Namespace
                 </MudChip>
             </MudTd>
             
-            <MudTd DataLabel="Type">
+            <MudTd DataLabel="@L.Resources["service_type"]">
                 <MudChip T="string" Size="Size.Small"
                          Color="@GetServiceTypeColor(context.Type)" 
                          Variant="Variant.Filled">
@@ -114,7 +114,7 @@
                 </MudChip>
             </MudTd>
             
-            <MudTd DataLabel="Ports">
+            <MudTd DataLabel="@L.Resources["service_ports"]">
                 @if (context.Ports.Any())
                 {
                     <MudStack Row="true" Spacing="0">
@@ -142,7 +142,7 @@
                     <MudText Typo="Typo.body2" Color="Color.Secondary">-</MudText>
                 }
             </MudTd>
-            <MudTd DataLabel="Actions">
+            <MudTd DataLabel="@L.Resources["service_actions"]">
                 @if (context.Ports.Any())
                 {
                     <MudStack Row="true" Spacing="0">
@@ -173,20 +173,20 @@
             <MudAlert Severity="Severity.Info" Class="my-4">
                 @if (_isLoading)
                 {
-                    <MudText>Loading services...</MudText>
+                    <MudText>@L.Resources["service_loading"]</MudText>
                 }
                 else if (!string.IsNullOrEmpty(_ui.SearchString) || _ui.SelectedNamespaces.Any() || _ui.SelectedTypes.Any())
                 {
-                    <MudText>No services match the current filters.</MudText>
+                    <MudText>@L.Resources["service_notfound_search"]</MudText>
                 }
                 else
                 {
-                    <MudText>No services found in this cluster.</MudText>
+                    <MudText>@L.Resources["service_notfound"]</MudText>
                 }
             </MudAlert>
         </NoRecordsContent>
                 <PagerContent>
-            <MudTablePager PageSizeOptions="@(new int[] { 15, 30, 50, int.MaxValue })" />
+            <MudTablePager RowsPerPageString="@L.Resources["page_service_per"]" AllItemsText="@L.Resources["page_all"]" PageSizeOptions="@(new int[] { 15, 30, 50, int.MaxValue })" />
         </PagerContent>
     </MudTable>
 </MudPaper>
@@ -271,19 +271,19 @@
     private string GetNamespaceSelectionText(List<string> selectedValues)
     {
         if (!selectedValues.Any())
-            return "All namespaces";
+            return L.Resources["pod_all_namespaces"];
         if (selectedValues.Count == 1)
             return selectedValues.First();
-        return $"{selectedValues.Count} namespaces";
+        return $"{selectedValues.Count} {L.Resources["pod_namespaces"]}";
     }
 
     private string GetTypeSelectionText(List<string> selectedValues)
     {
         if (!selectedValues.Any())
-            return "All types";
+            return L.Resources["pod_all_types"];
         if (selectedValues.Count == 1)
             return selectedValues.First();
-        return $"{selectedValues.Count} types";
+        return $"{selectedValues.Count} {L.Resources["pod_types"]}";
     }
 
     private async Task LoadServicesAsync()
@@ -358,7 +358,7 @@
 
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
 
-        var dialog= await DialogService.ShowAsync<CreateForwardDialog>("Create Forward", parameters, options);
+        var dialog= await DialogService.ShowAsync<CreateForwardDialog>(@L.Forwards["create_forward_title"], parameters, options);
         
         var result = await dialog.Result;
 

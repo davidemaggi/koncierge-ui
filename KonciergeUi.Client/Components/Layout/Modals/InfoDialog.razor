@@ -13,7 +13,7 @@
             <MudContainer >
                 <MudStack AlignItems="AlignItems.Center">
                     <MudIcon Icon="@KonciergeIcons.Filled.Logo" Style="font-size: 10rem"/>
-                    <MudText>Something Something</MudText>
+                    <MudText>@L.Global["info_description"]</MudText>
                 </MudStack>
             </MudContainer>
             <MudStack AlignItems="AlignItems.Start">
@@ -21,9 +21,9 @@
                     <MudStack AlignItems="AlignItems.Center" Row>
                         <MudIcon Icon="@KonciergeIcons.Color.Ananbelle" Style="font-size: 5rem"/>
                         <MudStack>
-                            <MudText Style="font-weight: bold">Version @VersionProvider.DisplayVersion</MudText>
-                            <MudText>Build @VersionProvider.BuildVersion</MudText>
-                            <MudText>Channel <MudText Inline="true" Color="Color.Primary">main</MudText></MudText>
+                            <MudText Style="font-weight: bold">@L.Global["info_version"] @VersionProvider.DisplayVersion</MudText>
+                            <MudText>@L.Global["info_build"] @VersionProvider.BuildVersion</MudText>
+                            <MudText>@L.Global["info_channel"] <MudText Inline="true" Color="Color.Primary">main</MudText></MudText>
                         </MudStack>
                     </MudStack>
                 </MudContainer>

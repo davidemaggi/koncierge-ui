@@ -3,10 +3,11 @@
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Translations.Services
 @inject IPreferencesStorage _storage
 @inject IDialogService DialogService
 @inject IPortForwardingService _fwdService
-
+@inject ILocalizationService L
 
 
 <MudCard>
@@ -25,9 +26,9 @@
             </CardHeaderContent>
         <CardHeaderActions>
                     <MudStack AlignItems="AlignItems.Center" Row>
-                <MudText Typo="Typo.body2">Context: @($"{@_template.ClusterInfo.ContextName}@{@_template.ClusterInfo.Name}")</MudText>
+                <MudText Typo="Typo.body2">@L.Global["k8s_context"]: @($"{@_template.ClusterInfo.ContextName}@{@_template.ClusterInfo.Name}")</MudText>
 
-            <MudButton OnClick="StopTemplate" Color="Color.Error" StartIcon="@Icons.Material.Outlined.StopCircle">Stop Template</MudButton>
+            <MudButton OnClick="StopTemplate" Color="Color.Error" StartIcon="@Icons.Material.Outlined.StopCircle">@L.Templates["cmd_stop"]</MudButton>
             </MudStack>
         </CardHeaderActions>
     </MudCardHeader>

@@ -4,11 +4,12 @@
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.State
 @using KonciergeUi.Client.Components.Layout.Modals
+@using KonciergeUI.Translations.Services
 @implements IDisposable
 
 @inject UiState _ui
 @inject IDialogService Dialog
-
+@inject ILocalizationService L
 
 <MudCard Elevation="0" Outlined="false" Style="@(KonciergeColors.GetSummaryCardBackground(_ui))">
     <MudStack Row>
@@ -28,7 +29,7 @@
             <MudText Style="font-family: monospace;" Typo="Typo.body2">@GetPortDisplay()</MudText>
             @if (_definition.LinkedSecrets.Any()) 
             {
-                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_definition.LinkedSecrets.Count} linked secret(s)")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_definition.LinkedSecrets.Count} {L.Forwards["linked_secrets"]}")</MudText>
             }
         </MudStack>
         @if (_showRemove || _showEdit)
@@ -37,10 +38,10 @@
         }
         @if (_showEdit)
         {
-            <MudButton StartIcon="@Icons.Material.Outlined.Edit" Color="Color.Primary" OnClick="EditClicked">Edit</MudButton>
+            <MudButton StartIcon="@Icons.Material.Outlined.Edit" Color="Color.Primary" OnClick="EditClicked">@L.Global["crud_edit"]</MudButton>
         }
         @if(_showRemove){
-        <MudButton StartIcon="@Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="RemoveClicked">Remove</MudButton>
+        <MudButton StartIcon="@Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="RemoveClicked">@L.Global["crud_remove"]</MudButton>
         }
     </MudStack>
 </MudCard>
@@ -80,7 +81,7 @@
 
     private string GetPortDisplay()
     {
-        var localPort = _definition.LocalPort == 0 ? "Random" : _definition.LocalPort.ToString();
+        var localPort = _definition.LocalPort == 0 ? @L.Global["random"] : _definition.LocalPort.ToString();
         return $"localhost:{localPort} -> {_definition.TargetPort}({_definition.Protocol.ToString()})";
     }
 
@@ -110,7 +111,7 @@
         };
 
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium };
-        var dialog = await Dialog.ShowAsync<CreateForwardDialog>("Edit Forward", parameters, options);
+        var dialog = await Dialog.ShowAsync<CreateForwardDialog>(@L.Forwards["edit_forward_title"], parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is PortForwardDefinition updatedForward)

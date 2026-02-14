@@ -1,27 +1,29 @@
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Models.Kube
+@using KonciergeUI.Translations.Services
 @inject IPreferencesStorage _storage
+@inject ILocalizationService L
 
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.Save" Class="mr-3 mb-n1"/>
-            Save Template
+            @L.Templates["save_template"]
         </MudText>
     </TitleContent>
     <DialogContent>
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
             <MudStack>
-                <MudTextField T="string" @bind-Value="@_template.Name" Label="Name"  />
-                <MudTextField T="string" @bind-Value="@_template.Description" Lines="5" Label="Description"  />
+                <MudTextField T="string" @bind-Value="@_template.Name" Label="@L.Templates["template_name"]"  />
+                <MudTextField T="string" @bind-Value="@_template.Description" Lines="5" Label="@L.Templates["template_description"]"  />
                            </MudStack>
         </MudForm>
 
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Success" OnClick="OnSaveAsync">Save</MudButton>
+        <MudButton OnClick="Cancel">@L.Global["crud_cancel"]</MudButton>
+        <MudButton Color="Color.Success" OnClick="OnSaveAsync">@L.Global["crud_save"]</MudButton>
     </DialogActions>
 </MudDialog>
 @code {

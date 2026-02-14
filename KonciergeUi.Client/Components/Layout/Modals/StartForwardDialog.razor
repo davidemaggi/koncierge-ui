@@ -5,16 +5,18 @@
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Models.Kube
 @using KonciergeUI.Models.Security
+@using KonciergeUI.Translations.Services
 @using static KonciergeUI.Models.Forwarding.Enums
 @inject ISnackbar Snackbar
 @inject IKubeRepository KubeRepo
 @inject UiState _ui
 @inject IPortForwardingService _fwd;
+@inject ILocalizationService L
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Class="mr-3 mb-n1"/>
-            Start Forward
+            @L.Forwards["start_forward_title"]
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -25,8 +27,8 @@
 
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Success" OnClick="StartForward">Start</MudButton>
+        <MudButton OnClick="Cancel">@L.Global["crud_cancel"]</MudButton>
+        <MudButton Color="Color.Success" OnClick="StartForward">@L.Forwards["start_forward"]</MudButton>
     </DialogActions>
 </MudDialog>
 @code {
@@ -80,7 +82,7 @@
         catch (Exception ex)
         {
             var errorMessage = ex.InnerException?.Message ?? ex.Message;
-            Snackbar.Add($"Failed to start template: {errorMessage}", Severity.Error);
+            Snackbar.Add($"{L.Forwards["message_failed_start"]}: {errorMessage}", Severity.Error);
         }
     }
 

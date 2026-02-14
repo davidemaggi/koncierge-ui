@@ -3,10 +3,11 @@
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.Extensions
+@using KonciergeUI.Translations.Services
 @inject IPreferencesStorage _storage
 @inject IDialogService DialogService
 @inject IPortForwardingService _fwdService
-
+@inject ILocalizationService L
 
 <MudExpansionPanels Elevation="0">
     <MudExpansionPanel>
@@ -22,7 +23,7 @@
                         <MudStack Row>
                             <MudText Typo="Typo.body2">@_template.Forwards.Count Forward(s)</MudText>
                             <MudText Typo="Typo.body2"> - </MudText>
-                            <MudText Typo="Typo.body2">Modified @_template.ModifiedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudText>
+                            <MudText Typo="Typo.body2">@L.Global["modified"] @_template.ModifiedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudText>
 
                         </MudStack>
                     </MudStack>
@@ -34,13 +35,13 @@
                 }
                 @if (hasConflict)
                 {
-                    <MudTooltip Text="@($"Port(s) already in use: {string.Join(", ", conflictingPorts)}")">
-                        <MudButton Disabled="true" Color="Color.Success" StartIcon="@Icons.Material.Outlined.PlayArrow">Start Template</MudButton>
+                    <MudTooltip Text="@($"{L.Templates["port_already_used"]}: {string.Join(", ", conflictingPorts)}")">
+                        <MudButton Disabled="true" Color="Color.Success" StartIcon="@Icons.Material.Outlined.PlayArrow">@L.Templates["cmd_start"]</MudButton>
                     </MudTooltip>
                 }
                 else
                 {
-                    <MudButton OnClick="StartTemplate" Color="Color.Success" StartIcon="@Icons.Material.Outlined.PlayArrow">Start Template</MudButton>
+                    <MudButton OnClick="StartTemplate" Color="Color.Success" StartIcon="@Icons.Material.Outlined.PlayArrow">@L.Templates["cmd_start"]</MudButton>
                 }
                     <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"  Size="Size.Small" OnClick="EditTemplate" />
                     <MudIconButton OnClick="DeleteTemplate" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete" />
@@ -103,7 +104,7 @@
 
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
 
-        var dialog= await DialogService.ShowAsync<StartForwardDialog>("Start Forward", parameters, options);
+        var dialog= await DialogService.ShowAsync<StartForwardDialog>(L.Templates["cmd_start"], parameters, options);
         
         var result = await dialog.Result;
 
