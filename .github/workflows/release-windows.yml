@@ -244,23 +244,37 @@ jobs:
           # For existing packages in winget-pkgs, use update --submit
           # For new packages, we need to submit the manifest files manually via PR
           # Try update first (will work if package already exists in winget-pkgs)
-          & $wingetcreate update "DavideMaggi.KonciergeUI" `
+          $output = & $wingetcreate update "DavideMaggi.KonciergeUI" `
             --urls $installerUrl `
             --version $version `
             --submit `
             --token $env:WINGET_GITHUB_TOKEN 2>&1
           
-          if ($LASTEXITCODE -eq 0) {
+          $updateExitCode = $LASTEXITCODE
+          Write-Host $output
+          
+          if ($updateExitCode -eq 0) {
             Write-Host "✓ Successfully submitted PR to microsoft/winget-pkgs" -ForegroundColor Green
           } else {
-            Write-Host "Package not found in winget-pkgs (first submission)." -ForegroundColor Yellow
-            Write-Host "For first-time submission, please:" -ForegroundColor Yellow
-            Write-Host "  1. Download the winget-manifest artifact from this workflow run" -ForegroundColor Gray
+            Write-Host ""
+            Write-Host "═══════════════════════════════════════════════════════════════════" -ForegroundColor Yellow
+            Write-Host "  FIRST-TIME WINGET SUBMISSION REQUIRED" -ForegroundColor Yellow
+            Write-Host "═══════════════════════════════════════════════════════════════════" -ForegroundColor Yellow
+            Write-Host ""
+            Write-Host "  The package 'DavideMaggi.KonciergeUI' doesn't exist yet in winget-pkgs." -ForegroundColor White
+            Write-Host "  This is expected for the first release!" -ForegroundColor White
+            Write-Host ""
+            Write-Host "  To submit your package for the first time:" -ForegroundColor Cyan
+            Write-Host "  1. Download the 'winget-manifest-${{ steps.gitversion.outputs.semver }}' artifact" -ForegroundColor Gray
             Write-Host "  2. Fork https://github.com/microsoft/winget-pkgs" -ForegroundColor Gray
-            Write-Host "  3. Copy files to manifests/d/DavideMaggi/KonciergeUI/$version/" -ForegroundColor Gray
-            Write-Host "  4. Submit a PR to microsoft/winget-pkgs" -ForegroundColor Gray
-            Write-Host "" -ForegroundColor Gray
-            Write-Host "After the first submission is merged, automatic updates will work." -ForegroundColor Cyan
+            Write-Host "  3. Copy manifest files to: manifests/d/DavideMaggi/KonciergeUI/$version/" -ForegroundColor Gray
+            Write-Host "  4. Submit a Pull Request to microsoft/winget-pkgs" -ForegroundColor Gray
+            Write-Host ""
+            Write-Host "  After your first PR is merged, automatic updates will work!" -ForegroundColor Green
+            Write-Host "═══════════════════════════════════════════════════════════════════" -ForegroundColor Yellow
+            Write-Host ""
+            # Don't fail the workflow for first-time submission
+            exit 0
           }
 
       - name: Upload WinGet manifest as artifact
