@@ -146,19 +146,20 @@ jobs:
             try {
               Write-Host "  Signing: $($file.Name)" -ForegroundColor Gray
               
-              # Use signtool to sign the file
-              & $signtoolPath sign `
+              # Use signtool to sign the file - capture output for diagnostics
+              $signOutput = & $signtoolPath sign `
                 /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
                 /fd SHA256 `
                 /tr "https://timestamp.sectigo.com" `
                 /td SHA256 `
                 /v `
-                "$($file.FullName)" 2>&1 | Out-Null
+                "$($file.FullName)" 2>&1
               
               if ($LASTEXITCODE -eq 0) {
                 $signedCount++
               } else {
                 Write-Warning "Failed to sign $($file.Name)"
+                Write-Host "Sign tool output: $signOutput" -ForegroundColor Red
                 $failedCount++
               }
             } catch {
@@ -170,7 +171,8 @@ jobs:
           Write-Host ""
           Write-Host "✓ Signed $signedCount files successfully" -ForegroundColor Green
           if ($failedCount -gt 0) {
-            Write-Warning "Failed to sign $failedCount files"
+            Write-Error "Failed to sign $failedCount files - failing build"
+            exit 1
           }
 
       - name: Publish Windows MSIX

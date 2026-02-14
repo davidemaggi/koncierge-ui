@@ -19,6 +19,9 @@ namespace KonciergeUI.Data
         {
             public KonciergeConfig Config { get; set; } = new();
 
+            // Migration tracking - if true, legacy properties have been migrated
+            public bool LegacyConfigMigrated { get; set; } = false;
+
             [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             public string? CurrentTheme { get; set; } = "System";
 
@@ -65,11 +68,18 @@ namespace KonciergeUI.Data
 
         private void MigrateLegacyConfig(PreferencesData data)
         {
+            // Skip if already migrated
+            if (data.LegacyConfigMigrated)
+            {
+                return;
+            }
+
             if (data.Config == null)
             {
                 data.Config = new KonciergeConfig();
             }
 
+            // Migrate legacy properties if they exist
             if (!string.IsNullOrWhiteSpace(data.CurrentTheme))
             {
                 data.Config.CurrentTheme = data.CurrentTheme;
@@ -85,9 +95,13 @@ namespace KonciergeUI.Data
                 data.Config.LastSelectedClusterId = data.LastSelectedClusterId;
             }
 
+            // Clear all legacy properties after migration
             data.CurrentTheme = null;
             data.CurrentLanguage = null;
             data.LastSelectedClusterId = null;
+
+            // Mark as migrated
+            data.LegacyConfigMigrated = true;
         }
 
         private async Task SaveToFileAsync()

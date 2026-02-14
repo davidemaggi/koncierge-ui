@@ -14,7 +14,7 @@
     The subject name for the certificate. Default: "Koncierge UI"
 
 .PARAMETER Password
-    The password to protect the PFX file. Default: "YourSecurePassword"
+    The password to protect the PFX file. If not provided, a strong random password will be generated.
     IMPORTANT: Use a strong password in production!
 
 .PARAMETER OutputPath
@@ -40,13 +40,24 @@ param(
     [string]$CertName = "Koncierge UI",
     
     [Parameter(Mandatory=$false)]
-    [string]$Password = "YourSecurePassword",
+    [string]$Password,
     
     [Parameter(Mandatory=$false)]
     [string]$OutputPath = "."
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Generate a strong random password if not provided
+if ([string]::IsNullOrWhiteSpace($Password)) {
+    Write-Host "No password provided. Generating a strong random password..." -ForegroundColor Yellow
+    # Generate a 32-character random password with letters, numbers, and safe symbols
+    # Using 0-9, A-Z, a-z, and safe symbols: !@#$%&*+=
+    $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%&*+='
+    $Password = -join ((1..32) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
+    Write-Host "✓ Generated strong random password" -ForegroundColor Green
+    Write-Host ""
+}
 
 # Validate output path
 if (-not (Test-Path $OutputPath)) {
