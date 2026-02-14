@@ -53,7 +53,8 @@
     {
         
         
-        var last = _storage.GetForwardTemplatesAsync().Result
+        var templates = await _storage.GetForwardTemplatesAsync();
+        var last = templates
             .OrderByDescending(t => t.Sorting)
             .FirstOrDefault();
         

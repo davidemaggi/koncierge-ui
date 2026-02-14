@@ -5,7 +5,7 @@ namespace KonciergeUi.Client.Components.Theme;
 public static class KonciergeColors
 {
 
-    public static string GetSummayCardBackground(UiState ui)
+    public static string GetSummaryCardBackground(UiState ui)
     {
         if (ui.IsDarkMode)
         {

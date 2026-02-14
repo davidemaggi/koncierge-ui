@@ -73,9 +73,9 @@
                 continue;
             }
 
-            template.Sorting = i;
-            template.ModifiedAt = DateTimeOffset.UtcNow;
-            changedTemplates.Add(template);
+            var updatedTemplate = template with { Sorting = i, ModifiedAt = DateTimeOffset.UtcNow };
+            _templates[i] = updatedTemplate;
+            changedTemplates.Add(updatedTemplate);
         }
 
         if (changedTemplates.Count > 0)
@@ -86,10 +86,9 @@
 
     private async Task ToggleFavoriteAsync(ForwardTemplate template)
     {
-        template.Favorite = !template.Favorite;
-        template.ModifiedAt = DateTimeOffset.UtcNow;
+        var updatedTemplate = template with { Favorite = !template.Favorite, ModifiedAt = DateTimeOffset.UtcNow };
 
-        await _storage.UpdateForwardTemplateAsync(template);
+        await _storage.UpdateForwardTemplateAsync(updatedTemplate);
 
         _templates = _templates.OrderBy(t => t.Sorting).ToList();
         await InvokeAsync(StateHasChanged);

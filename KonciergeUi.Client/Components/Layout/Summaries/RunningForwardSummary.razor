@@ -139,22 +139,14 @@
 
     private async Task OnCopyClicked(ResolvedSecret s)
     {
-        if (Clipboard.Default.HasText)
-        {
-            await Clipboard.Default.SetTextAsync(s.Value);
-
-            _snakbar.Add("Added to Clipboard", Severity.Info);
-        }
+        await Clipboard.Default.SetTextAsync(s.Value);
+        _snackbar.Add("Added to Clipboard", Severity.Info);
     }
 
     private async Task OnCopyLogClicked(List<string> s)
     {
-        if (Clipboard.Default.HasText)
-        {
-            await Clipboard.Default.SetTextAsync(String.Join(Environment.NewLine, s));
-
-            _snakbar.Add("Added to Clipboard", Severity.Info);
-        }
+        await Clipboard.Default.SetTextAsync(String.Join(Environment.NewLine, s));
+        _snackbar.Add("Added to Clipboard", Severity.Info);
     }
     private string? GetLinkedIcon(ResolvedSecret rs)
 

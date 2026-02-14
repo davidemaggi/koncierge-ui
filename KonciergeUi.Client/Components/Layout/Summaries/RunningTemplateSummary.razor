@@ -27,7 +27,7 @@
                     <MudStack AlignItems="AlignItems.Center" Row>
                 <MudText Typo="Typo.body2">Context: @($"{@_template.ClusterInfo.ContextName}@{@_template.ClusterInfo.Name}")</MudText>
 
-            <MudButton OnClick="Stoptemplate" Color="Color.Error" StartIcon="@Icons.Material.Outlined.StopCircle">Stop Template</MudButton>
+            <MudButton OnClick="StopTemplate" Color="Color.Error" StartIcon="@Icons.Material.Outlined.StopCircle">Stop Template</MudButton>
             </MudStack>
         </CardHeaderActions>
     </MudCardHeader>
@@ -56,7 +56,7 @@
 
     
 
-    private async Task Stoptemplate(MouseEventArgs arg)
+    private async Task StopTemplate(MouseEventArgs arg)
     {
     
         
