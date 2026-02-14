@@ -139,14 +139,28 @@
 
     private async Task OnCopyClicked(ResolvedSecret s)
     {
-        await Clipboard.Default.SetTextAsync(s.Value);
-        _snackbar.Add("Added to Clipboard", Severity.Info);
+        try
+        {
+            await Clipboard.Default.SetTextAsync(s.Value);
+            _snackbar.Add("Added to Clipboard", Severity.Info);
+        }
+        catch
+        {
+            _snackbar.Add("Failed to copy to clipboard", Severity.Error);
+        }
     }
 
     private async Task OnCopyLogClicked(List<string> s)
     {
-        await Clipboard.Default.SetTextAsync(String.Join(Environment.NewLine, s));
-        _snackbar.Add("Added to Clipboard", Severity.Info);
+        try
+        {
+            await Clipboard.Default.SetTextAsync(String.Join(Environment.NewLine, s));
+            _snackbar.Add("Added to Clipboard", Severity.Info);
+        }
+        catch
+        {
+            _snackbar.Add("Failed to copy to clipboard", Severity.Error);
+        }
     }
     private string? GetLinkedIcon(ResolvedSecret rs)
 
