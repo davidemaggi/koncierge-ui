@@ -41,52 +41,6 @@ jobs:
           "nugetversion=$($data.NuGetVersionV2)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "majorminorpatch=$($data.MajorMinorPatch)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Import code signing certificate
-        id: cert
-        shell: pwsh
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          
-          # Check if certificate secrets are available
-          if ([string]::IsNullOrEmpty($env:WINDOWS_CERTIFICATE)) {
-            Write-Host "Code signing certificate not configured - signing will be skipped" -ForegroundColor Yellow
-            "cert_imported=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            exit 0
-          }
-          
-          try {
-            Write-Host "Importing code signing certificate..." -ForegroundColor Green
-            
-            # Decode base64 certificate
-            $certBytes = [System.Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
-            $pfxPath = Join-Path $env:RUNNER_TEMP "cert.pfx"
-            [System.IO.File]::WriteAllBytes($pfxPath, $certBytes)
-            
-            # Import certificate to user store
-            $securePassword = ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -Force -AsPlainText
-            $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword
-            
-            # Output certificate info (not sensitive data)
-            Write-Host "✓ Certificate imported successfully" -ForegroundColor Green
-            Write-Host "  Subject: $($cert.Subject)" -ForegroundColor Gray
-            Write-Host "  Thumbprint: $($cert.Thumbprint)" -ForegroundColor Gray
-            Write-Host "  Valid From: $($cert.NotBefore)" -ForegroundColor Gray
-            Write-Host "  Valid To: $($cert.NotAfter)" -ForegroundColor Gray
-            
-            # Store outputs for later steps
-            "cert_thumbprint=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            "cert_path=$pfxPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            "cert_imported=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            
-          } catch {
-            Write-Error "Failed to import certificate: $_"
-            "cert_imported=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            throw
-          }
-
       - name: Install MAUI workloads
         run: |
           dotnet workload install maui maui-windows
@@ -106,100 +60,6 @@ jobs:
           -p:PublishTrimmed=false
           -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
 
-      - name: Sign ZIP binaries
-        if: steps.cert.outputs.cert_imported == 'true'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          
-          Write-Host "Signing binaries in ZIP publish directory..." -ForegroundColor Green
-          
-          # Find signtool.exe
-          $signtoolPath = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin\" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue | 
-            Where-Object { $_.FullName -like "*\x64\signtool.exe" } | 
-            Select-Object -First 1 -ExpandProperty FullName
-          
-          if (-not $signtoolPath) {
-            Write-Warning "signtool.exe not found - skipping signing"
-            exit 0
-          }
-          
-          Write-Host "Using signtool: $signtoolPath" -ForegroundColor Cyan
-          
-          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish'
-          
-          # Find all .exe and .dll files to sign
-          $filesToSign = Get-ChildItem -Path $publishDir -Recurse -Include *.exe,*.dll | Where-Object { !$_.PSIsContainer }
-          
-          if ($filesToSign.Count -eq 0) {
-            Write-Warning "No files found to sign"
-            exit 0
-          }
-          
-          Write-Host "Found $($filesToSign.Count) files to sign" -ForegroundColor Cyan
-          
-          # Sign each file
-          $signedCount = 0
-          $failedCount = 0
-          
-          foreach ($file in $filesToSign) {
-            try {
-              Write-Host "  Signing: $($file.Name)" -ForegroundColor Gray
-              
-              # Try signing with timestamp first
-              $signOutput = & $signtoolPath sign `
-                /sha1 "${{ steps.cert.outputs.cert_thumbprint }}" `
-                /fd SHA256 `
-                /v `
-                "$($file.FullName)" 2>&1
-              
-              if ($LASTEXITCODE -eq 0) {
-                $signedCount++
-              } else {
-                Write-Warning "Failed to sign $($file.Name)"
-                Write-Host "Sign tool output: $signOutput" -ForegroundColor Red
-                $failedCount++
-              }
-            } catch {
-              Write-Warning "Error signing $($file.Name): $_"
-              $failedCount++
-            }
-          }
-          
-          Write-Host ""
-          Write-Host "✓ Signed $signedCount files successfully" -ForegroundColor Green
-          if ($failedCount -gt 0) {
-            Write-Error "Failed to sign $failedCount files - failing build"
-            exit 1
-          }
-
-      - name: Publish Windows MSIX (signed)
-        if: steps.cert.outputs.cert_imported == 'true'
-        run: >-
-          dotnet publish KonciergeUi.Client/KonciergeUi.Client.csproj
-          -c Release
-          -f net9.0-windows10.0.19041.0
-          -p:RuntimeIdentifierOverride=win10-x64
-          -p:WindowsPackageType=MSIX
-          -p:WindowsAppSDKSelfContained=true
-          -p:WindowsAppSDKSelfContainedPlatforms=x64
-          -p:PublishTrimmed=false
-          -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
-          -p:PackageCertificateThumbprint=${{ steps.cert.outputs.cert_thumbprint }}
-
-      - name: Publish Windows MSIX (unsigned)
-        if: steps.cert.outputs.cert_imported != 'true'
-        run: >-
-          dotnet publish KonciergeUi.Client/KonciergeUi.Client.csproj
-          -c Release
-          -f net9.0-windows10.0.19041.0
-          -p:RuntimeIdentifierOverride=win10-x64
-          -p:WindowsPackageType=MSIX
-          -p:WindowsAppSDKSelfContained=true
-          -p:WindowsAppSDKSelfContainedPlatforms=x64
-          -p:PublishTrimmed=false
-          -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
-          -p:AppxPackageSigningEnabled=false
 
       - name: Package artifacts
         id: package
@@ -217,13 +77,16 @@ jobs:
           $itemsToZip = Get-ChildItem -Path $publishDir -Force
           Compress-Archive -Path $itemsToZip -DestinationPath $zipPath
 
-          $msixPath = Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/AppPackages') -Recurse -Filter '*.msix' | Select-Object -First 1
-          if (-not $msixPath) {
-            throw 'MSIX artifact not found'
-          }
-
           "zip_path=$zipPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          "msix_path=$($msixPath.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Calculate ZIP hash
+        id: hash
+        shell: pwsh
+        run: |
+          $zipPath = "${{ steps.package.outputs.zip_path }}"
+          $hash = (Get-FileHash -Path $zipPath -Algorithm SHA256).Hash
+          "sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "SHA256: $hash" -ForegroundColor Cyan
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
@@ -233,44 +96,127 @@ jobs:
           body: |
             ## Changes
             Automated Windows build via GitHub Actions.
+            
+            ## Installation
+            
+            ### Via WinGet (recommended)
+            Once the package is available in the WinGet repository:
+            ```powershell
+            winget install DavideMaggi.KonciergeUI
+            ```
+            
+            ### Manual Installation
+            1. Download `KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip`
+            2. Extract to a folder of your choice
+            3. Run `KonciergeUi.Client.exe`
+            
+            ### SHA256 Checksum
+            `${{ steps.hash.outputs.sha256 }}`
           files: |
             ${{ steps.package.outputs.zip_path }}
-            ${{ steps.package.outputs.msix_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Cleanup certificate
-        if: always() && steps.cert.outputs.cert_imported == 'true'
+      - name: Install WinGetCreate
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Continue'
+          # Download latest wingetcreate
+          $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/microsoft/winget-create/releases/latest"
+          $asset = $releases.assets | Where-Object { $_.name -eq "wingetcreate.exe" }
+          $downloadUrl = $asset.browser_download_url
           
-          Write-Host "Cleaning up certificate..." -ForegroundColor Yellow
+          $toolsDir = Join-Path $env:GITHUB_WORKSPACE "tools"
+          New-Item -ItemType Directory -Force -Path $toolsDir | Out-Null
           
-          # Remove certificate from store
-          try {
-            if ("${{ steps.cert.outputs.cert_thumbprint }}" -ne "") {
-              $certPath = "Cert:\CurrentUser\My\${{ steps.cert.outputs.cert_thumbprint }}"
-              if (Test-Path $certPath) {
-                Remove-Item -Path $certPath -Force
-                Write-Host "✓ Certificate removed from store" -ForegroundColor Green
-              }
-            }
-          } catch {
-            Write-Warning "Failed to remove certificate from store: $_"
+          Invoke-WebRequest -Uri $downloadUrl -OutFile (Join-Path $toolsDir "wingetcreate.exe")
+          Write-Host "✓ WinGetCreate downloaded to $toolsDir" -ForegroundColor Green
+
+      - name: Generate WinGet manifest with WinGetCreate
+        id: winget
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          
+          $version = "${{ steps.gitversion.outputs.semver }}"
+          $repoOwner = "${{ github.repository_owner }}"
+          $repoName = "${{ github.event.repository.name }}"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v$version/KonciergeUi-win-$version.zip"
+          
+          $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
+          $manifestDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/winget-manifest"
+          New-Item -ItemType Directory -Force -Path $manifestDir | Out-Null
+          
+          Write-Host "Creating manifest for version $version" -ForegroundColor Cyan
+          Write-Host "Installer URL: $installerUrl" -ForegroundColor Cyan
+          
+          # Use wingetcreate to generate/update the manifest
+          # For new packages, use 'new'. For updates, use 'update'
+          & $wingetcreate new $installerUrl `
+            --package-identifier "DavideMaggi.KonciergeUI" `
+            --package-version $version `
+            --package-locale "en-US" `
+            --publisher "Davide Maggi" `
+            --package-name "Koncierge UI" `
+            --license "MIT" `
+            --short-description "A Kubernetes port-forwarding manager with a modern UI" `
+            --output $manifestDir `
+            --windows-desktop
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "wingetcreate new failed, trying update mode..." -ForegroundColor Yellow
+            & $wingetcreate update "DavideMaggi.KonciergeUI" `
+              --urls $installerUrl `
+              --version $version `
+              --output $manifestDir
           }
           
-          # Remove temporary PFX file
-          try {
-            if ("${{ steps.cert.outputs.cert_path }}" -ne "") {
-              $pfxPath = "${{ steps.cert.outputs.cert_path }}"
-              if (Test-Path $pfxPath) {
-                Remove-Item -Path $pfxPath -Force
-                Write-Host "✓ Temporary PFX file removed" -ForegroundColor Green
-              }
-            }
-          } catch {
-            Write-Warning "Failed to remove PFX file: $_"
+          Write-Host "✓ WinGet manifest generated in $manifestDir" -ForegroundColor Green
+          Get-ChildItem -Path $manifestDir -Recurse | ForEach-Object { Write-Host "  - $($_.FullName)" }
+          
+          "manifest_dir=$manifestDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Submit to WinGet repository
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.WINGET_AUTO_SUBMIT == 'true'
+        shell: pwsh
+        env:
+          WINGET_GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          
+          if ([string]::IsNullOrEmpty($env:WINGET_GITHUB_TOKEN)) {
+            Write-Host "WINGET_GITHUB_TOKEN not configured - skipping automatic submission" -ForegroundColor Yellow
+            Write-Host "To enable automatic submission:" -ForegroundColor Yellow
+            Write-Host "  1. Create a GitHub PAT with 'public_repo' scope" -ForegroundColor Gray
+            Write-Host "  2. Add it as a repository secret named 'WINGET_GITHUB_TOKEN'" -ForegroundColor Gray
+            Write-Host "  3. Create a repository variable 'WINGET_AUTO_SUBMIT' with value 'true'" -ForegroundColor Gray
+            exit 0
           }
           
-          Write-Host "Certificate cleanup complete" -ForegroundColor Green
+          $version = "${{ steps.gitversion.outputs.semver }}"
+          $repoOwner = "${{ github.repository_owner }}"
+          $repoName = "${{ github.event.repository.name }}"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v$version/KonciergeUi-win-$version.zip"
+          
+          $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
+          
+          Write-Host "Submitting manifest to winget-pkgs repository..." -ForegroundColor Cyan
+          
+          # Submit directly to winget-pkgs (creates a PR automatically)
+          & $wingetcreate update "DavideMaggi.KonciergeUI" `
+            --urls $installerUrl `
+            --version $version `
+            --submit `
+            --token $env:WINGET_GITHUB_TOKEN
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ Successfully submitted PR to microsoft/winget-pkgs" -ForegroundColor Green
+          } else {
+            Write-Warning "Failed to submit to winget-pkgs. You can manually submit using the manifest artifact."
+          }
+
+      - name: Upload WinGet manifest as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: winget-manifest-${{ steps.gitversion.outputs.semver }}
+          path: ${{ steps.winget.outputs.manifest_dir }}
+          retention-days: 90

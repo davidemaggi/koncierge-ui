@@ -1,5 +1,7 @@
 # Code Signing Guide for Koncierge UI
 
+> ⚠️ **ARCHIVED DOCUMENT** - As of the migration to WinGet distribution, code signing for MSIX packages is no longer used. This document is preserved for historical reference and in case code signing is needed in the future. For current release process, see [release-process.md](release-process.md).
+
 This document explains how code signing works for Koncierge UI Windows releases, how to set up the signing infrastructure, and what end users need to know about trusting self-signed certificates.
 
 ## Table of Contents
