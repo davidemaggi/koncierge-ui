@@ -51,8 +51,10 @@ $ErrorActionPreference = 'Stop'
 # Generate a strong random password if not provided
 if ([string]::IsNullOrWhiteSpace($Password)) {
     Write-Host "No password provided. Generating a strong random password..." -ForegroundColor Yellow
-    # Generate a 32-character random password with letters, numbers, and symbols
-    $Password = -join ((48..57) + (65..90) + (97..122) + (33..47) | Get-Random -Count 32 | ForEach-Object {[char]$_})
+    # Generate a 32-character random password with letters, numbers, and safe symbols
+    # Using 0-9, A-Z, a-z, and safe symbols: !@#$%&*+=
+    $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%&*+='
+    $Password = -join ((1..32) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
     Write-Host "✓ Generated strong random password" -ForegroundColor Green
     Write-Host ""
 }

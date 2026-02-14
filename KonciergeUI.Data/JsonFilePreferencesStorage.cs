@@ -83,22 +83,24 @@ namespace KonciergeUI.Data
             if (!string.IsNullOrWhiteSpace(data.CurrentTheme))
             {
                 data.Config.CurrentTheme = data.CurrentTheme;
-                data.CurrentTheme = null;
             }
 
             if (!string.IsNullOrWhiteSpace(data.CurrentLanguage))
             {
                 data.Config.CurrentLanguage = data.CurrentLanguage;
-                data.CurrentLanguage = null;
             }
 
             if (!string.IsNullOrWhiteSpace(data.LastSelectedClusterId))
             {
                 data.Config.LastSelectedClusterId = data.LastSelectedClusterId;
-                data.LastSelectedClusterId = null;
             }
 
-            // Mark as migrated and save
+            // Clear all legacy properties after migration
+            data.CurrentTheme = null;
+            data.CurrentLanguage = null;
+            data.LastSelectedClusterId = null;
+
+            // Mark as migrated
             data.LegacyConfigMigrated = true;
         }
 
