@@ -91,7 +91,8 @@ namespace KonciergeUI.Kube
                     Definition = template,
                     Forwards = forwardInstances.AsReadOnly(),
                     StartedAt = DateTimeOffset.UtcNow,
-                    ClusterInfo = cluster // Store cluster info with the running template
+                    ClusterInfo = cluster, // Store cluster info with the running template
+                    Sorting = template.Sorting
                 };
 
                 _runningTemplates[template.Id] = runningTemplate;
