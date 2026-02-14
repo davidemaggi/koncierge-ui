@@ -90,6 +90,13 @@
 
         await _storage.UpdateForwardTemplateAsync(updatedTemplate);
 
+        // Update the template in the list
+        var index = _templates.FindIndex(t => t.Id == template.Id);
+        if (index >= 0)
+        {
+            _templates[index] = updatedTemplate;
+        }
+
         _templates = _templates.OrderBy(t => t.Sorting).ToList();
         await InvokeAsync(StateHasChanged);
     }
