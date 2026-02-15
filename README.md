@@ -78,6 +78,16 @@ winget install DavideMaggi.KonciergeUI
 winget install DavideMaggi.Koncierge
 ```
 
+### Windows - Chocolatey
+
+```powershell
+# Install the desktop application
+choco install konciergeui
+
+# Install the CLI tool
+choco install koncierge
+```
+
 ### Windows - Manual Installation
 
 Download the latest release from the [Releases](https://github.com/davidemaggi/koncierge-ui/releases) page:
@@ -180,6 +190,7 @@ koncierge-ui/
 ├── KonciergeUI.Models/      # Shared models and DTOs
 ├── KonciergeUI.Translations/# Localization resources
 ├── installer/               # Inno Setup scripts for Windows installers
+├── chocolatey/              # Chocolatey package definitions
 └── docs/                    # Documentation
 ```
 

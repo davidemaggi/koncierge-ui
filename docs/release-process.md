@@ -223,3 +223,51 @@ winget install DavideMaggi.Koncierge
 1. Run `dotnet build KonciergeUi.sln` to ensure the solution compiles with the resolved version metadata.
 2. Validate the footer/info dialog shows the expected version/build when debugging locally.
 3. Merge to `main`; the workflow will publish a release within a few minutes.
+
+## Chocolatey Distribution
+
+### Package Identifiers
+
+| Application | Chocolatey Package ID | Command |
+|-------------|----------------------|---------|
+| Desktop App | `konciergeui` | `konciergeui` |
+| CLI Tool | `koncierge` | `koncierge` |
+
+### Automatic Publishing
+
+The workflows automatically build Chocolatey packages (`.nupkg`) for each release. To enable automatic publishing to the Chocolatey Community Repository:
+
+1. Get your API key from https://community.chocolatey.org/account
+2. Add it as a repository secret named `CHOCOLATEY_API_KEY`
+3. Create a repository variable `CHOCOLATEY_AUTO_PUBLISH` with value `true`
+
+### Manual Publishing
+
+If automatic publishing is not configured:
+
+1. Download the Chocolatey package artifact from the GitHub Actions run:
+   - `chocolatey-konciergeui-<version>` for Desktop App
+   - `chocolatey-koncierge-<version>` for CLI Tool
+2. Push manually:
+   ```powershell
+   choco push konciergeui.<version>.nupkg --source https://push.chocolatey.org/ --api-key <your-api-key>
+   choco push koncierge.<version>.nupkg --source https://push.chocolatey.org/ --api-key <your-api-key>
+   ```
+
+### Installation via Chocolatey
+
+Once published:
+```powershell
+# Install Desktop App
+choco install konciergeui
+
+# Install CLI Tool
+choco install koncierge
+```
+
+### Notes
+
+- First-time package submissions require manual moderation (1-2 days)
+- Subsequent updates are typically auto-approved if they pass automated validation
+- Packages use the portable ZIP releases as the source
+

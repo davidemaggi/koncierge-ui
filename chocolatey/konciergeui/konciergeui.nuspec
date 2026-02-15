@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>konciergeui</id>
+    <version>$version$</version>
+    <title>Koncierge UI</title>
+    <authors>Davide Maggi</authors>
+    <owners>davidemaggi</owners>
+    <projectUrl>https://github.com/davidemaggi/koncierge-ui</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/davidemaggi/koncierge-ui/main/KonciergeUi.Client/Resources/Images/koncierge_logo.svg</iconUrl>
+    <licenseUrl>https://github.com/davidemaggi/koncierge-ui/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/davidemaggi/koncierge-ui</projectSourceUrl>
+    <docsUrl>https://github.com/davidemaggi/koncierge-ui#readme</docsUrl>
+    <bugTrackerUrl>https://github.com/davidemaggi/koncierge-ui/issues</bugTrackerUrl>
+    <tags>kubernetes k8s port-forward devops cloud containers kubectl maui blazor</tags>
+    <summary>A modern, cross-platform Kubernetes port-forwarding manager with a beautiful UI</summary>
+    <description>
+Koncierge UI is a cross-platform Kubernetes port-forwarding manager built with .NET MAUI and Blazor.
+
+## Features
+
+- **Easy port-forward creation** - Forward ports from pods and services with just a few clicks
+- **Template system** - Save frequently used port-forward configurations as reusable templates
+- **Multi-cluster support** - Manage port-forwards across multiple Kubernetes clusters
+- **Pod and Service browser** - View and filter resources by namespace, status, and name
+- **Secret Management** - Associate Kubernetes secrets with port-forwards
+- **Dark/Light themes** - Automatic theme detection with manual override
+- **Multi-language support** - Internationalization ready
+
+## Usage
+
+After installation, run `konciergeui` from the command line or use the desktop shortcut.
+    </description>
+    <releaseNotes>https://github.com/davidemaggi/koncierge-ui/releases/tag/v$version$</releaseNotes>
+    <dependencies>
+      <dependency id="dotnet-9.0-desktopruntime" version="9.0.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
+

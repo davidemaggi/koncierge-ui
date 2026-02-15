@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>koncierge</id>
+    <version>$version$</version>
+    <title>Koncierge CLI</title>
+    <authors>Davide Maggi</authors>
+    <owners>davidemaggi</owners>
+    <projectUrl>https://github.com/davidemaggi/koncierge-ui</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/davidemaggi/koncierge-ui/main/KonciergeUi.Client/Resources/Images/koncierge_logo.svg</iconUrl>
+    <licenseUrl>https://github.com/davidemaggi/koncierge-ui/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/davidemaggi/koncierge-ui</projectSourceUrl>
+    <docsUrl>https://github.com/davidemaggi/koncierge-ui#command-line-interface-cli</docsUrl>
+    <bugTrackerUrl>https://github.com/davidemaggi/koncierge-ui/issues</bugTrackerUrl>
+    <tags>kubernetes k8s port-forward devops cloud containers kubectl cli terminal</tags>
+    <summary>A powerful CLI tool for managing Kubernetes port-forwards</summary>
+    <description>
+Koncierge CLI is a command-line tool for managing Kubernetes port-forwards.
+
+## Features
+
+- **Interactive mode** - Full menu-driven interface in the terminal
+- **Scriptable commands** - Individual commands for automation and scripting
+- **Shared configuration** - Uses the same templates and preferences as the GUI
+- **Watch mode** - Monitor forwards with live log updates
+- **Rich output** - Tables, colors, and status indicators
+
+## Commands
+
+- `koncierge cluster list` - List all available clusters
+- `koncierge cluster select` - Select a cluster interactively
+- `koncierge pods list` - List pods with optional filters
+- `koncierge services list` - List services with optional filters
+- `koncierge forward create` - Create a port forward
+- `koncierge forward list` - List active forwards
+- `koncierge forward stop` - Stop a forward
+- `koncierge template list` - List saved templates
+- `koncierge template run` - Run a template
+- `koncierge interactive` - Start interactive mode
+
+## Usage
+
+After installation, the `koncierge` command is available globally.
+
+```powershell
+koncierge --help
+koncierge interactive
+```
+    </description>
+    <releaseNotes>https://github.com/davidemaggi/koncierge-ui/releases/tag/v$version$</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
+

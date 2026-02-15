@@ -343,3 +343,86 @@ jobs:
           name: winget-manifest-${{ steps.gitversion.outputs.semver }}
           path: ${{ steps.winget.outputs.manifest_dir }}
           retention-days: 90
+
+      - name: Build Chocolatey package
+        id: choco
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          
+          $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
+          $repoOwner = "${{ github.repository_owner }}"
+          $repoName = "${{ github.event.repository.name }}"
+          $zipUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip"
+          $checksum = "${{ steps.hash.outputs.sha256 }}"
+          
+          $chocoDir = Join-Path $env:GITHUB_WORKSPACE "chocolatey/konciergeui"
+          $toolsDir = Join-Path $chocoDir "tools"
+          
+          # Update install script with URL and checksum
+          $installScript = Join-Path $toolsDir "chocolateyinstall.ps1"
+          $content = Get-Content $installScript -Raw
+          $content = $content -replace '\$url64\$', $zipUrl
+          $content = $content -replace '\$checksum64\$', $checksum
+          Set-Content -Path $installScript -Value $content -NoNewline
+          
+          # Update nuspec with version
+          $nuspecPath = Join-Path $chocoDir "konciergeui.nuspec"
+          $content = Get-Content $nuspecPath -Raw
+          $content = $content -replace '\$version\$', $version
+          Set-Content -Path $nuspecPath -Value $content -NoNewline
+          
+          # Build the package
+          Push-Location $chocoDir
+          choco pack
+          Pop-Location
+          
+          $nupkgPath = Join-Path $chocoDir "konciergeui.$version.nupkg"
+          if (-not (Test-Path $nupkgPath)) {
+            throw "Chocolatey package not found: $nupkgPath"
+          }
+          
+          # Move to artifacts
+          $artifactsDir = Join-Path $env:GITHUB_WORKSPACE "artifacts"
+          Move-Item $nupkgPath $artifactsDir
+          
+          $finalPath = Join-Path $artifactsDir "konciergeui.$version.nupkg"
+          "nupkg_path=$finalPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "✓ Chocolatey package created: $finalPath" -ForegroundColor Green
+
+      - name: Publish to Chocolatey
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CHOCOLATEY_AUTO_PUBLISH == 'true'
+        shell: pwsh
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+        run: |
+          $ErrorActionPreference = 'Continue'
+          
+          if ([string]::IsNullOrEmpty($env:CHOCOLATEY_API_KEY)) {
+            Write-Host "CHOCOLATEY_API_KEY not configured - skipping Chocolatey publish" -ForegroundColor Yellow
+            Write-Host "To enable automatic publishing:" -ForegroundColor Yellow
+            Write-Host "  1. Get your API key from https://community.chocolatey.org/account" -ForegroundColor Gray
+            Write-Host "  2. Add it as a repository secret named 'CHOCOLATEY_API_KEY'" -ForegroundColor Gray
+            Write-Host "  3. Create a repository variable 'CHOCOLATEY_AUTO_PUBLISH' with value 'true'" -ForegroundColor Gray
+            exit 0
+          }
+          
+          $nupkgPath = "${{ steps.choco.outputs.nupkg_path }}"
+          
+          Write-Host "Publishing to Chocolatey Community Repository..." -ForegroundColor Cyan
+          choco push $nupkgPath --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ Successfully published to Chocolatey!" -ForegroundColor Green
+          } else {
+            Write-Host "Failed to publish to Chocolatey. The package may need manual review." -ForegroundColor Yellow
+            exit 0
+          }
+
+      - name: Upload Chocolatey package as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chocolatey-konciergeui-${{ steps.gitversion.outputs.semver }}
+          path: ${{ steps.choco.outputs.nupkg_path }}
+          retention-days: 90
+
