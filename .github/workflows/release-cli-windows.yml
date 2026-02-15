@@ -1,4 +1,4 @@
-name: release-windows
+name: release-cli-windows
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  build-and-release-cli:
     runs-on: windows-latest
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -41,38 +41,17 @@ jobs:
           "nugetversion=$($data.NuGetVersionV2)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "majorminorpatch=$($data.MajorMinorPatch)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Install MAUI workloads
-        run: |
-          dotnet workload install maui maui-windows
-
       - name: Restore solution
         run: dotnet restore KonciergeUi.sln
 
-      - name: Publish Windows self-contained (zip)
+      - name: Publish CLI Windows self-contained (zip)
         run: >-
-          dotnet publish KonciergeUi.Client/KonciergeUi.Client.csproj
+          dotnet publish KonciergeUI.Cli/KonciergeUI.Cli.csproj
           -c Release
-          -f net9.0-windows10.0.19041.0
-          -p:RuntimeIdentifierOverride=win10-x64
-          -p:WindowsPackageType=None
-          -p:WindowsAppSDKSelfContained=true
-          -p:WindowsAppSDKSelfContainedPlatforms=x64
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
           -p:PublishTrimmed=false
-          -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
-
-      - name: Convert SVG icon to ICO
-        shell: pwsh
-        run: |
-          # Install ImageMagick for icon conversion
-          choco install imagemagick -y --no-progress
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          
-          $svgPath = "KonciergeUi.Client/Resources/AppIcon/appicon.svg"
-          $icoPath = "KonciergeUi.Client/Resources/AppIcon/appicon.ico"
-          
-          # Convert SVG to ICO with multiple sizes
-          magick convert -background none -density 256 $svgPath -define icon:auto-resize=256,128,64,48,32,16 $icoPath
-          Write-Host "✓ Icon converted to ICO format" -ForegroundColor Green
 
       - name: Install Inno Setup
         shell: pwsh
@@ -80,25 +59,29 @@ jobs:
           choco install innosetup -y --no-progress
           Write-Host "✓ Inno Setup installed" -ForegroundColor Green
 
-      - name: Build Inno Setup installer
+      - name: Build CLI Inno Setup installer
         id: inno
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish'
+          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUI.Cli/bin/Release/net9.0/win-x64/publish'
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
+          
+          # Create artifacts directory
+          $artifacts = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
           
           # Run Inno Setup compiler
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          & $iscc /DMyAppVersion=$version /DMyAppSourceDir=$publishDir "installer/konciergeui.iss"
+          & $iscc /DMyAppVersion=$version /DMyAppSourceDir=$publishDir "installer/koncierge-cli.iss"
           
-          $setupPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/KonciergeUI-setup-$version.exe"
+          $setupPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/Koncierge-cli-setup-$version.exe"
           if (-not (Test-Path $setupPath)) {
             throw "Installer not found: $setupPath"
           }
           
           "setup_path=$setupPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          Write-Host "✓ Inno Setup installer created: $setupPath" -ForegroundColor Green
+          Write-Host "✓ CLI Inno Setup installer created: $setupPath" -ForegroundColor Green
 
       - name: Calculate installer hash
         id: setup_hash
@@ -109,19 +92,18 @@ jobs:
           "sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           Write-Host "Setup SHA256: $hash" -ForegroundColor Cyan
 
-
-      - name: Package artifacts
+      - name: Package CLI artifacts
         id: package
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish'
+          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUI.Cli/bin/Release/net9.0/win-x64/publish'
           if (-not (Test-Path $publishDir)) {
             throw "Publish directory not found: $publishDir"
           }
           $artifacts = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
-          $zipPath = Join-Path $artifacts "KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip"
+          $zipPath = Join-Path $artifacts "Koncierge-cli-win-${{ steps.gitversion.outputs.semver }}.zip"
           if (Test-Path $zipPath) { Remove-Item $zipPath }
           $itemsToZip = Get-ChildItem -Path $publishDir -Force
           Compress-Archive -Path $itemsToZip -DestinationPath $zipPath
@@ -140,29 +122,29 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.gitversion.outputs.semver }}
-          name: Koncierge UI ${{ steps.gitversion.outputs.semver }}
+          tag_name: cli-v${{ steps.gitversion.outputs.semver }}
+          name: Koncierge CLI ${{ steps.gitversion.outputs.semver }}
           body: |
             ## Changes
-            Automated Windows build via GitHub Actions.
+            Automated Windows CLI build via GitHub Actions.
             
             ## Installation
             
             ### Via WinGet (recommended)
             Once the package is available in the WinGet repository:
             ```powershell
-            winget install DavideMaggi.KonciergeUI
+            winget install DavideMaggi.Koncierge
             ```
             
-            ### Installer (with desktop shortcut)
-            1. Download `KonciergeUI-setup-${{ steps.gitversion.outputs.majorminorpatch }}.exe`
+            ### Installer (with PATH registration)
+            1. Download `Koncierge-cli-setup-${{ steps.gitversion.outputs.majorminorpatch }}.exe`
             2. Run the installer
-            3. Choose to create a desktop shortcut during installation
+            3. The `koncierge` command will be added to your PATH
             
             ### Manual Installation (portable)
-            1. Download `KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip`
+            1. Download `Koncierge-cli-win-${{ steps.gitversion.outputs.semver }}.zip`
             2. Extract to a folder of your choice
-            3. Run `KonciergeUI.exe`
+            3. Add the folder to your PATH or run `Koncierge.exe` directly
             
             ### SHA256 Checksums
             - Installer: `${{ steps.setup_hash.outputs.sha256 }}`
@@ -187,7 +169,7 @@ jobs:
           Invoke-WebRequest -Uri $downloadUrl -OutFile (Join-Path $toolsDir "wingetcreate.exe")
           Write-Host "✓ WinGetCreate downloaded to $toolsDir" -ForegroundColor Green
 
-      - name: Generate WinGet manifest with WinGetCreate
+      - name: Generate WinGet manifest for CLI
         id: winget
         shell: pwsh
         run: |
@@ -196,18 +178,16 @@ jobs:
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/KonciergeUI-setup-$version.exe"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/cli-v${{ steps.gitversion.outputs.semver }}/Koncierge-cli-setup-$version.exe"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
-          $manifestDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/winget-manifest"
+          $manifestDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/winget-manifest-cli"
           New-Item -ItemType Directory -Force -Path $manifestDir | Out-Null
           
-          Write-Host "Creating manifest for version $version" -ForegroundColor Cyan
+          Write-Host "Creating CLI manifest for version $version" -ForegroundColor Cyan
           Write-Host "Installer URL: $installerUrl" -ForegroundColor Cyan
           
-          # Try to create new manifest first (for first-time submission)
-          # wingetcreate new requires interactive mode or existing package, so we create manually
-          $packageId = "DavideMaggi.KonciergeUI"
+          $packageId = "DavideMaggi.Koncierge"
           $manifestVersionDir = Join-Path $manifestDir "$packageId/$version"
           New-Item -ItemType Directory -Force -Path $manifestVersionDir | Out-Null
           
@@ -232,9 +212,9 @@ jobs:
             Silent: /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
             SilentWithProgress: /SILENT /SUPPRESSMSGBOXES /NORESTART /SP-
             InstallLocation: /DIR="<INSTALLPATH>"
-            Custom: /TASKS=desktopicon,addtopath
+            Custom: /TASKS=addtopath
           Commands:
-            - konciergeui
+            - koncierge
           Installers:
             - Architecture: x64
               InstallerUrl: $installerUrl
@@ -251,12 +231,12 @@ jobs:
           Publisher: Davide Maggi
           PublisherUrl: https://github.com/$repoOwner
           PublisherSupportUrl: https://github.com/$repoOwner/$repoName/issues
-          PackageName: Koncierge UI
+          PackageName: Koncierge CLI
           PackageUrl: https://github.com/$repoOwner/$repoName
           License: MIT
           LicenseUrl: https://github.com/$repoOwner/$repoName/blob/main/LICENSE
-          ShortDescription: A Kubernetes port-forwarding manager with a modern UI
-          Description: Koncierge UI is a cross-platform application for managing Kubernetes port forwards. It provides an intuitive interface for viewing pods, services, and managing port forwarding sessions.
+          ShortDescription: A Kubernetes port-forwarding CLI tool
+          Description: Koncierge CLI is a command-line tool for managing Kubernetes port forwards. It provides an efficient terminal interface for viewing pods, services, and managing port forwarding sessions.
           Tags:
             - kubernetes
             - k8s
@@ -264,17 +244,19 @@ jobs:
             - devops
             - cloud
             - containers
+            - cli
+            - terminal
           ManifestType: defaultLocale
           ManifestVersion: 1.6.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.locale.en-US.yaml") -Encoding utf8NoBOM
           
-          Write-Host "✓ WinGet manifest generated in $manifestVersionDir" -ForegroundColor Green
+          Write-Host "✓ WinGet CLI manifest generated in $manifestVersionDir" -ForegroundColor Green
           Get-ChildItem -Path $manifestVersionDir | ForEach-Object { Write-Host "  - $($_.Name)" }
           
           "manifest_dir=$manifestDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "manifest_version_dir=$manifestVersionDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Submit to WinGet repository
+      - name: Submit CLI to WinGet repository
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.WINGET_AUTO_SUBMIT == 'true'
         shell: pwsh
         env:
@@ -284,27 +266,19 @@ jobs:
           
           if ([string]::IsNullOrEmpty($env:WINGET_GITHUB_TOKEN)) {
             Write-Host "WINGET_GITHUB_TOKEN not configured - skipping automatic submission" -ForegroundColor Yellow
-            Write-Host "To enable automatic submission:" -ForegroundColor Yellow
-            Write-Host "  1. Create a GitHub PAT with 'public_repo' scope" -ForegroundColor Gray
-            Write-Host "  2. Add it as a repository secret named 'WINGET_GITHUB_TOKEN'" -ForegroundColor Gray
-            Write-Host "  3. Create a repository variable 'WINGET_AUTO_SUBMIT' with value 'true'" -ForegroundColor Gray
             exit 0
           }
           
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/KonciergeUI-setup-$version.exe"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/cli-v${{ steps.gitversion.outputs.semver }}/Koncierge-cli-setup-$version.exe"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
-          $manifestVersionDir = "${{ steps.winget.outputs.manifest_version_dir }}"
           
-          Write-Host "Submitting manifest to winget-pkgs repository..." -ForegroundColor Cyan
+          Write-Host "Submitting CLI manifest to winget-pkgs repository..." -ForegroundColor Cyan
           
-          # For existing packages in winget-pkgs, use update --submit
-          # For new packages, we need to submit the manifest files manually via PR
-          # Try update first (will work if package already exists in winget-pkgs)
-          $output = & $wingetcreate update "DavideMaggi.KonciergeUI" `
+          $output = & $wingetcreate update "DavideMaggi.Koncierge" `
             --urls $installerUrl `
             --version $version `
             --submit `
@@ -314,32 +288,32 @@ jobs:
           Write-Host $output
           
           if ($updateExitCode -eq 0) {
-            Write-Host "✓ Successfully submitted PR to microsoft/winget-pkgs" -ForegroundColor Green
+            Write-Host "✓ Successfully submitted CLI PR to microsoft/winget-pkgs" -ForegroundColor Green
           } else {
             Write-Host ""
             Write-Host "═══════════════════════════════════════════════════════════════════" -ForegroundColor Yellow
-            Write-Host "  FIRST-TIME WINGET SUBMISSION REQUIRED" -ForegroundColor Yellow
+            Write-Host "  FIRST-TIME WINGET SUBMISSION REQUIRED FOR CLI" -ForegroundColor Yellow
             Write-Host "═══════════════════════════════════════════════════════════════════" -ForegroundColor Yellow
             Write-Host ""
-            Write-Host "  The package 'DavideMaggi.KonciergeUI' doesn't exist yet in winget-pkgs." -ForegroundColor White
-            Write-Host "  This is expected for the first release!" -ForegroundColor White
+            Write-Host "  The package 'DavideMaggi.Koncierge' doesn't exist yet in winget-pkgs." -ForegroundColor White
             Write-Host ""
-            Write-Host "  To submit your package for the first time:" -ForegroundColor Cyan
-            Write-Host "  1. Download the 'winget-manifest-${{ steps.gitversion.outputs.semver }}' artifact" -ForegroundColor Gray
+            Write-Host "  To submit your CLI package for the first time:" -ForegroundColor Cyan
+            Write-Host "  1. Download the 'winget-manifest-cli-${{ steps.gitversion.outputs.semver }}' artifact" -ForegroundColor Gray
             Write-Host "  2. Fork https://github.com/microsoft/winget-pkgs" -ForegroundColor Gray
-            Write-Host "  3. Copy manifest files to: manifests/d/DavideMaggi/KonciergeUI/$version/" -ForegroundColor Gray
+            Write-Host "  3. Copy manifest files to: manifests/d/DavideMaggi/Koncierge/$version/" -ForegroundColor Gray
             Write-Host "  4. Submit a Pull Request to microsoft/winget-pkgs" -ForegroundColor Gray
             Write-Host ""
-            Write-Host "  After your first PR is merged, automatic updates will work!" -ForegroundColor Green
-            Write-Host "═══════════════════════════════════════════════════════════════════" -ForegroundColor Yellow
-            Write-Host ""
-            # Don't fail the workflow for first-time submission
             exit 0
           }
 
-      - name: Upload WinGet manifest as artifact
+      - name: Upload WinGet CLI manifest as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: winget-manifest-${{ steps.gitversion.outputs.semver }}
+          name: winget-manifest-cli-${{ steps.gitversion.outputs.semver }}
           path: ${{ steps.winget.outputs.manifest_dir }}
           retention-days: 90
+
+
+
+
+
