@@ -141,32 +141,78 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.gitversion.outputs.semver }}
-          name: Koncierge UI ${{ steps.gitversion.outputs.semver }}
+          name: Koncierge ${{ steps.gitversion.outputs.semver }}
           body: |
-            ## Changes
+            ## Koncierge ${{ steps.gitversion.outputs.semver }}
+            
             Automated Windows build via GitHub Actions.
             
-            ## Installation
+            ---
             
-            ### Via WinGet (recommended)
-            Once the package is available in the WinGet repository:
+            ## 🖥️ Koncierge UI (Desktop App)
+            
+            A modern, cross-platform Kubernetes port-forwarding manager with a beautiful UI.
+            
+            ### Installation
+            
+            #### Via WinGet (recommended)
             ```powershell
             winget install DavideMaggi.KonciergeUI
             ```
             
-            ### Installer (with desktop shortcut)
+            #### Via Chocolatey
+            ```powershell
+            choco install konciergeui
+            ```
+            
+            #### Installer (with desktop shortcut)
             1. Download `KonciergeUI-setup-${{ steps.gitversion.outputs.majorminorpatch }}.exe`
             2. Run the installer
-            3. Choose to create a desktop shortcut during installation
+            3. A desktop shortcut will be created
             
-            ### Manual Installation (portable)
+            #### Manual Installation (portable)
             1. Download `KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip`
             2. Extract to a folder of your choice
             3. Run `KonciergeUI.exe`
             
-            ### SHA256 Checksums
+            ---
+            
+            ## ⌨️ Koncierge CLI (Command Line)
+            
+            A powerful CLI tool for managing Kubernetes port-forwards.
+            
+            ### Installation
+            
+            #### Via WinGet (recommended)
+            ```powershell
+            winget install DavideMaggi.Koncierge
+            ```
+            
+            #### Via Chocolatey
+            ```powershell
+            choco install koncierge
+            ```
+            
+            #### Installer (with PATH registration)
+            1. Download `Koncierge-cli-setup-${{ steps.gitversion.outputs.majorminorpatch }}.exe`
+            2. Run the installer
+            3. The `koncierge` command will be added to your PATH
+            
+            #### Manual Installation (portable)
+            1. Download `Koncierge-cli-win-${{ steps.gitversion.outputs.semver }}.zip`
+            2. Extract to a folder of your choice
+            3. Add the folder to your PATH or run `Koncierge.exe` directly
+            
+            ---
+            
+            ## SHA256 Checksums
+            
+            ### UI
             - Installer: `${{ steps.setup_hash.outputs.sha256 }}`
             - ZIP: `${{ steps.hash.outputs.sha256 }}`
+            
+            ### CLI
+            _(See CLI workflow output for checksums)_
           files: |
             ${{ steps.inno.outputs.setup_path }}
             ${{ steps.package.outputs.zip_path }}

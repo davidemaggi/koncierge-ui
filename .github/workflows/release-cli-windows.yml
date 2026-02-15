@@ -119,43 +119,61 @@ jobs:
           "sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           Write-Host "SHA256: $hash" -ForegroundColor Cyan
 
-      - name: Create GitHub release
+      - name: Create or update GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.gitversion.outputs.semver }}
           name: Koncierge ${{ steps.gitversion.outputs.semver }}
-          body: |
-            ## Koncierge CLI ${{ steps.gitversion.outputs.semver }}
-            
-            Automated Windows CLI build via GitHub Actions.
-            
-            ## Installation
-            
-            ### Via WinGet (recommended)
-            Once the package is available in the WinGet repository:
-            ```powershell
-            winget install DavideMaggi.Koncierge
-            ```
-            
-            ### Installer (with PATH registration)
-            1. Download `Koncierge-cli-setup-${{ steps.gitversion.outputs.majorminorpatch }}.exe`
-            2. Run the installer
-            3. The `koncierge` command will be added to your PATH
-            
-            ### Manual Installation (portable)
-            1. Download `Koncierge-cli-win-${{ steps.gitversion.outputs.semver }}.zip`
-            2. Extract to a folder of your choice
-            3. Add the folder to your PATH or run `Koncierge.exe` directly
-            
-            ### SHA256 Checksums
-            - Installer: `${{ steps.setup_hash.outputs.sha256 }}`
-            - ZIP: `${{ steps.hash.outputs.sha256 }}`
           files: |
             ${{ steps.inno.outputs.setup_path }}
             ${{ steps.package.outputs.zip_path }}
-          append_body: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update release body with CLI checksums
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLI_SETUP_HASH: ${{ steps.setup_hash.outputs.sha256 }}
+          CLI_ZIP_HASH: ${{ steps.hash.outputs.sha256 }}
+        run: |
+          $version = "v${{ steps.gitversion.outputs.semver }}"
+          $repoOwner = "${{ github.repository_owner }}"
+          $repoName = "${{ github.event.repository.name }}"
+          $setupHash = $env:CLI_SETUP_HASH
+          $zipHash = $env:CLI_ZIP_HASH
+          
+          # Get current release
+          $headers = @{
+            "Authorization" = "Bearer $env:GITHUB_TOKEN"
+            "Accept" = "application/vnd.github+json"
+          }
+          
+          $releaseUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/tags/$version"
+          
+          try {
+            $release = Invoke-RestMethod -Uri $releaseUrl -Headers $headers -Method Get
+            $currentBody = $release.body
+            
+            # Replace the placeholder with actual checksums
+            $newBody = $currentBody -replace '\(_See CLI workflow output for checksums_\)', @"
+          - Installer: ``$setupHash``
+          - ZIP: ``$zipHash``
+          "@
+            
+            if ($newBody -ne $currentBody) {
+              $updateBody = @{
+                body = $newBody
+              } | ConvertTo-Json
+              
+              Invoke-RestMethod -Uri $release.url -Headers $headers -Method Patch -Body $updateBody -ContentType "application/json"
+              Write-Host "✓ Release body updated with CLI checksums" -ForegroundColor Green
+            } else {
+              Write-Host "Placeholder not found or already updated" -ForegroundColor Yellow
+            }
+          } catch {
+            Write-Host "Could not update release body: $_" -ForegroundColor Yellow
+          }
 
       - name: Install WinGetCreate
         shell: pwsh
