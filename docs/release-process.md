@@ -68,25 +68,84 @@ The app retrieves the computed values through `IAppVersionProvider`, which wraps
 
 ## GitHub Actions workflow
 
+The project uses two separate workflows for Windows releases:
+
+### Desktop Application (MAUI)
+
 - Workflow file: `.github/workflows/release-windows.yml`
 - Trigger: every push (including merges) into `main`.
 - Steps:
   1. Resolve the next semantic version with GitVersion.
-  2. Install the .NET 9 SDK + MAUI workloads and publish the Windows (win-x64) binaries as a portable ZIP.
-  3. Calculate SHA256 hash for the ZIP file.
-  4. Create/Update a GitHub Release with tag `v<semver>` and attach the ZIP.
-  5. Install and use `wingetcreate` to generate WinGet manifest files.
-  6. (Optional) Automatically submit PR to microsoft/winget-pkgs if configured.
-  7. Upload WinGet manifest as a workflow artifact.
+  2. Install the .NET 9 SDK + MAUI workloads and publish the Windows (win-x64) binaries.
+  3. Convert the SVG icon to ICO format using ImageMagick.
+  4. Build an Inno Setup installer with desktop shortcut support.
+  5. Create a portable ZIP archive.
+  6. Calculate SHA256 hashes for both artifacts.
+  7. Create/Update a GitHub Release with tag `v<semver>` and attach both installer and ZIP.
+  8. Install and use `wingetcreate` to generate WinGet manifest files for `DavideMaggi.KonciergeUI`.
+  9. (Optional) Automatically submit PR to microsoft/winget-pkgs if configured.
+  10. Upload WinGet manifest as a workflow artifact.
+
+**Output executables:**
+- `KonciergeUI.exe` - Main application executable
+- `KonciergeUI-setup-X.Y.Z.exe` - Inno Setup installer (creates desktop shortcut, adds `konciergeui` to PATH)
+- `KonciergeUi-win-X.Y.Z.zip` - Portable ZIP package
+
+### CLI Application
+
+- Workflow file: `.github/workflows/release-cli-windows.yml`
+- Trigger: every push (including merges) into `main`.
+- Steps:
+  1. Resolve the next semantic version with GitVersion.
+  2. Install the .NET 9 SDK and publish the CLI (win-x64) as a self-contained single-file executable.
+  3. Build an Inno Setup installer with PATH registration.
+  4. Create a portable ZIP archive.
+  5. Calculate SHA256 hashes for both artifacts.
+  6. Create/Update a GitHub Release with tag `cli-v<semver>` and attach both installer and ZIP.
+  7. Install and use `wingetcreate` to generate WinGet manifest files for `DavideMaggi.Koncierge`.
+  8. (Optional) Automatically submit PR to microsoft/winget-pkgs if configured.
+  9. Upload WinGet manifest as a workflow artifact.
+
+**Output executables:**
+- `Koncierge.exe` - CLI executable
+- `Koncierge-cli-setup-X.Y.Z.exe` - Inno Setup installer (adds `koncierge` to PATH)
+- `Koncierge-cli-win-X.Y.Z.zip` - Portable ZIP package
 
 ## WinGet Distribution
 
+### Package Identifiers
+
+| Application | WinGet Package ID | Command | Executable |
+|-------------|-------------------|---------|------------|
+| Desktop App | `DavideMaggi.KonciergeUI` | `konciergeui` | `KonciergeUI.exe` |
+| CLI Tool | `DavideMaggi.Koncierge` | `koncierge` | `Koncierge.exe` |
+
 ### Automatic Manifest Generation
 
-The workflow uses [WinGetCreate](https://github.com/microsoft/winget-create) to automatically generate WinGet manifest files for each release:
+The workflows use [WinGetCreate](https://github.com/microsoft/winget-create) to automatically generate WinGet manifest files for each release:
+
+**Desktop Application (`DavideMaggi.KonciergeUI`):**
 - `DavideMaggi.KonciergeUI.yaml` - Version manifest
-- `DavideMaggi.KonciergeUI.installer.yaml` - Installer configuration  
+- `DavideMaggi.KonciergeUI.installer.yaml` - Inno Setup installer configuration (with desktop shortcut)
 - `DavideMaggi.KonciergeUI.locale.en-US.yaml` - Package metadata
+
+**CLI Tool (`DavideMaggi.Koncierge`):**
+- `DavideMaggi.Koncierge.yaml` - Version manifest
+- `DavideMaggi.Koncierge.installer.yaml` - Inno Setup installer configuration (with PATH registration)
+- `DavideMaggi.Koncierge.locale.en-US.yaml` - Package metadata
+
+### Installer Features
+
+The Inno Setup installers provide the following features:
+
+**Desktop Application:**
+- Creates desktop shortcut (optional during installation, enabled by default via WinGet)
+- Adds installation directory to user PATH (optional)
+- Registers `konciergeui` command
+
+**CLI Tool:**
+- Adds installation directory to user PATH (enabled by default)
+- Registers `koncierge` command
 
 ### Automatic Submission (Optional)
 
@@ -103,10 +162,14 @@ When configured, each release will automatically create a PR to add/update the p
 If automatic submission is not configured, you can manually submit:
 
 #### Option 1: Using the workflow artifact
-1. Download the WinGet manifest artifact from the GitHub Actions run
+1. Download the WinGet manifest artifact from the GitHub Actions run:
+   - `winget-manifest-<version>` for Desktop App
+   - `winget-manifest-cli-<version>` for CLI Tool
 2. Fork the [winget-pkgs](https://github.com/microsoft/winget-pkgs) repository
 3. Create a new branch for your submission
-4. Copy the manifest files to `manifests/d/DavideMaggi/KonciergeUI/<version>/`
+4. Copy the manifest files to:
+   - Desktop: `manifests/d/DavideMaggi/KonciergeUI/<version>/`
+   - CLI: `manifests/d/DavideMaggi/Koncierge/<version>/`
 5. Validate the manifest locally:
    ```powershell
    winget validate --manifest <path-to-manifest-folder>
@@ -118,9 +181,16 @@ If automatic submission is not configured, you can manually submit:
 # Install wingetcreate
 winget install Microsoft.WingetCreate
 
-# Submit with your GitHub token
+# Submit Desktop App
 wingetcreate update DavideMaggi.KonciergeUI `
-  --urls "https://github.com/<owner>/<repo>/releases/download/v<version>/KonciergeUi-win-<version>.zip" `
+  --urls "https://github.com/<owner>/<repo>/releases/download/v<version>/KonciergeUI-setup-<version>.exe" `
+  --version "<version>" `
+  --submit `
+  --token "<your-github-pat>"
+
+# Submit CLI Tool
+wingetcreate update DavideMaggi.Koncierge `
+  --urls "https://github.com/<owner>/<repo>/releases/download/cli-v<version>/Koncierge-cli-setup-<version>.exe" `
   --version "<version>" `
   --submit `
   --token "<your-github-pat>"
@@ -130,13 +200,22 @@ wingetcreate update DavideMaggi.KonciergeUI `
 
 Once published to WinGet:
 ```powershell
-# Install via WinGet
+# Install Desktop App via WinGet (creates desktop shortcut)
 winget install DavideMaggi.KonciergeUI
 
+# Install CLI Tool via WinGet (adds 'koncierge' to PATH)
+winget install DavideMaggi.Koncierge
+
 # Or directly from GitHub release (manual)
-# 1. Download KonciergeUi-win-<version>.zip
-# 2. Extract to desired location
-# 3. Run KonciergeUi.Client.exe
+# Desktop App:
+#   1. Download KonciergeUI-setup-<version>.exe (installer) or KonciergeUi-win-<version>.zip (portable)
+#   2. Run installer or extract ZIP to desired location
+#   3. Run KonciergeUI.exe
+
+# CLI Tool:
+#   1. Download Koncierge-cli-setup-<version>.exe (installer) or Koncierge-cli-win-<version>.zip (portable)
+#   2. Run installer or extract ZIP to desired location
+#   3. Run Koncierge.exe (or use 'koncierge' command if installed via installer)
 ```
 
 ## Manual checks before merging

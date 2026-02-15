@@ -65,19 +65,34 @@ Koncierge UI is a cross-platform Kubernetes port-forwarding manager available bo
 ## Installation
 
 ### Prerequisites
-- .NET 9 SDK
+- .NET 9 SDK (for building from source)
 - A valid kubeconfig file with cluster access
 
-### From Releases
-Download the latest release for your platform from the [Releases](https://github.com/davidemaggi/koncierge-ui/releases) page.
+### Windows - WinGet (Recommended)
 
-#### Windows Code Signing
-Windows releases are signed with a self-signed certificate. To avoid security warnings:
-1. Download `KonciergeUI-CodeSigning.cer` from the release
-2. Install it to your **Trusted Root Certification Authorities** store
-3. See [docs/SIGNING.md](docs/SIGNING.md) for detailed instructions
+```powershell
+# Install the desktop application (with desktop shortcut)
+winget install DavideMaggi.KonciergeUI
 
-**Note**: Self-signed certificates require manual trust installation. This is normal for open-source projects. See the signing documentation for security implications and instructions.
+# Install the CLI tool
+winget install DavideMaggi.Koncierge
+```
+
+### Windows - Manual Installation
+
+Download the latest release from the [Releases](https://github.com/davidemaggi/koncierge-ui/releases) page:
+
+**Desktop Application:**
+- **Installer** (`KonciergeUI-setup-X.Y.Z.exe`): Recommended, creates desktop shortcut and adds `konciergeui` to PATH
+- **Portable** (`KonciergeUi-win-X.Y.Z.zip`): Extract and run `KonciergeUI.exe`
+
+**CLI Tool:**
+- **Installer** (`Koncierge-cli-setup-X.Y.Z.exe`): Adds `koncierge` command to PATH
+- **Portable** (`Koncierge-cli-win-X.Y.Z.zip`): Extract and run `Koncierge.exe`
+
+### macOS / Linux
+
+Build from source (see below) or download platform-specific releases when available.
 
 ### Build from Source
 
@@ -164,6 +179,7 @@ koncierge-ui/
 │   └── Repositories/        # K8s API wrappers
 ├── KonciergeUI.Models/      # Shared models and DTOs
 ├── KonciergeUI.Translations/# Localization resources
+├── installer/               # Inno Setup scripts for Windows installers
 └── docs/                    # Documentation
 ```
 
@@ -171,7 +187,17 @@ koncierge-ui/
 
 Koncierge UI also includes a powerful command-line interface for users who prefer terminal-based workflows or need to integrate with scripts and automation.
 
-### Running the CLI
+### Installation
+
+```powershell
+# Via WinGet (recommended)
+winget install DavideMaggi.Koncierge
+
+# After installation, the 'koncierge' command is available globally
+koncierge --help
+```
+
+### Running the CLI (from source)
 
 ```bash
 # Run directly with dotnet
@@ -179,7 +205,7 @@ dotnet run --project KonciergeUI.Cli
 
 # Or build and run the executable
 dotnet build KonciergeUI.Cli
-./KonciergeUI.Cli/bin/Debug/net9.0/KonciergeUI.Cli
+./KonciergeUI.Cli/bin/Debug/net9.0/Koncierge
 ```
 
 ### Interactive Mode
