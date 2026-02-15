@@ -27,7 +27,7 @@ This directory contains [Inno Setup](https://jrsoftware.org/isinfo.php) scripts 
 - **Installation directory**: `%LOCALAPPDATA%\Programs\Koncierge`
 - **Features**:
   - Creates Start Menu shortcut
-  - PATH registration for `koncierge` command (enabled by default)
+  - PATH registration for `koncierge` command (selected by default)
   - Supports English and Italian languages
 
 ## Building Installers Locally

@@ -33,7 +33,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 
 [Tasks]
-Name: "addtopath"; Description: "Add 'koncierge' command to PATH"; GroupDescription: "Additional options:"; Flags: checked
+Name: "addtopath"; Description: "Add 'koncierge' command to PATH"; GroupDescription: "Additional options:"
 
 [Files]
 Source: "{#MyAppSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
