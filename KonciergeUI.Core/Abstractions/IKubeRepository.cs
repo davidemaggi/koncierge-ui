@@ -1,4 +1,4 @@
-﻿using KonciergeUI.Models.Kube;
+﻿﻿using KonciergeUI.Models.Kube;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,6 +15,10 @@ namespace KonciergeUI.Core.Abstractions
         /// </summary>
         IKubernetes GetClient(ClusterConnectionInfo cluster);
         
+        /// <summary>
+        /// List all namespaces in a cluster.
+        /// </summary>
+        Task<List<string>> ListNamespacesAsync(ClusterConnectionInfo cluster);
         
         /// <summary>
         /// List all pods in a cluster (optionally filter by namespace).
