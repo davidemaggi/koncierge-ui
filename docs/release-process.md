@@ -101,7 +101,7 @@ The project uses two separate workflows for Windows releases:
   3. Build an Inno Setup installer with PATH registration.
   4. Create a portable ZIP archive.
   5. Calculate SHA256 hashes for both artifacts.
-  6. Create/Update a GitHub Release with tag `cli-v<semver>` and attach both installer and ZIP.
+  6. Add CLI artifacts to the same GitHub Release (`v<semver>`) created by the MAUI workflow.
   7. Install and use `wingetcreate` to generate WinGet manifest files for `DavideMaggi.Koncierge`.
   8. (Optional) Automatically submit PR to microsoft/winget-pkgs if configured.
   9. Upload WinGet manifest as a workflow artifact.
@@ -190,7 +190,7 @@ wingetcreate update DavideMaggi.KonciergeUI `
 
 # Submit CLI Tool
 wingetcreate update DavideMaggi.Koncierge `
-  --urls "https://github.com/<owner>/<repo>/releases/download/cli-v<version>/Koncierge-cli-setup-<version>.exe" `
+  --urls "https://github.com/<owner>/<repo>/releases/download/v<version>/Koncierge-cli-setup-<version>.exe" `
   --version "<version>" `
   --submit `
   --token "<your-github-pat>"

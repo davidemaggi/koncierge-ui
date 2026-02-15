@@ -122,10 +122,11 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: cli-v${{ steps.gitversion.outputs.semver }}
-          name: Koncierge CLI ${{ steps.gitversion.outputs.semver }}
+          tag_name: v${{ steps.gitversion.outputs.semver }}
+          name: Koncierge ${{ steps.gitversion.outputs.semver }}
           body: |
-            ## Changes
+            ## Koncierge CLI ${{ steps.gitversion.outputs.semver }}
+            
             Automated Windows CLI build via GitHub Actions.
             
             ## Installation
@@ -152,6 +153,7 @@ jobs:
           files: |
             ${{ steps.inno.outputs.setup_path }}
             ${{ steps.package.outputs.zip_path }}
+          append_body: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -178,7 +180,7 @@ jobs:
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/cli-v${{ steps.gitversion.outputs.semver }}/Koncierge-cli-setup-$version.exe"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/Koncierge-cli-setup-$version.exe"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
           $manifestDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/winget-manifest-cli"
@@ -272,7 +274,7 @@ jobs:
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/cli-v${{ steps.gitversion.outputs.semver }}/Koncierge-cli-setup-$version.exe"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/Koncierge-cli-setup-$version.exe"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
           
