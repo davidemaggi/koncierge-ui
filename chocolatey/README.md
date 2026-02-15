@@ -33,7 +33,7 @@ Both packages install to user-writable locations to avoid permission issues:
 This means:
 - No administrator privileges required for app updates
 - Configuration and data files can be written without issues
-- Executables are accessible via Chocolatey's shim mechanism
+- Executables are accessible via Chocolatey's shim mechanism 
 
 ## Package Structure
 
