@@ -40,7 +40,16 @@ namespace KonciergeUI.Data
             var appDataDir = ResolveAppDataDirectory();
             _filePath = Path.Combine(appDataDir, "koncierge_preferences.json");
             _data = LoadFromFile();
+            
+            // Log the config path for debugging (can be removed later)
+            Console.WriteLine($"[Koncierge] Config file path: {_filePath}");
         }
+        
+        /// <summary>
+        /// Gets the path to the configuration file.
+        /// Useful for debugging to verify both CLI and MAUI use the same path.
+        /// </summary>
+        public string ConfigFilePath => _filePath;
 
         private PreferencesData LoadFromFile()
         {
@@ -205,19 +214,89 @@ namespace KonciergeUI.Data
 
         private static string ResolveAppDataDirectory()
         {
-            var basePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-            if (string.IsNullOrWhiteSpace(basePath))
+            // Use a consistent path for both MAUI and CLI applications
+            // This ensures both apps share the same configuration
+            
+            string homePath;
+            
+            if (OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst())
             {
-                basePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                // On macOS/MacCatalyst, we need to bypass MAUI sandbox to get the real home directory
+                // The sandbox changes HOME to point to the container, but we want the real user home
+                
+                // First try: Use the real HOME from the original environment (before sandbox)
+                // MAUI doesn't always override HOME completely
+                var homeEnv = Environment.GetEnvironmentVariable("HOME");
+                
+                // Check if HOME points to a sandbox container path
+                if (!string.IsNullOrEmpty(homeEnv) && !homeEnv.Contains("/Library/Containers/"))
+                {
+                    // HOME is not sandboxed, use it directly
+                    homePath = homeEnv;
+                }
+                else
+                {
+                    // HOME is sandboxed or not set, construct the real home path
+                    // Try multiple methods to get the username
+                    var user = Environment.UserName;
+                    
+                    // Environment.UserName should still return the real username even in sandbox
+                    if (!string.IsNullOrEmpty(user))
+                    {
+                        var realHome = $"/Users/{user}";
+                        if (Directory.Exists(realHome))
+                        {
+                            homePath = realHome;
+                        }
+                        else
+                        {
+                            // Fallback: extract from sandboxed HOME path
+                            // Sandbox HOME looks like: /Users/<user>/Library/Containers/<bundle-id>/Data
+                            if (!string.IsNullOrEmpty(homeEnv) && homeEnv.StartsWith("/Users/"))
+                            {
+                                var parts = homeEnv.Split('/');
+                                if (parts.Length >= 3)
+                                {
+                                    homePath = $"/Users/{parts[2]}";
+                                }
+                                else
+                                {
+                                    homePath = homeEnv; // Last resort
+                                }
+                            }
+                            else
+                            {
+                                homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    }
+                }
+            }
+            else if (OperatingSystem.IsWindows())
+            {
+                // On Windows, use USERPROFILE which is consistent
+                homePath = Environment.GetEnvironmentVariable("USERPROFILE") 
+                    ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            }
+            else
+            {
+                // On Linux, use HOME environment variable
+                homePath = Environment.GetEnvironmentVariable("HOME") 
+                    ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            }
+            
+            if (string.IsNullOrWhiteSpace(homePath))
+            {
+                // Last resort fallback
+                homePath = ".";
             }
 
-            if (string.IsNullOrWhiteSpace(basePath))
-            {
-                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".koncierge");
-            }
-
-            var targetPath = Path.Combine(basePath, "koncierge");
+            // Use ~/.koncierge as the config directory (works on all platforms)
+            var targetPath = Path.Combine(homePath, ".koncierge");
             Directory.CreateDirectory(targetPath);
             return targetPath;
         }

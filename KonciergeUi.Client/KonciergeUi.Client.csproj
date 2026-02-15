@@ -12,6 +12,7 @@
         <!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
 
         <OutputType>Exe</OutputType>
+        <AssemblyName>KonciergeUI</AssemblyName>
         <RootNamespace>KonciergeUi.Client</RootNamespace>
         <UseMaui>true</UseMaui>
         <SingleProject>true</SingleProject>

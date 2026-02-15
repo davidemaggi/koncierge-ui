@@ -13,6 +13,7 @@
   <a href="#installation">Installation</a> •
   <a href="#getting-started">Getting Started</a> •
   <a href="#usage">Usage</a> •
+  <a href="#command-line-interface-cli">CLI</a> •
   <a href="#faq">FAQ</a> •
   <a href="#contributing">Contributing</a>
 </p>
@@ -21,7 +22,7 @@
 
 ## Overview
 
-Koncierge UI is a desktop application that simplifies Kubernetes port-forwarding management. Built with .NET MAUI and Blazor, it provides an intuitive interface to manage multiple port-forwards across different clusters, namespaces, and services without needing to remember complex `kubectl` commands.
+Koncierge UI is a cross-platform Kubernetes port-forwarding manager available both as a **desktop application** (built with .NET MAUI and Blazor) and a **command-line interface**. It provides an intuitive way to manage multiple port-forwards across different clusters, namespaces, and services without needing to remember complex `kubectl` commands.
 
 ## Features
 
@@ -54,22 +55,44 @@ Koncierge UI is a desktop application that simplifies Kubernetes port-forwarding
 - **iOS** - iPad support (experimental)
 - **Android** - Tablet support (experimental)
 
+### ⌨️ Command-Line Interface
+- **Interactive mode** - Full menu-driven interface in the terminal
+- **Scriptable commands** - Individual commands for automation and scripting
+- **Shared configuration** - Uses the same templates and preferences as the GUI
+- **Watch mode** - Monitor forwards with live log updates
+- **Rich output** - Tables, colors, and status indicators
+
 ## Installation
 
 ### Prerequisites
-- .NET 9 SDK
+- .NET 9 SDK (for building from source)
 - A valid kubeconfig file with cluster access
 
-### From Releases
-Download the latest release for your platform from the [Releases](https://github.com/davidemaggi/koncierge-ui/releases) page.
+### Windows - WinGet (Recommended)
 
-#### Windows Code Signing
-Windows releases are signed with a self-signed certificate. To avoid security warnings:
-1. Download `KonciergeUI-CodeSigning.cer` from the release
-2. Install it to your **Trusted Root Certification Authorities** store
-3. See [docs/SIGNING.md](docs/SIGNING.md) for detailed instructions
+```powershell
+# Install the desktop application (with desktop shortcut)
+winget install DavideMaggi.KonciergeUI
 
-**Note**: Self-signed certificates require manual trust installation. This is normal for open-source projects. See the signing documentation for security implications and instructions.
+# Install the CLI tool
+winget install DavideMaggi.Koncierge
+```
+
+### Windows - Manual Installation
+
+Download the latest release from the [Releases](https://github.com/davidemaggi/koncierge-ui/releases) page:
+
+**Desktop Application:**
+- **Installer** (`KonciergeUI-setup-X.Y.Z.exe`): Recommended, creates desktop shortcut and adds `konciergeui` to PATH
+- **Portable** (`KonciergeUi-win-X.Y.Z.zip`): Extract and run `KonciergeUI.exe`
+
+**CLI Tool:**
+- **Installer** (`Koncierge-cli-setup-X.Y.Z.exe`): Adds `koncierge` command to PATH
+- **Portable** (`Koncierge-cli-win-X.Y.Z.zip`): Extract and run `Koncierge.exe`
+
+### macOS / Linux
+
+Build from source (see below) or download platform-specific releases when available.
 
 ### Build from Source
 
@@ -147,13 +170,155 @@ koncierge-ui/
 │   ├── Services/            # App services (version provider)
 │   ├── State/               # Application state management
 │   └── wwwroot/             # Static assets
+├── KonciergeUI.Cli/         # Command-line interface application
+│   ├── Commands/            # CLI commands (cluster, pods, services, templates)
+│   └── Infrastructure/      # DI and CLI infrastructure
 ├── KonciergeUI.Core/        # Core abstractions and interfaces
 ├── KonciergeUI.Data/        # Data persistence (preferences, templates)
 ├── KonciergeUI.Kube/        # Kubernetes integration
 │   └── Repositories/        # K8s API wrappers
 ├── KonciergeUI.Models/      # Shared models and DTOs
 ├── KonciergeUI.Translations/# Localization resources
+├── installer/               # Inno Setup scripts for Windows installers
 └── docs/                    # Documentation
+```
+
+## Command-Line Interface (CLI)
+
+Koncierge UI also includes a powerful command-line interface for users who prefer terminal-based workflows or need to integrate with scripts and automation.
+
+### Installation
+
+```powershell
+# Via WinGet (recommended)
+winget install DavideMaggi.Koncierge
+
+# After installation, the 'koncierge' command is available globally
+koncierge --help
+```
+
+### Running the CLI (from source)
+
+```bash
+# Run directly with dotnet
+dotnet run --project KonciergeUI.Cli
+
+# Or build and run the executable
+dotnet build KonciergeUI.Cli
+./KonciergeUI.Cli/bin/Debug/net9.0/Koncierge
+```
+
+### Interactive Mode
+
+Start the full interactive menu with all features:
+
+```bash
+koncierge interactive
+# or
+koncierge i
+```
+
+The interactive mode provides a guided menu for:
+- 🔄 Switching clusters
+- 📋 Listing pods and services
+- 🔐 Viewing secrets and ConfigMaps
+- ▶️ Creating quick port forwards
+- 📁 Managing templates
+- 📊 Viewing active forwards
+
+### CLI Commands
+
+#### Cluster Management
+```bash
+# List all available clusters
+koncierge cluster list
+
+# Select a cluster interactively or by name
+koncierge cluster select
+koncierge cluster select my-cluster
+```
+
+#### Resource Listing
+```bash
+# List pods (with optional namespace and cluster filters)
+koncierge pods list
+koncierge pods list -n kube-system -c my-cluster
+
+# List services
+koncierge services list
+koncierge services list -n default
+
+# List secrets and ConfigMaps
+koncierge secrets list -n default
+koncierge secrets list --show-values
+```
+
+#### Port Forwarding
+```bash
+# Create a quick port forward interactively
+koncierge forward create
+
+# Create with options
+koncierge forward create -n default -t service -r my-service -p 8080 -l 8080
+
+# List active forwards
+koncierge forward list
+
+# Stop a forward
+koncierge forward stop
+koncierge forward stop --all
+```
+
+#### Template Management
+```bash
+# List saved templates
+koncierge template list
+
+# Run a template
+koncierge template run
+koncierge template run "My Template" -c my-cluster
+
+# Run with watch mode (shows logs and status updates)
+koncierge template run "My Template" --watch
+
+# Stop a running template
+koncierge template stop
+koncierge template stop --all
+
+# Create a new template interactively
+koncierge template create
+```
+
+### CLI Features
+
+- **Shared configuration** - CLI uses the same templates and preferences as the GUI application
+- **Interactive prompts** - When options are not provided, the CLI prompts for input with smart defaults
+- **Rich terminal output** - Tables, colors, and status indicators using Spectre.Console
+- **Watch mode** - Monitor running forwards with live log updates
+- **Secret resolution** - View resolved secrets and ConfigMaps for running forwards
+
+### Example Workflow
+
+```bash
+# 1. List and select a cluster
+koncierge cluster list
+koncierge cluster select production
+
+# 2. Browse resources
+koncierge pods list -n backend
+koncierge services list -n backend
+
+# 3. Run a saved template with logging
+koncierge template run "Backend Dev" --watch
+
+# 4. Or create a quick forward
+koncierge forward create -t service -r api-gateway -p 8080
+
+# 5. View active forwards
+koncierge forward list
+
+# 6. Stop when done
+koncierge forward stop --all
 ```
 
 ## FAQ

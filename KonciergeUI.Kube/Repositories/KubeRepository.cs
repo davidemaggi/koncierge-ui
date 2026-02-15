@@ -1,4 +1,4 @@
-﻿using k8s;
+﻿﻿using k8s;
 using k8s.Models;
 using KonciergeUI.Core.Abstractions;
 using KonciergeUI.Models.Kube;
@@ -14,6 +14,32 @@ namespace KonciergeUI.Kube.Repositories;
 public class KubeRepository : IKubeRepository
 {
     public IKubernetes GetClient(ClusterConnectionInfo cluster)=>CreateClient(cluster);
+
+    public async Task<List<string>> ListNamespacesAsync(ClusterConnectionInfo cluster)
+    {
+        var namespaces = new List<string>();
+
+        try
+        {
+            var client = CreateClient(cluster);
+            var nsList = await client.CoreV1.ListNamespaceAsync();
+
+            foreach (var ns in nsList.Items)
+            {
+                if (!string.IsNullOrEmpty(ns.Metadata?.Name))
+                {
+                    namespaces.Add(ns.Metadata.Name);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to list namespaces: {ex.Message}");
+            throw;
+        }
+
+        return namespaces.OrderBy(n => n).ToList();
+    }
 
     public async Task<List<PodInfo>> ListPodsAsync(ClusterConnectionInfo cluster, string? namespaceFilter = null)
     {

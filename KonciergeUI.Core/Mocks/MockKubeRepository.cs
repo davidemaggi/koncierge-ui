@@ -72,6 +72,11 @@ namespace KonciergeUI.Core.Mocks
             throw new NotImplementedException();
         }
 
+        public Task<List<string>> ListNamespacesAsync(ClusterConnectionInfo cluster)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<List<PodInfo>> ListPodsAsync(ClusterConnectionInfo cluster, string? namespaceFilter = null)
         {
             var pods = GenerateMockPods(cluster.Id);
