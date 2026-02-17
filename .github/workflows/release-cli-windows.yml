@@ -53,6 +53,27 @@ jobs:
           -p:PublishSingleFile=true
           -p:PublishTrimmed=false
 
+      - name: Convert SVG icon to ICO
+        shell: pwsh
+        run: |
+          # Install ImageMagick for icon conversion
+          choco install imagemagick -y --no-progress
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+          # Use the project image from Resources/Images as the source SVG
+          $svgPath = "KonciergeUi.Client/Resources/Images/koncierge_logo.svg"
+          $icoPath = "KonciergeUi.Client/Resources/AppIcon/appicon.ico"
+
+          # Ensure destination directory exists
+          $destDir = Split-Path -Path $icoPath
+          if (!(Test-Path $destDir)) {
+            New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+          }
+
+          # Convert SVG to ICO with multiple sizes
+          magick convert -background none -density 256 $svgPath -define icon:auto-resize=256,128,64,48,32,16 $icoPath
+          Write-Host "✓ Icon converted to ICO format" -ForegroundColor Green
+
       - name: Install Inno Setup
         shell: pwsh
         run: |
