@@ -202,12 +202,9 @@ public class ForwardCreateCommand : AsyncCommand<ForwardCreateSettings>
                 .DefaultValue(targetPort)
         );
 
-        // Ask about linking secrets/configmaps
-        var linkedSecrets = new List<SecretReference>();
-        if (AnsiConsole.Confirm("Link secrets/configmaps to this forward?", false))
-        {
-            linkedSecrets = await SelectSecretsAsync(cluster, @namespace);
-        }
+        // Linked secrets - always show the selection (user can skip)
+        AnsiConsole.MarkupLine("\n[bold]Link Secrets/ConfigMaps[/]");
+        var linkedSecrets = await SelectSecretsAsync(cluster, @namespace);
 
         // Create forward definition
         var forwardDef = new PortForwardDefinition
@@ -270,14 +267,40 @@ public class ForwardCreateCommand : AsyncCommand<ForwardCreateSettings>
 
         try
         {
-            var k8sSecrets = await _kubeRepository.ListSecretsAsync(cluster, @namespace);
-            var configMaps = await _kubeRepository.ListConfigMapsAsync(cluster, @namespace);
+            var k8sSecrets = await AnsiConsole.Status()
+                .StartAsync("Loading secrets...", async ctx =>
+                    await _kubeRepository.ListSecretsAsync(cluster, @namespace));
+
+            var configMaps = await AnsiConsole.Status()
+                .StartAsync("Loading configmaps...", async ctx =>
+                    await _kubeRepository.ListConfigMapsAsync(cluster, @namespace));
+
+            // Filter to only those with data
+            var secretsWithData = k8sSecrets.Where(s => s.Data.Any()).ToList();
+            var configMapsWithData = configMaps.Where(c => c.Data.Any()).ToList();
+
+            if (!secretsWithData.Any() && !configMapsWithData.Any())
+            {
+                AnsiConsole.MarkupLine("[yellow]No secrets or configmaps with data found in this namespace.[/]");
+                return secrets;
+            }
+
+            AnsiConsole.MarkupLine($"[dim]Found {secretsWithData.Count} secret(s) and {configMapsWithData.Count} configmap(s) with data.[/]");
+            AnsiConsole.MarkupLine("[dim]Select secrets/configmaps to link to this forward, or skip to continue without.[/]\n");
+
+            // Build selection items with index for reliable lookup
+            var secretItems = secretsWithData.Select((s, i) => new { Index = i, Type = "Secret", Resource = s, Display = $"Secret: {s.Name} ({s.Data.Count} keys)" }).ToList();
+            var configMapItems = configMapsWithData.Select((c, i) => new { Index = i, Type = "ConfigMap", Resource = c, Display = $"ConfigMap: {c.Name} ({c.Data.Count} keys)" }).ToList();
 
             while (true)
             {
-                var choices = new List<string> { "[Done - finish selection]" };
-                choices.AddRange(k8sSecrets.Select(s => $"Secret: {s.Name}"));
-                choices.AddRange(configMaps.Select(c => $"ConfigMap: {c.Name}"));
+                var doneLabel = secrets.Any() 
+                    ? $"✓ Done - {secrets.Count} item(s) linked" 
+                    : "Skip - no secrets/configmaps";
+                
+                var choices = new List<string> { doneLabel };
+                choices.AddRange(secretItems.Select(s => s.Display));
+                choices.AddRange(configMapItems.Select(c => c.Display));
 
                 var selection = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
@@ -286,58 +309,89 @@ public class ForwardCreateCommand : AsyncCommand<ForwardCreateSettings>
                         .AddChoices(choices)
                 );
 
-                if (selection.StartsWith("[Done"))
+                if (selection.StartsWith("✓ Done") || selection.StartsWith("Skip"))
                     break;
 
-                if (selection.StartsWith("Secret:"))
-                {
-                    var secretName = selection.Replace("Secret: ", "");
-                    var secret = k8sSecrets.First(s => s.Name == secretName);
+                // Find the selected item
+                var selectedSecret = secretItems.FirstOrDefault(s => s.Display == selection);
+                var selectedConfigMap = configMapItems.FirstOrDefault(c => c.Display == selection);
 
-                    var key = AnsiConsole.Prompt(
-                        new SelectionPrompt<string>()
-                            .Title($"Select key from [cyan]{secretName}[/]:")
-                            .AddChoices(secret.Data.Keys)
+                if (selectedSecret != null)
+                {
+                    var secret = selectedSecret.Resource;
+                    var keyChoices = new List<string> { ">> All keys <<" };
+                    keyChoices.AddRange(secret.Data.Keys);
+
+                    var keySelection = AnsiConsole.Prompt(
+                        new MultiSelectionPrompt<string>()
+                            .Title($"Select key(s) from {secret.Name}:")
+                            .PageSize(15)
+                            .AddChoices(keyChoices)
                     );
 
-                    secrets.Add(new SecretReference
-                    {
-                        SourceType = SecretSourceType.Secret,
-                        ResourceName = secretName,
-                        Namespace = @namespace,
-                        Key = key,
-                        Name = $"{secretName}/{key}"
-                    });
+                    var keysToAdd = keySelection.Contains(">> All keys <<")
+                        ? secret.Data.Keys.ToList()
+                        : keySelection.Where(k => k != ">> All keys <<").ToList();
 
-                    AnsiConsole.MarkupLine($"[green]✓[/] Added secret: {secretName}/{key}");
+                    foreach (var key in keysToAdd)
+                    {
+                        if (!secrets.Any(s => s.ResourceName == secret.Name && s.Key == key))
+                        {
+                            secrets.Add(new SecretReference
+                            {
+                                SourceType = SecretSourceType.Secret,
+                                ResourceName = secret.Name,
+                                Namespace = @namespace,
+                                Key = key,
+                                Name = $"{secret.Name}/{key}"
+                            });
+                            AnsiConsole.MarkupLine($"[green]✓[/] Added secret: {secret.Name.EscapeMarkup()}/{key.EscapeMarkup()}");
+                        }
+                    }
                 }
-                else if (selection.StartsWith("ConfigMap:"))
+                else if (selectedConfigMap != null)
                 {
-                    var configMapName = selection.Replace("ConfigMap: ", "");
-                    var configMap = configMaps.First(c => c.Name == configMapName);
+                    var configMap = selectedConfigMap.Resource;
+                    var keyChoices = new List<string> { ">> All keys <<" };
+                    keyChoices.AddRange(configMap.Data.Keys);
 
-                    var key = AnsiConsole.Prompt(
-                        new SelectionPrompt<string>()
-                            .Title($"Select key from [cyan]{configMapName}[/]:")
-                            .AddChoices(configMap.Data.Keys)
+                    var keySelection = AnsiConsole.Prompt(
+                        new MultiSelectionPrompt<string>()
+                            .Title($"Select key(s) from {configMap.Name}:")
+                            .PageSize(15)
+                            .AddChoices(keyChoices)
                     );
 
-                    secrets.Add(new SecretReference
-                    {
-                        SourceType = SecretSourceType.ConfigMap,
-                        ResourceName = configMapName,
-                        Namespace = @namespace,
-                        Key = key,
-                        Name = $"{configMapName}/{key}"
-                    });
+                    var keysToAdd = keySelection.Contains(">> All keys <<")
+                        ? configMap.Data.Keys.ToList()
+                        : keySelection.Where(k => k != ">> All keys <<").ToList();
 
-                    AnsiConsole.MarkupLine($"[green]✓[/] Added configmap: {configMapName}/{key}");
+                    foreach (var key in keysToAdd)
+                    {
+                        if (!secrets.Any(s => s.ResourceName == configMap.Name && s.Key == key))
+                        {
+                            secrets.Add(new SecretReference
+                            {
+                                SourceType = SecretSourceType.ConfigMap,
+                                ResourceName = configMap.Name,
+                                Namespace = @namespace,
+                                Key = key,
+                                Name = $"{configMap.Name}/{key}"
+                            });
+                            AnsiConsole.MarkupLine($"[green]✓[/] Added configmap: {configMap.Name.EscapeMarkup()}/{key.EscapeMarkup()}");
+                        }
+                    }
+                }
+
+                if (secrets.Any())
+                {
+                    AnsiConsole.MarkupLine($"\n[dim]Currently linked: {secrets.Count} item(s)[/]");
                 }
             }
         }
         catch (Exception ex)
         {
-            AnsiConsole.MarkupLine($"[yellow]Warning: Could not load secrets/configmaps: {ex.Message.EscapeMarkup()}[/]");
+            AnsiConsole.MarkupLine("[yellow]Warning: Could not load secrets/configmaps: " + ex.Message.EscapeMarkup() + "[/]");
         }
 
         return secrets;

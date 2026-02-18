@@ -21,6 +21,20 @@ choco install konciergeui
 choco install koncierge
 ```
 
+## Installation Locations
+
+Both packages install to user-writable locations to avoid permission issues:
+
+| Package | Install Location |
+|---------|-----------------|
+| Desktop App | `%LOCALAPPDATA%\Koncierge\UI` |
+| CLI Tool | `%LOCALAPPDATA%\Koncierge\CLI` |
+
+This means:
+- No administrator privileges required for app updates
+- Configuration and data files can be written without issues
+- Executables are accessible via Chocolatey's shim mechanism 
+
 ## Package Structure
 
 ```
@@ -36,6 +50,18 @@ chocolatey/
         ├── chocolateyinstall.ps1    # Install script
         └── chocolateyuninstall.ps1  # Uninstall script
 ```
+
+## What Gets Installed
+
+### konciergeui (Desktop App)
+- Application files in `%LOCALAPPDATA%\Koncierge\UI`
+- Desktop shortcut: `Koncierge UI.lnk`
+- Start Menu shortcut: `Koncierge UI.lnk`
+- Command: `konciergeui` (via Chocolatey shim)
+
+### koncierge (CLI Tool)
+- Application files in `%LOCALAPPDATA%\Koncierge\CLI`
+- Command: `koncierge` (via Chocolatey shim)
 
 ## Building Packages Locally
 
@@ -73,7 +99,8 @@ choco push koncierge.<version>.nupkg --source https://push.chocolatey.org/ --api
 ## Notes
 
 - Packages are built from the portable ZIP releases
-- The desktop app creates a desktop shortcut during installation
+- Applications are installed in `%LOCALAPPDATA%\Koncierge` for user-writable access
+- The desktop app creates desktop and Start Menu shortcuts during installation
 - The CLI tool is automatically added to PATH via Chocolatey's shim mechanism
 - First-time submissions require manual approval (usually 1-2 days)
 - Subsequent updates are typically auto-approved if they pass automated checks
