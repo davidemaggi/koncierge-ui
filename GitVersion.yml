@@ -11,5 +11,8 @@ branches:
 ignore:
   sha: []
 commit-message-incrementing: Enabled
+major-version-bump-message: '\\+semver:\\s?(major|breaking)'
+minor-version-bump-message: '\\+semver:\\s?minor'
+patch-version-bump-message: '\\+semver:\\s?patch'
 merge-message-formats: {}
 assembly-informational-format: '{FullSemVer}+{ShortSha}'

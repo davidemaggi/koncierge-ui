@@ -37,9 +37,44 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $json = dotnet-gitversion /output json
           $data = $json | ConvertFrom-Json
-          "semver=$($data.SemVer)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          "nugetversion=$($data.NuGetVersionV2)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          "majorminorpatch=$($data.MajorMinorPatch)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          $semver = $data.SemVer
+          $nugetversion = $data.NuGetVersionV2
+          $majorminorpatch = $data.MajorMinorPatch
+
+          if ([string]::IsNullOrWhiteSpace($majorminorpatch)) {
+            try {
+              $tag = (git describe --tags --abbrev=0 --match "v[0-9]*" 2>$null).Trim()
+            } catch {
+              $tag = ""
+            }
+
+            if ([string]::IsNullOrWhiteSpace($tag)) {
+              $base = "0.0.0"
+            } else {
+              $base = $tag.TrimStart('v')
+            }
+
+            $parts = $base.Split('.')
+            if ($parts.Length -lt 3) {
+              $parts = @($parts[0], $parts[1], '0')
+            }
+
+            $patch = [int]$parts[2] + 1
+            $majorminorpatch = "$($parts[0]).$($parts[1]).$patch"
+            $semver = $majorminorpatch
+            $nugetversion = $majorminorpatch
+          }
+
+          "semver=$semver" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "nugetversion=$nugetversion" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "majorminorpatch=$majorminorpatch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Show GitVersion values
+        shell: pwsh
+        run: |
+          Write-Host "SemVer: ${{ steps.gitversion.outputs.semver }}"
+          Write-Host "MajorMinorPatch: ${{ steps.gitversion.outputs.majorminorpatch }}"
+          Write-Host "NuGetVersionV2: ${{ steps.gitversion.outputs.nugetversion }}"
 
       - name: Install MAUI workloads
         run: |
