@@ -93,9 +93,9 @@ namespace KonciergeUI.Translations.Resources {
             }
         }
         
-        public static string info_descrioption {
+        public static string info_description {
             get {
-                return ResourceManager.GetString("info_descrioption", resourceCulture);
+                return ResourceManager.GetString("info_description", resourceCulture);
             }
         }
         

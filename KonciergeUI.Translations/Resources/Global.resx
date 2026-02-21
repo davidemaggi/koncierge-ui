@@ -42,8 +42,8 @@
     <data name="crud_create" xml:space="preserve">
         <value>Create</value>
     </data>
-    <data name="info_descrioption" xml:space="preserve">
-        <value>Something Something</value>
+    <data name="info_description" xml:space="preserve">
+        <value>A modern, cross-platform Kubernetes port-forwarding manager</value>
     </data>
     <data name="info_version" xml:space="preserve">
         <value>Version</value>
