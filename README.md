@@ -361,6 +361,9 @@ A: This usually means the application inside the pod is not listening on the spe
 
 ### Troubleshooting
 
+**Q: Emoji render as "??" in the CLI on Windows**  
+A: This is usually a console/font limitation. Use Windows Terminal or PowerShell 7, and pick a font with emoji support (for example, Segoe UI Emoji or Cascadia Code PL). If you run from cmd.exe, verify the code page is UTF-8 with `chcp 65001`.
+
 **Q: Resources are not loading after changing clusters**  
 A: Make sure you have proper RBAC permissions on the target cluster. Check the connection logs for detailed error messages.
 
@@ -391,6 +394,13 @@ dotnet workload install maui
 git clone https://github.com/davidemaggi/koncierge-ui.git
 cd koncierge-ui
 dotnet build
+```
+
+To regenerate the CLI ASCII logo from the SVG:
+```bash
+bash scripts/generate-ascii-logo.sh --help
+# Example
+bash scripts/generate-ascii-logo.sh --width 72
 ```
 
 ### Version Management

@@ -6,6 +6,11 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <Version>1.0.0</Version>
+        <Version Condition="'$(GitVersion_MajorMinorPatch)' != ''">$(GitVersion_MajorMinorPatch)</Version>
+        <AssemblyVersion Condition="'$(GitVersion_MajorMinorPatch)' != ''">$(GitVersion_MajorMinorPatch)</AssemblyVersion>
+        <FileVersion Condition="'$(GitVersion_MajorMinorPatch)' != ''">$(GitVersion_MajorMinorPatch)</FileVersion>
+        <InformationalVersion Condition="'$(GitVersion_MajorMinorPatch)' != ''">$(GitVersion_MajorMinorPatch)</InformationalVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -14,6 +19,10 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
       <PackageReference Include="Spectre.Console" Version="0.50.0" />
       <PackageReference Include="Spectre.Console.Cli" Version="0.50.0" />
+      <PackageReference Include="GitVersion.MsBuild" Version="6.5.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
@@ -23,5 +32,11 @@
       <ProjectReference Include="..\KonciergeUI.Models\KonciergeUI.Models.csproj" />
     </ItemGroup>
 
-</Project>
+    <ItemGroup>
+      <Content Include="Resources\\logo.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>logo.txt</Link>
+      </Content>
+    </ItemGroup>
 
+</Project>

@@ -35,10 +35,7 @@ public class InteractiveCommand : AsyncCommand
     public override async Task<int> ExecuteAsync(CommandContext context)
     {
         AnsiConsole.Clear();
-        AnsiConsole.Write(
-            new FigletText("Koncierge")
-                .Color(Color.Cyan1)
-                .Centered());
+        AsciiLogo.Write();
         AnsiConsole.MarkupLine("[dim]Kubernetes Port Forward Manager[/]\n");
 
         // Auto-select cluster on startup
@@ -79,6 +76,7 @@ public class InteractiveCommand : AsyncCommand
                         "✏️  Edit Template",
                         "🗑️  Delete Template")
                     .AddChoiceGroup("[bold]Other[/]",
+                        "ℹ️  Info",
                         "❌ Exit")
             );
 
@@ -136,6 +134,10 @@ public class InteractiveCommand : AsyncCommand
 
                 case "🗑️  Delete Template":
                     await DeleteTemplateAsync();
+                    break;
+
+                case "ℹ️  Info":
+                    new InfoCommand().Execute(context);
                     break;
 
                 case "❌ Exit":
@@ -1313,4 +1315,6 @@ public class InteractiveCommand : AsyncCommand
         return secrets;
     }
 }
+
+
 

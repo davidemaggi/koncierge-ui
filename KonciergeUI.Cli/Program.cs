@@ -1,6 +1,7 @@
 ﻿using KonciergeUI.Cli.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
+using System.Text;
 
 namespace KonciergeUI.Cli;
 
@@ -8,6 +9,12 @@ class Program
 {
     static async Task<int> Main(string[] args)
     {
+        if (OperatingSystem.IsWindows())
+        {
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.InputEncoding = Encoding.UTF8;
+        }
+
         var services = ServiceConfiguration.ConfigureServices();
         var registrar = new TypeRegistrar(services);
 
@@ -16,7 +23,11 @@ class Program
         app.Configure(config =>
         {
             config.SetApplicationName("koncierge");
-            config.SetApplicationVersion("1.0.0");
+            config.SetApplicationVersion(VersionInfo.DisplayVersion);
+
+            config.AddCommand<Commands.InfoCommand>("info")
+                .WithDescription("Show application information")
+                .WithAlias("about");
 
             config.AddCommand<Commands.InteractiveCommand>("interactive")
                 .WithDescription("Start interactive mode with full menu navigation")
