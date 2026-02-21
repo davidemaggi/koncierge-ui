@@ -48,6 +48,18 @@ jobs:
           $nugetversion = $data.NuGetVersionV2
           $majorminorpatch = $data.MajorMinorPatch
 
+          $stableTag = git tag -l "v[0-9]*.[0-9]*.[0-9]*" | Where-Object { $_ -notmatch '-' } | ForEach-Object { $_.TrimStart('v') } | Sort-Object {[version]$_} | Select-Object -Last 1
+          if ($semver -match '^\d+\.\d+\.\d+-\d+$') {
+            $base = $semver.Split('-')[0]
+            if ([string]::IsNullOrWhiteSpace($stableTag) -or $stableTag -eq $base) {
+              $parts = $base.Split('.')
+              $patch = [int]$parts[2] + 1
+              $majorminorpatch = "$($parts[0]).$($parts[1]).$patch"
+              $semver = "$majorminorpatch-1"
+              $nugetversion = $majorminorpatch
+            }
+          }
+
           if ([string]::IsNullOrWhiteSpace($majorminorpatch)) {
             try {
               $tag = (git describe --tags --abbrev=0 --match "v[0-9]*" 2>$null).Trim()
