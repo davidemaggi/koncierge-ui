@@ -38,18 +38,9 @@ public static class MauiProgram
 #endif
 
         builder.Services.AddMauiBlazorWebView();
-            ;
+            
 
-#if WINDOWS
-        // Enable HTML5 drag/drop inside WebView2 on Windows.
-        BlazorWebViewHandler.Mapper.AppendToMapping("AllowDrop", (handler, view) =>
-        {
-            if (handler.PlatformView is WebView2 webView)
-            {
-                webView.AllowDrop = true;
-            }
-        });
-#endif
+
 
         // Register app services
         builder.Services.RegisterKonciergeServices();
