@@ -185,7 +185,7 @@ jobs:
       - name: Create or update GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.gitversion.outputs.semver }}
+          tag_name: v${{ steps.gitversion.outputs.majorminorpatch }}
           name: Koncierge ${{ steps.gitversion.outputs.semver }}
           files: |
             ${{ steps.inno.outputs.setup_path }}
@@ -200,7 +200,7 @@ jobs:
           CLI_SETUP_HASH: ${{ steps.setup_hash.outputs.sha256 }}
           CLI_ZIP_HASH: ${{ steps.hash.outputs.sha256 }}
         run: |
-          $version = "v${{ steps.gitversion.outputs.semver }}"
+          $version = "v${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
           $setupHash = $env:CLI_SETUP_HASH
@@ -261,7 +261,7 @@ jobs:
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/Koncierge-cli-setup-$version.exe"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.majorminorpatch }}/Koncierge-cli-setup-$version.exe"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
           $manifestDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/winget-manifest-cli"
@@ -355,7 +355,7 @@ jobs:
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/Koncierge-cli-setup-$version.exe"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.majorminorpatch }}/Koncierge-cli-setup-$version.exe"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
           
@@ -405,7 +405,7 @@ jobs:
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $zipUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/Koncierge-cli-win-${{ steps.gitversion.outputs.semver }}.zip"
+          $zipUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.majorminorpatch }}/Koncierge-cli-win-${{ steps.gitversion.outputs.semver }}.zip"
           $checksum = "${{ steps.hash.outputs.sha256 }}"
           
           $chocoDir = Join-Path $env:GITHUB_WORKSPACE "chocolatey/koncierge"

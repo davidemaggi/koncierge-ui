@@ -189,7 +189,7 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.gitversion.outputs.semver }}
+          tag_name: v${{ steps.gitversion.outputs.majorminorpatch }}
           name: Koncierge ${{ steps.gitversion.outputs.semver }}
           body: |
             ## Koncierge ${{ steps.gitversion.outputs.semver }}
@@ -291,7 +291,7 @@ jobs:
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/KonciergeUI-setup-$version.exe"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.majorminorpatch }}/KonciergeUI-setup-$version.exe"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
           $manifestDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/winget-manifest"
@@ -389,7 +389,7 @@ jobs:
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/KonciergeUI-setup-$version.exe"
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.majorminorpatch }}/KonciergeUI-setup-$version.exe"
           
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
           $manifestVersionDir = "${{ steps.winget.outputs.manifest_version_dir }}"
@@ -448,7 +448,7 @@ jobs:
           $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $zipUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.semver }}/KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip"
+          $zipUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.majorminorpatch }}/KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip"
           $checksum = "${{ steps.hash.outputs.sha256 }}"
           
           $chocoDir = Join-Path $env:GITHUB_WORKSPACE "chocolatey/konciergeui"
