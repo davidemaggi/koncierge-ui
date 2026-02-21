@@ -3,6 +3,10 @@ using KonciergeUi.Client.Services;
 using KonciergeUi.Client.State;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
+#if WINDOWS
+using Microsoft.Maui.Handlers;
+using Microsoft.UI.Xaml.Controls;
+#endif
 
 namespace KonciergeUi.Client;
 
@@ -38,6 +42,17 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
             ;
+
+#if WINDOWS
+        // Enable HTML5 drag/drop inside WebView2 on Windows.
+        BlazorWebViewHandler.Mapper.AppendToMapping("AllowDrop", (handler, view) =>
+        {
+            if (handler.PlatformView is WebView2 webView)
+            {
+                webView.AllowDrop = true;
+            }
+        });
+#endif
 
         // Register app services
         builder.Services.RegisterKonciergeServices();
