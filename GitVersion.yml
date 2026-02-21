@@ -1,7 +1,7 @@
 mode: ContinuousDelivery
 branches:
   main:
-    regex: ^main$
+    regex: ^(main|HEAD|refs/heads/main)$
     increment: patch
     track-merge-target: true
   feature:
