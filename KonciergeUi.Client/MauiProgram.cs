@@ -3,11 +3,7 @@ using KonciergeUi.Client.Services;
 using KonciergeUi.Client.State;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
-#if WINDOWS
-using Microsoft.AspNetCore.Components.WebView.Maui;
-using Microsoft.Maui.Handlers;
-using Microsoft.UI.Xaml.Controls;
-#endif
+
 
 namespace KonciergeUi.Client;
 

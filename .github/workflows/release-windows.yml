@@ -21,6 +21,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Show git context
+        shell: pwsh
+        run: |
+          git --no-pager log -5 --oneline
+          git --no-pager describe --tags --abbrev=0 --match "v[0-9]*" 2>$null
+
       - name: Setup .NET 9 SDK
         uses: actions/setup-dotnet@v4
         with:
