@@ -296,5 +296,17 @@ namespace KonciergeUI.Translations.Resources {
                 return ResourceManager.GetString("resource", resourceCulture);
             }
         }
+        
+        public static string select_cluster_sub {
+            get {
+                return ResourceManager.GetString("select_cluster_sub", resourceCulture);
+            }
+        }
+        
+        public static string contexts {
+            get {
+                return ResourceManager.GetString("contexts", resourceCulture);
+            }
+        }
     }
 }

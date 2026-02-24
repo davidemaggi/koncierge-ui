@@ -21,6 +21,7 @@
 @inject ISnackbar Snackbar;
 @inject ILocalizationService L
 @inject IClusterDiscoveryService _clusterDiscoveryService;
+@inject IKubeRepository KubeRepo
 @inject IPreferencesStorage _preferencesStorage;
 
 <MudStack Class="ma-4">
@@ -179,31 +180,59 @@
    
     private async Task StartForward()
     {
-        
-        
-        
-        
-        var parameters = new DialogParameters<StartForwardDialog>
+        var selected = await SelectContextAsync();
+        if (selected is null)
         {
-            { x => x._template, _currentTemplate },
-
-           
-        };
-
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
-
-        var dialog= await DialogService.ShowAsync<StartForwardDialog>("Start Forward", parameters, options);
-        
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
-           
+            return;
         }
 
+        try
+        {
+            _ = KubeRepo.GetClient(selected);
+            await _fwd.StartTemplateAsync(_currentTemplate, selected);
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = ex.InnerException?.Message ?? ex.Message;
+            Snackbar.Add($"{L.Forwards["message_failed_start"]}: {errorMessage}", Severity.Error);
+        }
     }
-    
+
+    private async Task<ClusterConnectionInfo?> SelectContextAsync()
+    {
+        var groupedClusters = await BuildGroupedClustersAsync();
+        var parameters = new DialogParameters<ContextSelectDialog>
+        {
+            { x => x._groupedClusters, groupedClusters },
+            { x => x.SelectedContext, _ui.SelectedCluster }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium };
+        var dialog = await DialogService.ShowAsync<ContextSelectDialog>("Start Forward", parameters, options);
+        var result = await dialog.Result;
+
+        if (result.Canceled)
+        {
+            return null;
+        }
+
+        return result.Data as ClusterConnectionInfo;
+    }
+
+    private async Task<Dictionary<string, List<ClusterConnectionInfo>>> BuildGroupedClustersAsync()
+    {
+        var data = await _clusterDiscoveryService.DiscoverClustersAsync();
+        return data
+            .GroupBy(c => c.KubeconfigPath)
+            .OrderByDescending(g => g.Any(c => c.IsDefaultKubeconfig))
+            .ThenBy(g => g.Key)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(c => c.IsCurrentContext)
+                      .ThenBy(c => c.Name)
+                      .ToList()
+            );
+    }
     
     private async Task OnSaveClick()
     {

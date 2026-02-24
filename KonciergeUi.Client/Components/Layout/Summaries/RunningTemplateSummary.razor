@@ -26,7 +26,7 @@
             </CardHeaderContent>
         <CardHeaderActions>
                     <MudStack AlignItems="AlignItems.Center" Row>
-                <MudText Typo="Typo.body2">@L.Global["k8s_context"]: @($"{@_template.ClusterInfo.ContextName}@{@_template.ClusterInfo.Name}")</MudText>
+                <MudText Typo="Typo.body2">@L.Global["k8s_context"]: @($"{@_template.ClusterInfo.Name}@{@_template.ClusterInfo.ClusterUrl.ToClusterHost()}")</MudText>
 
             <MudButton OnClick="StopTemplate" Color="Color.Error" StartIcon="@Icons.Material.Outlined.StopCircle">@L.Templates["cmd_stop"]</MudButton>
             </MudStack>

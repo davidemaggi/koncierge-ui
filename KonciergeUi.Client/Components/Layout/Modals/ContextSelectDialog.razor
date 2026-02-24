@@ -1,0 +1,205 @@
+@using KonciergeUi.Client.Extensions
+@using KonciergeUI.Models.Kube
+@using KonciergeUI.Translations.Services
+@using System.IO
+@inject ILocalizationService L
+@inject IAppVersionProvider VersionProvider
+
+<MudDialog ContentClass="border-none pa-0" Style="width: fit-content; max-width: 90vw;">
+    
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.Resources["select_cluster"]</MudText>
+        <MudText Typo="Typo.body1">@L.Resources["select_cluster_sub"]</MudText>
+    </TitleContent>
+    
+    <DialogContent>
+        <MudStack AlignItems="AlignItems.Stretch" Spacing="2">
+            <MudTextField @bind-Value="_search"
+                          Immediate="true"
+                          DebounceInterval="150"
+                          Placeholder="Search"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Margin="Margin.Dense" />
+
+            <MudExpansionPanels Elevation="0">
+                @foreach (var group in FilteredGroups)
+                {
+                    var groupPath = GetGroupPath(group);
+                    <MudExpansionPanel Expanded="@ShouldExpandGroup(group)">
+                        <TitleContent>
+                            <MudStack AlignItems="AlignItems.Center" Row>
+                                <MudIcon Color="Color.Primary" Icon="@Icons.Material.Filled.Description" />
+                                <MudStack>
+                                    <MudStack AlignItems="AlignItems.Center" Row>
+                                    
+                                        <MudText Typo="Typo.h6">@GetFileName(groupPath)</MudText>
+                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@group.Value.Count @L.Resources["contexts"]</MudChip>
+                                    </MudStack>
+                                    <MudText Typo="Typo.caption">@groupPath</MudText>
+                                </MudStack>
+                            </MudStack>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudList T="ClusterConnectionInfo" Dense="true"
+                                     @bind-SelectedValue="_selectedContext"
+                                     SelectionMode="SelectionMode.SingleSelection">
+                                @foreach (var ctx in FilterContexts(group.Value))
+                                {
+                                    <MudListItem T="ClusterConnectionInfo"
+                                                 Value="ctx"
+                                                 @ondblclick="(() => SelectContext(ctx))"
+                                                 Class="@GetItemClass(ctx)">
+                                        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width: 100%">
+                                            <MudStack AlignItems="AlignItems.Center" Row>
+                                                <MudIcon Icon="@KonciergeIcons.Outlined.Resources" Color="Color.Primary" />
+
+                                                <MudStack>
+                                                    <MudText Style="font-weight: bold" Typo="Typo.body1">@ctx.ContextName</MudText>
+                                                    <MudStack Row Spacing="2">
+                                                        <MudText Typo="Typo.caption">Cluster: @ctx.ClusterUrl.ToClusterHost()</MudText>
+                                                        <MudText Typo="Typo.caption">Namespace: @ctx.DefaultNamespace</MudText>
+                                                    </MudStack>
+                                                </MudStack>
+                                            </MudStack>
+
+                                            @if (_selectedContext is not null && _selectedContext.Id == ctx.Id)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Primary" />
+                                            }
+                                        </MudStack>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
+        </MudStack>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudStack StretchItems="StretchItems.Start" AlignItems="AlignItems.Center" Row>
+            <MudText Align="Align.Left" Typo="Typo.caption">@_groupedClusters.Count Files - @TotalContexts @L.Resources["contexts"]</MudText>
+            <MudButton OnClick="Cancel">@L.Global["crud_cancel"]</MudButton>
+            <MudButton OnClick="SelectContext" Disabled="@(_selectedContext is null)">@L.Global["crud_select"]</MudButton>
+        </MudStack>
+    </DialogActions>
+    
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter]
+    public Dictionary<string, List<ClusterConnectionInfo>> _groupedClusters { get; set; } = new();
+
+    [Parameter]
+    public ClusterConnectionInfo? SelectedContext { get; set; }
+
+    private string _search = string.Empty;
+    private ClusterConnectionInfo? _selectedContext;
+
+    private IEnumerable<KeyValuePair<string, List<ClusterConnectionInfo>>> FilteredGroups =>
+        string.IsNullOrWhiteSpace(_search)
+            ? _groupedClusters
+            : _groupedClusters.Where(g => GroupMatchesSearch(g));
+
+    private IEnumerable<ClusterConnectionInfo> FilterContexts(List<ClusterConnectionInfo> items) =>
+        string.IsNullOrWhiteSpace(_search)
+            ? items
+            : items.Where(c => c.ContextName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                               || c.Name.Contains(_search, StringComparison.OrdinalIgnoreCase));
+
+    private bool GroupMatchesSearch(KeyValuePair<string, List<ClusterConnectionInfo>> group)
+    {
+        var groupPath = GetGroupPath(group);
+        var groupFile = GetFileName(groupPath);
+        return groupFile.Contains(_search, StringComparison.OrdinalIgnoreCase)
+               || groupPath.Contains(_search, StringComparison.OrdinalIgnoreCase)
+               || group.Value.Any(c => c.ContextName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                                       || c.Name.Contains(_search, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string GetGroupPath(KeyValuePair<string, List<ClusterConnectionInfo>> group) =>
+        string.IsNullOrWhiteSpace(group.Key)
+            ? group.Value.FirstOrDefault()?.KubeconfigPath ?? string.Empty
+            : group.Key;
+
+    private static string GetFileName(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return Path.GetFileName(trimmed);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+      
+    }
+    
+    protected override void OnParametersSet()
+    {
+        if (SelectedContext is not null)
+        {
+            _selectedContext = SelectedContext;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void SelectContext()
+    {
+        SelectContext(_selectedContext);
+    }
+
+    private void SelectContext(ClusterConnectionInfo? selected)
+    {
+        if (selected is null)
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(selected));
+    }
+
+    private bool ShouldExpandGroup(KeyValuePair<string, List<ClusterConnectionInfo>> group)
+    {
+        if (_selectedContext is not null && group.Value.Any(c => c.Id == _selectedContext.Id))
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(_search))
+        {
+            return false;
+        }
+
+        return GroupMatchesSearch(group);
+    }
+
+    private string GetItemClass(ClusterConnectionInfo ctx)
+    {
+        var classes = "pl-4";
+        if (_selectedContext is not null && _selectedContext.Id == ctx.Id)
+        {
+            classes += " selected-context";
+        }
+
+        return classes;
+    }
+
+    private int TotalContexts => _groupedClusters.Sum(g => g.Value.Count);
+}
+
+<style>
+    .selected-context {
+        background-color: var(--mud-palette-action-default-hover);
+        border-radius: 4px;
+    }
+</style>

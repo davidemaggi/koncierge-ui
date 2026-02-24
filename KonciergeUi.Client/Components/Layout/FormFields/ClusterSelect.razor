@@ -1,4 +1,5 @@
-﻿@using KonciergeUI.Core.Abstractions
+﻿@using KonciergeUi.Client.Components.Layout.Modals
+@using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Kube
 @using KonciergeUi.Client.State
 @using KonciergeUi.Client.Extensions
@@ -6,98 +7,54 @@
 @inject IClusterDiscoveryService ClusterService
 @inject UiState _ui
 @inject ILocalizationService L
+@inject IDialogService DialogService
 
 <MudStack StretchItems="StretchItems.Start" Row>
-    @if (_selectionEnabled || SelectedCluster is null) {
-    <MudSelect T="ClusterConnectionInfo?"
-           Label="@Label"
-           Value="SelectedCluster"
-           ValueChanged="ClusterSelected"
-           Variant="@Variant"
-           FullWidth="true"
-           Disabled="@(IsLoading || Disabled)">
-    
-    @if (IsLoading)
-    {
-        <MudSelectItem T="ClusterConnectionInfo?" Value="@null" Disabled="true">
-            @L.Resources["loading_cluster"]
-        </MudSelectItem>
-    }
-    else if (!_groupedClusters.Any())
-    {
-        <MudSelectItem T="ClusterConnectionInfo?" Value="@null" Disabled="true">
-            @L.Resources["no_clusters_found"]
-        </MudSelectItem>
-    }
-    else
-    {
-        <MudSelectItem T="ClusterConnectionInfo?" Value="@null">
-            @L.Resources["select_cluster"]
-        </MudSelectItem>
-
-        @foreach (var group in _groupedClusters)
-        {
-            <!-- Group header as disabled item -->
-            <MudSelectItem T="ClusterConnectionInfo?" Value="@null" Disabled="true">
-                <MudStack AlignItems="AlignItems.Start" Row>
+    <MudTooltip Text="@L.Resources["no_clusters_found"]" Disabled="@(!NoClusters)">
+        <MudButton Color="Color.Primary"
+                   Style="justify-content: flex-start; width: 100%"
+                   FullWidth="true"
+                   OnClick="OpenContextDialog"
+                   Variant="Variant.Outlined"
+                   Disabled="@(Disabled || IsLoading || NoClusters)">
+            <MudStack AlignItems="AlignItems.Center" Row>
+                @if (IsLoading)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" />
+                }
+                else
+                {
                     <MudIcon Color="Color.Primary" Icon="@KonciergeIcons.Outlined.Resources" />
-                    <MudStack>
-                    <MudText Style="font-weight:bold" Typo="Typo.subtitle2" >
-                    @GetGroupLabel(group.Key) (@group.Value.Count Contexts)
-                </MudText>
-                 <MudText Style="font-style:italic" Typo="Typo.body2">
-                     @($"{group.Value.First().KubeconfigPath}")
-                </MudText>
+                }
+                <MudStack AlignItems="AlignItems.Start">
+                    @if (IsLoading)
+                    {
+                        <MudText Style="font-weight:bold" Typo="Typo.subtitle2">@Label</MudText>
+                        <MudText Style="font-style:italic" Typo="Typo.body2">@L.Resources["loading_cluster"]</MudText>
+                    }
+                    else if (SelectedCluster is null)
+                    {
+                        <MudText Style="font-weight:bold" Typo="Typo.subtitle2">@Label</MudText>
+                        <MudText Style="font-style:italic" Typo="Typo.body2">@L.Resources["select_cluster"]</MudText>
+                    }
+                    else
+                    {
+                        <MudText Style="font-weight:bold" Typo="Typo.subtitle2">
+                            @($"{SelectedCluster.Name}@{SelectedCluster.ClusterUrl.ToClusterHost()}")
+                        </MudText>
+                        <MudText Style="font-style:italic" Typo="Typo.body2">
+                            @($"{GetGroupLabel(SelectedCluster.KubeconfigPath)} {@L.Resources["default_namespace"]}: {SelectedCluster.DefaultNamespace}")
+                        </MudText>
+                    }
                 </MudStack>
-                </MudStack>
-            </MudSelectItem>
-
-            <!-- Group items -->
-            @foreach (var cluster in group.Value)
-            {
-                <MudSelectItem T="ClusterConnectionInfo?" Value="@cluster">
-                    <MudStack Row Spacing="1" AlignItems="AlignItems.Start" Class="pl-4">
-                        <MudIcon Icon="@KonciergeIcons.Outlined.Templates" 
-                                 Size="Size.Small" 
-                                 Color="@(cluster.IsCurrentContext ? Color.Success : Color.Default)" />
-                        <MudStack>
-                           <MudText>@cluster.Name</MudText>
-                           <MudText>@($"{@L.Resources["default_namespace"]}: {cluster.DefaultNamespace}")</MudText>
-
-                       
-                        </MudStack>
-                    </MudStack>
-                </MudSelectItem>
-            }
-        }
-    }
-        </MudSelect>
-    }
-    else
-    {
-        <MudButton Color="Color.Primary" Style="justify-content: flex-start" OnClick="ToggleEditing" Variant="Variant.Outlined">
-
-         <MudStack  AlignItems="AlignItems.Center" Row>
-                    <MudIcon Color="Color.Primary" Icon="@KonciergeIcons.Outlined.Resources" />
-                    <MudStack AlignItems="AlignItems.Start">
-                    <MudText Style="font-weight:bold" Typo="Typo.subtitle2" >
-                    @($"{_ui.SelectedCluster.Name} -> {_ui.SelectedCluster.ContextName}")
-                </MudText>
-                 <MudText Style="font-style:italic" Typo="Typo.body2">
-                     @($"{GetGroupLabel(_ui.SelectedCluster.KubeconfigPath)} {@L.Resources["default_namespace"]}: {_ui.SelectedCluster.DefaultNamespace}")
-                </MudText>
-                </MudStack>
-                </MudStack>
-                </MudButton>
-   }
-
-    
-
+            </MudStack>
+        </MudButton>
+    </MudTooltip>
 </MudStack>
+
 @code {
     private Dictionary<string, List<ClusterConnectionInfo>> _groupedClusters = new();
     private bool IsLoading = true;
-    private bool _selectionEnabled = false;
 
     [Parameter]
     public ClusterConnectionInfo? SelectedCluster { get; set; }
@@ -113,6 +70,8 @@
 
     [Parameter]
     public bool Disabled { get; set; }
+
+    private bool NoClusters => !IsLoading && !_groupedClusters.Any();
 
 
     protected override async Task OnInitializedAsync()
@@ -131,15 +90,6 @@
                 SelectedCluster = cluster;
                 await _onClusterSelection.InvokeAsync(SelectedCluster);
             }
-            else
-            {
-                _selectionEnabled = true;  
-
-            }
-        }
-        else
-        {
-            _selectionEnabled = true;  
         }
     }
     
@@ -193,19 +143,30 @@
 
     public async Task ClusterSelected(ClusterConnectionInfo? sel)
     {
-        if (sel is not null) {
-            _selectionEnabled = false;
-        }
-
         await _onClusterSelection.InvokeAsync(sel);
     }
 
-
-    public void ToggleEditing()
-
+    private async Task OpenContextDialog()
     {
-        _selectionEnabled = !_selectionEnabled;  
+        var parameters = new DialogParameters<ContextSelectDialog>
+        {
+            { x => x._groupedClusters, _groupedClusters },
+            { x => x.SelectedContext, SelectedCluster }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium };
+        var dialog = await DialogService.ShowAsync<ContextSelectDialog>(null, parameters, options);
+        var result = await dialog.Result;
+
+        if (result.Canceled)
+        {
+            return;
+        }
+
+        if (result.Data is ClusterConnectionInfo selected)
+        {
+            SelectedCluster = selected;
+            await ClusterSelected(selected);
+        }
     }
-
-
 }

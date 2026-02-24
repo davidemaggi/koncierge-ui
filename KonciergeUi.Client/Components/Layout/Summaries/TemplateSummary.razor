@@ -2,11 +2,17 @@
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Models.Kube
 @using KonciergeUi.Client.Extensions
+@using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
 @inject IPreferencesStorage _storage
 @inject IDialogService DialogService
 @inject IPortForwardingService _fwdService
+@inject IClusterDiscoveryService ClusterService
+@inject IKubeRepository KubeRepo
+@inject UiState _ui
+@inject ISnackbar Snackbar
 @inject ILocalizationService L
 
 <MudExpansionPanels Elevation="0">
@@ -95,24 +101,58 @@
     
     private async Task StartTemplate(MouseEventArgs arg)
     {
-        var parameters = new DialogParameters<StartForwardDialog>
+        var selected = await SelectContextAsync();
+        if (selected is null)
         {
-            { x => x._template, _template },
+            return;
+        }
 
-           
+        try
+        {
+            _ = KubeRepo.GetClient(selected);
+            await _fwdService.StartTemplateAsync(_template, selected);
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = ex.InnerException?.Message ?? ex.Message;
+            Snackbar.Add($"{L.Forwards["message_failed_start"]}: {errorMessage}", Severity.Error);
+        }
+    }
+
+    private async Task<ClusterConnectionInfo?> SelectContextAsync()
+    {
+        var groupedClusters = await BuildGroupedClustersAsync();
+        var parameters = new DialogParameters<ContextSelectDialog>
+        {
+            { x => x._groupedClusters, groupedClusters },
+            { x => x.SelectedContext, _ui.SelectedCluster }
         };
 
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium };
-
-        var dialog= await DialogService.ShowAsync<StartForwardDialog>(L.Templates["cmd_start"], parameters, options);
-        
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium };
+        var dialog = await DialogService.ShowAsync<ContextSelectDialog>(L.Templates["cmd_start"], parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (result.Canceled)
         {
-            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
-           
+            return null;
         }
+
+        return result.Data as ClusterConnectionInfo;
+    }
+
+    private async Task<Dictionary<string, List<ClusterConnectionInfo>>> BuildGroupedClustersAsync()
+    {
+        var data = await ClusterService.DiscoverClustersAsync();
+        return data
+            .GroupBy(c => c.KubeconfigPath)
+            .OrderByDescending(g => g.Any(c => c.IsDefaultKubeconfig))
+            .ThenBy(g => g.Key)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(c => c.IsCurrentContext)
+                      .ThenBy(c => c.Name)
+                      .ToList()
+            );
     }
 
     private Task EditTemplate(MouseEventArgs _)

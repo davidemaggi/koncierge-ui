@@ -145,4 +145,10 @@
     <data name="resource" xml:space="preserve">
         <value>Resource</value>
     </data>
+    <data name="select_cluster_sub" xml:space="preserve">
+        <value>Choose a kubeconfig file and context to connect to your cluster</value>
+    </data>
+    <data name="contexts" xml:space="preserve">
+        <value>Contexts</value>
+    </data>
 </root>

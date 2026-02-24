@@ -137,4 +137,10 @@
     <data name="resource" xml:space="preserve">
         <value>Risorsa</value>
     </data>
+    <data name="select_cluster_sub" xml:space="preserve">
+        <value>Scegli il cluster e la configurazione da usare</value>
+    </data>
+    <data name="contexts" xml:space="preserve">
+        <value>Contesti</value>
+    </data>
 </root>
