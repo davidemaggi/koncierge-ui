@@ -164,5 +164,11 @@ namespace KonciergeUI.Translations.Resources {
                 return ResourceManager.GetString("service_namespace", resourceCulture);
             }
         }
+        
+        public static string cmd_stop_all {
+            get {
+                return ResourceManager.GetString("cmd_stop_all", resourceCulture);
+            }
+        }
     }
 }

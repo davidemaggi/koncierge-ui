@@ -1,7 +1,5 @@
-﻿@using System.Globalization
-@using System.Linq
+﻿@using System.Linq
 @using System.Threading
-@using KonciergeUi.Client.Shared
 @using KonciergeUi.Client.State
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
@@ -10,8 +8,8 @@
 
 @inject UiState Ui;
 @inject ILocalizationService L;
-@inject NavigationManager _nav;
-@inject IPortForwardingService _fwd;
+@inject NavigationManager Nav;
+@inject IPortForwardingService Fwd;
 
 @implements IDisposable
 @implements IAsyncDisposable
@@ -30,7 +28,7 @@
     <MudSpacer/>
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
 
-        <MudButton Color="Color.Info" Variant="@GetVariant("")" StartIcon="@KonciergeIcons.Outlined.Resources" Href="/">@L.Navigation["NavResources"]</MudButton>
+        <MudButton Color="Color.Info" Variant="@GetVariant("resources")" StartIcon="@KonciergeIcons.Outlined.Resources" Href="/resources">@L.Navigation["NavResources"]</MudButton>
         <MudButton Color="Color.Info" Variant="@GetVariant("templates")" StartIcon="@KonciergeIcons.Outlined.Templates" Href="/templates">@L.Navigation["NavTemplates"]</MudButton>
         
         @if (_fwdCount > 0)
@@ -59,15 +57,13 @@
     <MudMenu AnchorOrigin="Origin.BottomRight"
              TransformOrigin="Origin.TopRight"
              Open="@_langMenuOpen"
-             CloseMenuOnItemClick="true"
-             OnClose="() => _langMenuOpen = false"
              ActivatorContent="@(builder => builder.AddContent(0, string.Empty))"
-             AnchorEl="@_langButtonRef">
+             >
         <MudMenuItem Icon="@KonciergeIcons.Flags.Uk" OnClick="@(() => ChangeLanguage("en"))">English</MudMenuItem>
         <MudMenuItem Icon="@KonciergeIcons.Flags.Italy" OnClick="@(() => ChangeLanguage("it"))">Italiano</MudMenuItem>
     </MudMenu>
 
-    <MudIconButton Icon="@(_isDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+    <MudIconButton Icon="@(IsDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
                    Color="Color.Primary"
                    OnClick="@ToggleTheme"/>
 </MudAppBar>
@@ -77,7 +73,7 @@
     private MudIconButton _langButtonRef = default!;
 
     [Parameter] 
-    public bool _isDark { get; set; }
+    public bool IsDark { get; set; }
 
     [Parameter] 
     public EventCallback OnThemeChangedAsync { get; set; }
@@ -91,7 +87,7 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        _nav.LocationChanged += OnLocationChanged;
+        Nav.LocationChanged += OnLocationChanged;
         Ui.LanguageChanged += OnLanguageChanged;
 
         await RefreshForwardCountAsync();
@@ -111,7 +107,7 @@
 
     public void Dispose()
     {
-        _nav.LocationChanged -= OnLocationChanged;
+        Nav.LocationChanged -= OnLocationChanged;
         Ui.LanguageChanged -= OnLanguageChanged;
 
         _forwardCountCts?.Cancel();
@@ -137,13 +133,16 @@
         _forwardCountCts?.Dispose();
     }
 
-    private string CurrentPath => _nav.ToBaseRelativePath(_nav.Uri); 
+    private string CurrentPath => Nav.ToBaseRelativePath(Nav.Uri);
 
-    private Variant GetVariant(string href) 
-        => CurrentPath == href ? Variant.Filled : Variant.Text;
+    private Variant GetVariant(string href)
+    {
+        var current = string.IsNullOrWhiteSpace(CurrentPath) ? "templates" : CurrentPath;
+        return current == href ? Variant.Filled : Variant.Text;
+    }
     private async Task ToggleTheme()
     {
-        _isDark = !_isDark;
+        IsDark = !IsDark;
        await OnThemeChangedAsync.InvokeAsync();
     }
 
@@ -178,7 +177,7 @@
 
     private Task RefreshForwardCountAsync()
     {
-        var runningTemplates = _fwd.GetAllRunningTemplates();
+        var runningTemplates = Fwd.GetAllRunningTemplates();
         var currentCount = 0;
 
         foreach (var template in runningTemplates)

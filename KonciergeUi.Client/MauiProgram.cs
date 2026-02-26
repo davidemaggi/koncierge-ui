@@ -1,15 +1,14 @@
 ﻿using KonciergeUi.Client.Extensions;
 using KonciergeUi.Client.Services;
-using KonciergeUi.Client.State;
 using Microsoft.Extensions.Logging;
-using MudBlazor.Services;
 
 
 namespace KonciergeUi.Client;
 
 public static class MauiProgram
 {
-    public static IServiceProvider ServiceProvider { get; private set; }
+    public static IServiceProvider ServiceProvider { get; private set; } = null!;
+
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();

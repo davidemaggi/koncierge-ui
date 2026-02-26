@@ -70,12 +70,15 @@
         <value>Adding to Clipboard failed</value>
     </data>
     <data name="service_type" xml:space="preserve">
-        <value />
+        <value>Type</value>
     </data>
     <data name="service_name" xml:space="preserve">
-        <value />
+        <value>Name</value>
     </data>
     <data name="service_namespace" xml:space="preserve">
-        <value />
+        <value>Namespace</value>
+    </data>
+    <data name="cmd_stop_all" xml:space="preserve">
+        <value>Stop All</value>
     </data>
 </root>

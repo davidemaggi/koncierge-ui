@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/resources"
 
 @using KonciergeUI.Models.Kube
 @using KonciergeUi.Client.Components.Layout.FormFields
@@ -6,14 +6,11 @@
 @using KonciergeUi.Client.Components.Layout.Summaries
 @using KonciergeUi.Client.Components.Layout.Tables
 @using KonciergeUi.Client.Components.Layout.Views
-@using KonciergeUi.Client.Shared
 @using KonciergeUi.Client.State
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Translations.Services
-@using OneOf.Types
 @using KonciergeUI.Data
-@using Microsoft.Maui.Storage
 @using System.IO
 @inject UiState _ui
 @inject IPortForwardingService _fwd;
@@ -48,9 +45,9 @@
                         @foreach (var fwd in _currentTemplate.Forwards)
                         {
                             <MudItem xs="12">
-                                <ForwardSummary _definition="fwd"
-                                                _showEdit="true"
-                                                _showRemove="true"
+                                <ForwardSummary Definition="fwd"
+                                                ShowEdit="true"
+                                                ShowRemove="true"
                                                 OnForwardRemoveAsync="RemoveForwardFromList"
                                                 OnForwardUpdated="HandleForwardUpdated"/>
                             </MudItem>
@@ -106,12 +103,17 @@
         return Task.CompletedTask;
     }
 
-    private async Task OnClusterSelection(ClusterConnectionInfo? sel)
+    private Task OnClusterSelection(ClusterConnectionInfo? sel)
     {
-
-   
-        _ui.SelectedCluster = sel;
-
+        try
+        {
+            _ui.SelectedCluster = sel;
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 
     private void HandleCreateForward(PodInfo pod)
@@ -211,7 +213,7 @@
         var dialog = await DialogService.ShowAsync<ContextSelectDialog>("Start Forward", parameters, options);
         var result = await dialog.Result;
 
-        if (result.Canceled)
+        if (result!.Canceled)
         {
             return null;
         }
@@ -242,7 +244,7 @@
         
         var parameters = new DialogParameters<SaveTemplateDialog>
         {
-            { x => x._template, _currentTemplate },
+            { x => x.Template, _currentTemplate },
 
            
         };
@@ -253,7 +255,7 @@
         
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (!result!.Canceled)
         {
             _currentTemplate = new();
         }
@@ -277,7 +279,7 @@
         
         var result = await dialog.Result;
 
-        if (result.Canceled || result.Data is not List<string> filePaths || filePaths.Count == 0)
+        if (result!.Canceled || result.Data is not List<string> filePaths || filePaths.Count == 0)
         {
             return;
         }

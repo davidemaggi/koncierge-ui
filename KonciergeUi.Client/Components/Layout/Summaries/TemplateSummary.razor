@@ -23,13 +23,13 @@
                     <MudIcon Icon="@KonciergeIcons.Outlined.Templates" Color="Color.Primary" />
                     <MudStack>
                         
-                            <MudText Typo="Typo.body1">@_template.Name</MudText>
+                            <MudText Typo="Typo.body1">@Template.Name</MudText>
                      
-                        <MudText Typo="Typo.body2">@_template.Description</MudText>
+                        <MudText Typo="Typo.body2">@Template.Description</MudText>
                         <MudStack Row>
-                            <MudText Typo="Typo.body2">@_template.Forwards.Count Forward(s)</MudText>
+                            <MudText Typo="Typo.body2">@Template.Forwards.Count Forward(s)</MudText>
                             <MudText Typo="Typo.body2"> - </MudText>
-                            <MudText Typo="Typo.body2">@L.Global["modified"] @_template.ModifiedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudText>
+                            <MudText Typo="Typo.body2">@L.Global["modified"] @Template.ModifiedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudText>
 
                         </MudStack>
                     </MudStack>
@@ -55,8 +55,8 @@
         </TitleContent>
         <ChildContent>
              <MudStack Spacing="10">
-            @foreach(var fwd in _template.Forwards) {
-                <ForwardSummary _definition="fwd" _showRemove="false"/>
+            @foreach(var fwd in Template.Forwards) {
+                <ForwardSummary Definition="fwd" ShowRemove="false"/>
             }
              </MudStack>
         </ChildContent>
@@ -66,7 +66,8 @@
 
 
     [Parameter]
-    public ForwardTemplate _template { get; set; }
+    public ForwardTemplate Template { get; set; } = null!;
+
     [Parameter]
     public EventCallback<ForwardTemplate> OnEditTemplate { get; set; }
 
@@ -80,7 +81,7 @@
             .ToHashSet();
 
         // Find ports in this template that are non-zero and already in use
-        return _template.Forwards
+        return Template.Forwards
             .Where(f => f.LocalPort != 0 && portsInUse.Contains(f.LocalPort))
             .Select(f => f.LocalPort)
             .Distinct()
@@ -95,7 +96,7 @@
         if (!res)
             return;
 
-        await _storage.RemoveForwardTemplateAsync(_template.Id);
+        await _storage.RemoveForwardTemplateAsync(Template.Id);
         StateHasChanged();
     }
     
@@ -110,7 +111,7 @@
         try
         {
             _ = KubeRepo.GetClient(selected);
-            await _fwdService.StartTemplateAsync(_template, selected);
+            await _fwdService.StartTemplateAsync(Template, selected);
         }
         catch (Exception ex)
         {
@@ -132,7 +133,7 @@
         var dialog = await DialogService.ShowAsync<ContextSelectDialog>(L.Templates["cmd_start"], parameters, options);
         var result = await dialog.Result;
 
-        if (result.Canceled)
+        if (result!.Canceled)
         {
             return null;
         }
@@ -157,7 +158,7 @@
 
     private Task EditTemplate(MouseEventArgs _)
     {
-        return OnEditTemplate.HasDelegate ? OnEditTemplate.InvokeAsync(_template) : Task.CompletedTask;
+        return OnEditTemplate.HasDelegate ? OnEditTemplate.InvokeAsync(Template) : Task.CompletedTask;
     }
 
 }

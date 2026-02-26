@@ -1,4 +1,3 @@
-using KonciergeUI.Translations.Resources;
 using Microsoft.Extensions.Localization;
 using System.Globalization;
 

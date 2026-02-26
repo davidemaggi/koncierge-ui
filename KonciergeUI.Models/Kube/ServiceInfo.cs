@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace KonciergeUI.Models.Kube
+﻿namespace KonciergeUI.Models.Kube
 {
     public record ServiceInfo
     {

@@ -1,5 +1,3 @@
-using Microsoft.Maui.ApplicationModel;
-
 namespace KonciergeUi.Client.Services;
 
 public interface IAppVersionProvider

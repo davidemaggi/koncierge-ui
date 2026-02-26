@@ -19,7 +19,7 @@ public static class IDialogExtensions
     
         var dialogReference = await dialog.ShowAsync<ConfirmationDialog>("confirm", parameters);
         var dialogResult = await dialogReference.Result;  // CRITICAL: Await here!
-        return dialogResult.Canceled ? false : true;  // Cleaner, explicit
+        return dialogResult is { Canceled: false };  // Cleaner, explicit
     }
 
     public static async Task ShowConfirmationActionAsync(this IDialogService dialog, 

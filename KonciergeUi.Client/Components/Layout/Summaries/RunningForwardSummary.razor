@@ -2,7 +2,6 @@
 @using KonciergeUI.Models.Security
 @using KonciergeUi.Client.Components.Layout.Fields
 @using KonciergeUi.Client.Components.Layout.Views
-@using KonciergeUi.Client.Shared
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Translations.Services
@@ -18,7 +17,7 @@
     <MudStack AlignItems="AlignItems.Center" Row>
         <MudStack>
             <MudStack AlignItems="AlignItems.Center" Row>
-                @if (_instance.Definition.ResourceType == Enums.ResourceType.Pod)
+                @if (Instance.Definition.ResourceType == Enums.ResourceType.Pod)
                 {
                     <MudIcon Icon="@KonciergeIcons.Outlined.Pod" Size="Size.Small" Color="Color.Primary"/>
                 }
@@ -27,27 +26,27 @@
                     <MudIcon Icon="@KonciergeIcons.Outlined.Service" Size="Size.Small" Color="Color.Secondary"/>
 
                 }
-                <MudText Style="font-family: monospace;" Typo="Typo.body1">@_instance.Definition.ResourceName</MudText>
-                <RunningForwardStatus _status="_instance.Status"/>
+                <MudText Style="font-family: monospace;" Typo="Typo.body1">@Instance.Definition.ResourceName</MudText>
+                <RunningForwardStatus _status="Instance.Status"/>
             </MudStack>
             <MudStack AlignItems="AlignItems.Center" Row>
 
                 <MudText Typo="Typo.body2">@($"{L.Forwards["source"]}: ")</MudText>
-                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_cluster.ContextName}:{_instance.Definition.TargetPort}")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{Cluster.ContextName}:{Instance.Definition.TargetPort}")</MudText>
 
                 <MudText Typo="Typo.body2">@($"{L.Forwards["destination"]}: ")</MudText>
-                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{_instance.BoundLocalPort ?? _instance.Definition.LocalPort}")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"localhost:{Instance.BoundLocalPort ?? Instance.Definition.LocalPort}")</MudText>
 
                 <MudText Typo="Typo.body2">@($"{L.Forwards["protocol"]}: ")</MudText>
-                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_instance.Definition.Protocol.ToString().ToUpper()}")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{Instance.Definition.Protocol.ToString().ToUpper()}")</MudText>
             </MudStack>
-            @if (_instance.ResolvedSecrets.Any())
+            @if (Instance.ResolvedSecrets.Any())
             {
                 <MudStack AlignItems="AlignItems.Center" Row>
 
                     <MudText Typo="Typo.body2">@($"{L.Forwards["linked_secrets"]}: ")</MudText>
 
-                    @foreach (var secret in _instance.ResolvedSecrets)
+                    @foreach (var secret in Instance.ResolvedSecrets)
                     {
                         <MudTooltip Text="@secret.Value">
                             <MudChip T="string" OnClose="(() => OnCopyClicked(secret))" Icon="@GetLinkedIcon(secret)" CloseIcon="@Icons.Material.Filled.ContentCopy" IconColor="Color.Info">@($"{@secret.Reference.Key}")</MudChip>
@@ -64,7 +63,7 @@
         
         <MudIconButton OnClick="(() => OnCopyLogClicked(_logs))"  Icon="@Icons.Material.Filled.ContentCopy"/>
         <MudIconButton OnClick="ShowLog" Icon="@Icons.Material.Filled.Terminal"/>
-        @if (_instance.Status != Enums.ForwardStatus.Stopped)
+        @if (Instance.Status != Enums.ForwardStatus.Stopped)
         {
             <MudButton StartIcon="@Icons.Material.Outlined.StopCircle" Color="Color.Error" OnClick="StopForward">@L.Forwards["cmd_stop"]</MudButton>
         }
@@ -82,10 +81,12 @@
 </MudCard>
 @code {
     [Parameter]
-    public ForwardInstance _instance { get; set; }
+    public ForwardInstance Instance { get; set; } = null!;
+
     [Parameter]
-    public ClusterConnectionInfo _cluster { get; set; }
-    private System.Timers.Timer _logRefreshTimer;
+    public ClusterConnectionInfo Cluster { get; set; } = null!;
+
+    private System.Timers.Timer _logRefreshTimer = null!;
 
     private bool _showLog = false;
 
@@ -96,23 +97,31 @@
     private List<string> _logs = new();
 
     
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        _logRefreshTimer = new System.Timers.Timer(1000); // Refresh ogni 1 secondo
-        _logRefreshTimer.Elapsed += async (s, e) => await RefreshLogs();
-        _logRefreshTimer.AutoReset = true;
-        _logRefreshTimer.Start();
+        try
+        {
+            _logRefreshTimer = new System.Timers.Timer(1000); // Refresh ogni 1 secondo
+            _logRefreshTimer.Elapsed += async (s, e) => await RefreshLogs();
+            _logRefreshTimer.AutoReset = true;
+            _logRefreshTimer.Start();
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 
     private async Task RefreshLogs()
     {
         try
         {
-            var newLogs = await _fwdService.GetForwardLogsAsync(_instance.Id);
+            var newLogs = await _fwdService.GetForwardLogsAsync(Instance.Id);
             _logs = newLogs.ToList();
             await InvokeAsync(StateHasChanged);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Handle error
         }
@@ -128,15 +137,23 @@
         StateHasChanged();
     }
 
-    async ValueTask IAsyncDisposable.DisposeAsync()
+    ValueTask IAsyncDisposable.DisposeAsync()
     {
-        _logRefreshTimer?.Dispose();
+        try
+        {
+            _logRefreshTimer?.Dispose();
+            return ValueTask.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return ValueTask.FromException(exception);
+        }
     }
     
     
     private async Task RemoveClicked()
     {
-        await OnForwardRemoveAsync.InvokeAsync(_instance.Definition.Id);
+        await OnForwardRemoveAsync.InvokeAsync(Instance.Definition.Id);
     }
 
     private async Task OnCopyClicked(ResolvedSecret s)
@@ -184,14 +201,14 @@
 
     private async Task StopForward(MouseEventArgs arg)
     {
-        var res= await _fwdService.StopForwardAsync(_instance.Id);
+        var res= await _fwdService.StopForwardAsync(Instance.Id);
         StateHasChanged();
 
     }
     
     private async Task StartForward(MouseEventArgs arg)
     {
-        var res= await _fwdService.StartForwardAsync(_instance.Id);
+        var res= await _fwdService.StartForwardAsync(Instance.Id);
     StateHasChanged();
 
     }

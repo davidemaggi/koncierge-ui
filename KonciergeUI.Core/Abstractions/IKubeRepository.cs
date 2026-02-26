@@ -1,11 +1,7 @@
 ﻿﻿using KonciergeUI.Models.Kube;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using k8s;
-using k8s.Models;
+ using k8s;
 
-namespace KonciergeUI.Core.Abstractions
+ namespace KonciergeUI.Core.Abstractions
 {
     public interface IKubeRepository
     {

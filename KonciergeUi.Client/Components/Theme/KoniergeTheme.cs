@@ -1,6 +1,4 @@
 ﻿using MudBlazor;
-using Color = MudBlazor.Color;
-using Colors = Microsoft.Maui.Graphics.Colors;
 
 
 namespace KonciergeUi.Client.Components.Theme

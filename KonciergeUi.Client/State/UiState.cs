@@ -5,9 +5,8 @@ using System.Runtime.CompilerServices;
 using KonciergeUI.Data;
 using KonciergeUI.Translations.Services;
 using KonciergeUI.Models.Security;
-using System.Collections.Generic;
-using System.Linq;
 using KonciergeUI.Models;
+using KonciergeUI.Core.Abstractions;
 
 namespace KonciergeUi.Client.State;
 
@@ -15,6 +14,7 @@ public class UiState : INotifyPropertyChanged
 {
     private readonly IPreferencesStorage _preferencesStorage;
     private readonly ILocalizationService _localizationService;
+    private readonly IClusterDiscoveryService _clusterDiscoveryService;
     private ClusterConnectionInfo? _selectedCluster;
     private string _currentTheme = "System";
     private string _currentLanguage = "en";
@@ -27,10 +27,11 @@ public class UiState : INotifyPropertyChanged
     private string? _searchString = null;
     private ForwardTemplate? _templateDraft;
 
-    public UiState(IPreferencesStorage preferencesStorage, ILocalizationService localizationService)
+    public UiState(IPreferencesStorage preferencesStorage, ILocalizationService localizationService, IClusterDiscoveryService clusterDiscoveryService)
     {
         _preferencesStorage = preferencesStorage;
         _localizationService = localizationService;
+        _clusterDiscoveryService = clusterDiscoveryService;
     }
 
     public ClusterConnectionInfo? SelectedCluster
@@ -128,6 +129,22 @@ public class UiState : INotifyPropertyChanged
         }
 
         _localizationService.SetCulture(_currentLanguage);
+
+        if (!string.IsNullOrWhiteSpace(_config.LastSelectedClusterId))
+        {
+            try
+            {
+                var cluster = await _clusterDiscoveryService.GetClusterByIdAsync(_config.LastSelectedClusterId);
+                if (cluster is not null)
+                {
+                    SelectedCluster = cluster;
+                }
+            }
+            catch (Exception)
+            {
+                // Leave SelectedCluster unchanged if lookup fails.
+            }
+        }
     }
 
     public Task<string?> GetLastSelectedClusterIdAsync()

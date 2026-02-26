@@ -1,11 +1,8 @@
+@page "/"
 @page "/templates"
-
-@using KonciergeUI.Models.Kube
-@using KonciergeUi.Client.Components.Layout.FormFields
 @using KonciergeUi.Client.Components.Layout.Summaries
 @using KonciergeUi.Client.Components.Layout.Views
 @using KonciergeUi.Client.State
-@using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
 @inject UiState _ui
@@ -40,7 +37,7 @@
                             </MudStack>
                             <MudIconButton Ripple="false" Size="Size.Small" Color="Color.Primary" Icon="@(template.Favorite ? Icons.Material.Filled.Star : Icons.Material.Filled.StarBorder)" OnClick="@(() => ToggleFavoriteAsync(template))"/>
                             <div class="flex-grow-1">
-                                <TemplateSummary _template="template" OnEditTemplate="EditTemplateAsync"/>
+                                <TemplateSummary Template="template" OnEditTemplate="EditTemplateAsync"/>
                             </div>
                         </MudPaper>
                     }

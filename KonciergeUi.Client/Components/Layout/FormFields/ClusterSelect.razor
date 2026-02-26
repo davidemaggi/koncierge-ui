@@ -1,11 +1,10 @@
 ﻿@using KonciergeUi.Client.Components.Layout.Modals
+
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Kube
-@using KonciergeUi.Client.State
 @using KonciergeUi.Client.Extensions
 @using KonciergeUI.Translations.Services
 @inject IClusterDiscoveryService ClusterService
-@inject UiState _ui
 @inject ILocalizationService L
 @inject IDialogService DialogService
 
@@ -77,20 +76,6 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadClusters();
-
-
-        // Restore last selected cluster
-        var lastClusterId = await _ui.GetLastSelectedClusterIdAsync();
-        if (!string.IsNullOrEmpty(lastClusterId))
-        {
-            var cluster = await ClusterService.GetClusterByIdAsync(lastClusterId);
-            if (cluster != null)
-            {
-                _ui.SelectedCluster = cluster;
-                SelectedCluster = cluster;
-                await _onClusterSelection.InvokeAsync(SelectedCluster);
-            }
-        }
     }
     
 
@@ -158,12 +143,12 @@
         var dialog = await DialogService.ShowAsync<ContextSelectDialog>(null, parameters, options);
         var result = await dialog.Result;
 
-        if (result.Canceled)
+        if (result is { Canceled: true })
         {
             return;
         }
 
-        if (result.Data is ClusterConnectionInfo selected)
+        if (result!.Data is ClusterConnectionInfo selected)
         {
             SelectedCluster = selected;
             await ClusterSelected(selected);

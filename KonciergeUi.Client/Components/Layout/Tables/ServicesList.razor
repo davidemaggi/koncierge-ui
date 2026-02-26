@@ -1,11 +1,9 @@
 ﻿@using KonciergeUi.Client.Components.Layout.Modals
-@using KonciergeUi.Client.Shared
 @using KonciergeUI.Models.Kube
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
-@using System
 @inject IKubeRepository KubeRepo
 @inject IDialogService DialogService
 @inject UiState _ui
@@ -70,7 +68,6 @@
                           AdornmentIcon="@Icons.Material.Filled.Search" 
                           IconSize="Size.Medium"
                           Variant="Variant.Outlined"
-                          Dense="true"
                           Immediate="true"
                           Class="mr-2"
                           Style="min-width: 200px;" />
@@ -348,11 +345,11 @@
     {
         var parameters = new DialogParameters<CreateForwardDialog>
         {
-            { x => x._servicePort, cp },
-            { x => x._namespace, ser.Namespace },
-            { x => x._resourceName, ser.Name },
-            { x => x._kind, Enums.ResourceType.Service },
-            { x => x._cluster, Cluster },
+            { x => x.ServicePort, cp },
+            { x => x.Namespace, ser.Namespace },
+            { x => x.ResourceName, ser.Name },
+            { x => x.Kind, Enums.ResourceType.Service },
+            { x => x.Cluster, Cluster },
            
         };
 
@@ -362,7 +359,7 @@
         
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
             var xxx = result.Data as PortForwardDefinition;

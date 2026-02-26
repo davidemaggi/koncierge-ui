@@ -1,5 +1,3 @@
-using System;
-
 namespace KonciergeUi.Client.Extensions
 {
     public static class ClusterUrlExtensions

@@ -17,8 +17,8 @@
         </CardHeaderAvatar>
         <CardHeaderContent>
         <MudStack AlignItems="AlignItems.Center" Row>
-                <MudText Typo="Typo.body1">@_template.Definition.Name</MudText>
-                <MudAlert Dense="true" Severity="Severity.Info">@_template.Forwards.Count Forward(s)</MudAlert>
+                <MudText Typo="Typo.body1">@Template.Definition.Name</MudText>
+                <MudAlert Dense="true" Severity="Severity.Info">@Template.Forwards.Count Forward(s)</MudAlert>
 
 
                 
@@ -26,7 +26,7 @@
             </CardHeaderContent>
         <CardHeaderActions>
                     <MudStack AlignItems="AlignItems.Center" Row>
-                <MudText Typo="Typo.body2">@L.Global["k8s_context"]: @($"{@_template.ClusterInfo.Name}@{@_template.ClusterInfo.ClusterUrl.ToClusterHost()}")</MudText>
+                <MudText Typo="Typo.body2">@L.Global["k8s_context"]: @($"{Template.ClusterInfo.Name}@{Template.ClusterInfo.ClusterUrl.ToClusterHost()}")</MudText>
 
             <MudButton OnClick="StopTemplate" Color="Color.Error" StartIcon="@Icons.Material.Outlined.StopCircle">@L.Templates["cmd_stop"]</MudButton>
             </MudStack>
@@ -34,9 +34,9 @@
     </MudCardHeader>
     <MudCardContent>
         <MudStack Spacing="3">
-        @foreach (var fwd in _template.Forwards)
+        @foreach (var fwd in Template.Forwards)
         {
-            <RunningForwardSummary _cluster="_template.ClusterInfo" _instance="fwd" />
+            <RunningForwardSummary Cluster="Template.ClusterInfo" Instance="fwd" />
         }
         </MudStack>
     </MudCardContent>
@@ -50,7 +50,7 @@
 
 
     [Parameter]
-    public RunningTemplate _template { get; set; }
+    public required RunningTemplate Template { get; set; }
 
     [Parameter]
     public EventCallback<Guid> OnTemplateStopped { get; set; }
@@ -63,8 +63,8 @@
         
                 await DialogService.ShowConfirmationActionAsync(async () => 
                 {
-                    await _fwdService.StopTemplateAsync(_template.TemplateId);
-                    await OnTemplateStopped.InvokeAsync(_template.TemplateId);
+                    await _fwdService.StopTemplateAsync(Template.TemplateId);
+                    await OnTemplateStopped.InvokeAsync(Template.TemplateId);
                 });
 
     }

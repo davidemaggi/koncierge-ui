@@ -1,4 +1,3 @@
-@using KonciergeUi.Client.Shared
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Translations.Services
 @inject ILocalizationService L
@@ -7,7 +6,7 @@
         <MudText Style="font-family: monospace;" Typo="Typo.body2" >@L.Resources["resource"]</MudText>
 
         <MudStack AlignItems="AlignItems.Center"  Row>
-            @if (_kind == Enums.ResourceType.Pod){
+            @if (Kind == Enums.ResourceType.Pod){
                 <MudIcon Icon="@KonciergeIcons.Outlined.Pod" Size="Size.Small" Color="Color.Primary" />
             }
             else
@@ -15,19 +14,19 @@
                 <MudIcon Icon="@KonciergeIcons.Outlined.Service" Size="Size.Small" Color="Color.Primary" />
 
             }
-            <MudText Style="font-family: monospace;" Typo="Typo.body1">@_resourceName</MudText>
+            <MudText Style="font-family: monospace;" Typo="Typo.body1">@ResourceName</MudText>
         </MudStack>
-        <MudText Style="font-family: monospace;" Typo="Typo.body2">@_namespace</MudText>
+        <MudText Style="font-family: monospace;" Typo="Typo.body2">@Namespace</MudText>
 
     </MudStack>
 </MudCard>
 @code {
     
     [Parameter]
-    public Enums.ResourceType _kind { get; set; }
+    public Enums.ResourceType Kind { get; set; }
     [Parameter]
-    public string _namespace { get; set; } 
+    public required string Namespace { get; set; } 
     [Parameter]
-    public string _resourceName { get; set; } 
+    public required string ResourceName { get; set; } 
     
 }

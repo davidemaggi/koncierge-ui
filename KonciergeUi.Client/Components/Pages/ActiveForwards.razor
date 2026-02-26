@@ -1,30 +1,29 @@
 @page "/activeforwards"
-
-@using KonciergeUI.Models.Kube
-@using KonciergeUi.Client.Components.Layout.FormFields
 @using KonciergeUi.Client.Components.Layout.Summaries
 @using KonciergeUi.Client.Components.Layout.Views
-@using KonciergeUi.Client.State
 @using KonciergeUI.Core.Abstractions
-@using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
-@inject UiState _ui
-@inject IPortForwardingService _forwardService;
+@using KonciergeUI.Translations.Services
+@using KonciergeUi.Client.Extensions
+@inject IPortForwardingService ForwardService;
+@inject ILocalizationService L
+@inject IDialogService DialogService
 
 <MudStack Class="ma-4">
-    @if (_templates.Any())
+    @if (Templates.Any())
     {
         <MudCard>
             <MudCardContent>
                 <MudStack>
                     <MudGrid>
-                        @foreach (var template in _templates)
+                        @foreach (var template in Templates)
                         {
                             <MudItem xs="12">
-                                <RunningTemplateSummary _template="template" OnTemplateStopped="HandleTemplateStopped" />
+                                <RunningTemplateSummary Template="template" OnTemplateStopped="HandleTemplateStopped" />
                             </MudItem>
                         }
                     </MudGrid>
+                    <MudButton OnClick="StopAll" Color="Color.Error" Variant="Variant.Filled" >@L.Forwards["cmd_stop_all"]</MudButton>
                 </MudStack>
             </MudCardContent>
             @*
@@ -45,20 +44,48 @@
 
 @code {
 
-    private List<RunningTemplate> _templates { get; set; } = new();
+    private List<RunningTemplate> Templates { get; set; } = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        _templates =  _forwardService.GetAllRunningTemplates()
-            .OrderBy(x => x.Sorting)
-            .ToList();
+        try
+        {
+            Templates =  ForwardService.GetAllRunningTemplates()
+                .OrderBy(x => x.Sorting)
+                .ToList();
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 
     private void HandleTemplateStopped(Guid templateId)
     {
-        _templates.RemoveAll(t => t.TemplateId == templateId);
+        Templates.RemoveAll(t => t.TemplateId == templateId);
         StateHasChanged();
     }
 
-}
+    private async Task StopAll()
+    {
+        if (Templates.Count == 0)
+        {
+            return;
+        }
 
+        await DialogService.ShowConfirmationActionAsync(async () =>
+        {
+            var toStop = Templates.Select(t => t.TemplateId).Distinct().ToList();
+            foreach (var templateId in toStop)
+            {
+                await ForwardService.StopTemplateAsync(templateId);
+            }
+
+            Templates.Clear();
+            
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+
+}

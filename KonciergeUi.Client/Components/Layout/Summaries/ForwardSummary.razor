@@ -1,6 +1,5 @@
 @using KonciergeUi.Client.Components.Theme
 @using KonciergeUi.Client.Extensions
-@using KonciergeUi.Client.Shared
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.State
 @using KonciergeUi.Client.Components.Layout.Modals
@@ -15,7 +14,7 @@
     <MudStack Row>
         <MudStack>
             <MudStack AlignItems="AlignItems.Center" Row>
-                @if (_definition.ResourceType == Enums.ResourceType.Pod)
+                @if (Definition.ResourceType == Enums.ResourceType.Pod)
                 {
                     <MudIcon Icon="@KonciergeIcons.Outlined.Pod" Size="Size.Small" Color="Color.Primary"/>
                 }
@@ -24,36 +23,36 @@
                     <MudIcon Icon="@KonciergeIcons.Outlined.Service" Size="Size.Small" Color="Color.Secondary"/>
 
                 }
-                <MudText Style="font-family: monospace;" Typo="Typo.body1">@_definition.ResourceName</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body1">@Definition.ResourceName</MudText>
             </MudStack>
             <MudText Style="font-family: monospace;" Typo="Typo.body2">@GetPortDisplay()</MudText>
-            @if (_definition.LinkedSecrets.Any()) 
+            @if (Definition.LinkedSecrets.Any()) 
             {
-                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{_definition.LinkedSecrets.Count} {L.Forwards["linked_secrets"]}")</MudText>
+                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{Definition.LinkedSecrets.Count} {L.Forwards["linked_secrets"]}")</MudText>
             }
         </MudStack>
-        @if (_showRemove || _showEdit)
+        @if (ShowRemove || ShowEdit)
         {
             <MudSpacer></MudSpacer>
         }
-        @if (_showEdit)
+        @if (ShowEdit)
         {
             <MudButton StartIcon="@Icons.Material.Outlined.Edit" Color="Color.Primary" OnClick="EditClicked">@L.Global["crud_edit"]</MudButton>
         }
-        @if(_showRemove){
+        @if(ShowRemove){
         <MudButton StartIcon="@Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="RemoveClicked">@L.Global["crud_remove"]</MudButton>
         }
     </MudStack>
 </MudCard>
 @code {
     [Parameter]
-    public PortForwardDefinition _definition { get; set; }
+    public required PortForwardDefinition Definition { get; set; }
 
     [Parameter] 
-    public bool _showRemove { get; set; } = false;
+    public bool ShowRemove { get; set; } = false;
 
     [Parameter]
-    public bool _showEdit { get; set; } = false;
+    public bool ShowEdit { get; set; } = false;
 
     [Parameter] 
     public EventCallback<Guid> OnForwardRemoveAsync { get; set; }
@@ -81,14 +80,14 @@
 
     private string GetPortDisplay()
     {
-        var localPort = _definition.LocalPort == 0 ? @L.Global["random"] : _definition.LocalPort.ToString();
-        return $"localhost:{localPort} -> {_definition.TargetPort}({_definition.Protocol.ToString()})";
+        var localPort = Definition.LocalPort == 0 ? @L.Global["random"] : Definition.LocalPort.ToString();
+        return $"localhost:{localPort} -> {Definition.TargetPort}({Definition.Protocol.ToString()})";
     }
 
     private async Task RemoveClicked()
     {
 
-        await Dialog.ShowConfirmationActionAsync( ()=> OnForwardRemoveAsync.InvokeAsync(_definition.Id));
+        await Dialog.ShowConfirmationActionAsync( ()=> OnForwardRemoveAsync.InvokeAsync(Definition.Id));
         
        
     }
@@ -103,18 +102,18 @@
 
         var parameters = new DialogParameters<CreateForwardDialog>
         {
-            { x => x._kind, _definition.ResourceType },
-            { x => x._namespace, _definition.Namespace },
-            { x => x._resourceName, _definition.ResourceName },
-            { x => x._cluster, _ui.SelectedCluster },
-            { x => x._existingForward, _definition }
+            { x => x.Kind, Definition.ResourceType },
+            { x => x.Namespace, Definition.Namespace },
+            { x => x.ResourceName, Definition.ResourceName },
+            { x => x.Cluster, _ui.SelectedCluster },
+            { x => x.ExistingForward, Definition }
         };
 
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium };
         var dialog = await Dialog.ShowAsync<CreateForwardDialog>(@L.Forwards["edit_forward_title"], parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is PortForwardDefinition updatedForward)
+        if (result is { Canceled: false, Data: PortForwardDefinition updatedForward })
         {
             if (OnForwardUpdated.HasDelegate)
             {

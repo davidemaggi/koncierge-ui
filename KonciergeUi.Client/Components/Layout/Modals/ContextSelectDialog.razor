@@ -138,9 +138,9 @@
         return Path.GetFileName(trimmed);
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-      
+        return Task.CompletedTask;
     }
     
     protected override void OnParametersSet()

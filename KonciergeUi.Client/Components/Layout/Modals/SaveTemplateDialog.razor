@@ -1,8 +1,7 @@
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
-@using KonciergeUI.Models.Kube
 @using KonciergeUI.Translations.Services
-@inject IPreferencesStorage _storage
+@inject IPreferencesStorage Storage
 @inject ILocalizationService L
 
 <MudDialog>
@@ -13,10 +12,10 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+        <MudForm @ref="_form" @bind-IsValid="@_success" @bind-Errors="@_errors">
             <MudStack>
-                <MudTextField T="string" @bind-Value="@_template.Name" Label="@L.Templates["template_name"]"  />
-                <MudTextField T="string" @bind-Value="@_template.Description" Lines="5" Label="@L.Templates["template_description"]"  />
+                <MudTextField T="string" @bind-Value="@Template.Name" Label="@L.Templates["template_name"]"  />
+                <MudTextField T="string" @bind-Value="@Template.Description" Lines="5" Label="@L.Templates["template_description"]"  />
                            </MudStack>
         </MudForm>
 
@@ -28,19 +27,17 @@
 </MudDialog>
 @code {
     [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
-    public required ForwardTemplate _template { get; set; } 
+    public required ForwardTemplate Template { get; set; } 
 
     
-    MudForm form;
+    MudForm _form = null!;
 
-    bool success;
-    string[] errors = { };
+    bool _success;
+    string[] _errors = { };
 
-    string _name;
-    string _description;
 
     private void Cancel() => MudDialog.Cancel();
 
@@ -55,14 +52,14 @@
     {
         
         
-        var templates = await _storage.GetForwardTemplatesAsync();
+        var templates = await Storage.GetForwardTemplatesAsync();
         var last = templates
             .OrderByDescending(t => t.Sorting)
             .FirstOrDefault();
         
-        _template.Sorting= (last?.Sorting ?? 0) + 1;
+        Template.Sorting= (last?.Sorting ?? 0) + 1;
         
-        await _storage.AddForwardTemplateAsync(_template);
+        await Storage.AddForwardTemplateAsync(Template);
         
         MudDialog.Close();
     }

@@ -23,34 +23,51 @@
     [Parameter] public string CancelButtonText { get; set; } = "";
     
     
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        if (string.IsNullOrEmpty(Title))
+        try
         {
-            Title = L.Global["confirm_dialog_title"];
-        }
+            if (string.IsNullOrEmpty(Title))
+            {
+                Title = L.Global["confirm_dialog_title"];
+            }
         
-        if (string.IsNullOrEmpty(ContentText))
-        {
-            ContentText = L.Global["confirm_dialog_message"];
-        }
+            if (string.IsNullOrEmpty(ContentText))
+            {
+                ContentText = L.Global["confirm_dialog_message"];
+            }
         
-        if (string.IsNullOrEmpty(ConfirmButtonText))
-        {
-            ConfirmButtonText = L.Global["confirm_dialog_ok_label"];
-        }
+            if (string.IsNullOrEmpty(ConfirmButtonText))
+            {
+                ConfirmButtonText = L.Global["confirm_dialog_ok_label"];
+            }
         
-        if (string.IsNullOrEmpty(CancelButtonText))
+            if (string.IsNullOrEmpty(CancelButtonText))
+            {
+                CancelButtonText = L.Global["confirm_dialog_cancel_label"];
+            }
+
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
         {
-            CancelButtonText = L.Global["confirm_dialog_cancel_label"];
+            return Task.FromException(exception);
         }
     }
     
     
     
-    private async Task Confirm()
+    private Task Confirm()
     {
-        MudDialog.Close(DialogResult.Ok(true));
+        try
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
     
     private void Cancel() => MudDialog.Cancel();

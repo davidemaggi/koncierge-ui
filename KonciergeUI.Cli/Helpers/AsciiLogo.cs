@@ -1,6 +1,3 @@
-using System.IO;
-using Spectre.Console;
-
 namespace KonciergeUI.Cli.Helpers;
 
 internal static class AsciiLogo

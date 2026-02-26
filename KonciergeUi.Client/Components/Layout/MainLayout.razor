@@ -1,7 +1,6 @@
 ﻿@using KonciergeUi.Client.Components.Layout.Views
 @using KonciergeUi.Client.Components.Theme
 @using KonciergeUi.Client.State
-@using KonciergeUI.Translations.Services
 @inherits LayoutComponentBase
 @implements IDisposable
 
@@ -26,7 +25,7 @@
         <MudLayout>
 <MudStack StretchItems="StretchItems.Middle" Style="height: 100vh">
             <!-- TOP APP BAR -->
-            <NavMenu _isDark="_isDarkMode" OnThemeChangedAsync="ToggleTheme" />
+            <NavMenu IsDark="_isDarkMode" OnThemeChangedAsync="ToggleTheme" />
 
             <!-- MAIN CONTENT -->
             <MudMainContent @key="_languageKey">
@@ -39,7 +38,7 @@
     <ErrorContent Context="ex">
         <MudLayout>
             <MudStack StretchItems="StretchItems.Middle" Style="height: 100vh">
-                <NavMenu _isDark="_isDarkMode" OnThemeChangedAsync="ToggleTheme" />
+                <NavMenu IsDark="_isDarkMode" OnThemeChangedAsync="ToggleTheme" />
                 <MudMainContent>
                     <ErrorView Exception="ex" OnRecover="RecoverFromError" />
                 </MudMainContent>
@@ -73,7 +72,7 @@
             return;
 
         // Get system preference
-        var systemPrefersDark = await _mudThemeProvider.GetSystemPreference();
+        var systemPrefersDark = await _mudThemeProvider.GetSystemDarkModeAsync();
 
         // Apply saved theme preference
         _isDarkMode = Ui.CurrentTheme switch
@@ -88,7 +87,7 @@
         Ui.IsDarkMode = _isDarkMode;
 
         // Watch OS changes
-        await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+        await _mudThemeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
 
         StateHasChanged();
     }

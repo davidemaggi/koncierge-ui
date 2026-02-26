@@ -1,4 +1,3 @@
-using KonciergeUI.Cli.Infrastructure;
 using KonciergeUI.Core.Abstractions;
 using Spectre.Console;
 using Spectre.Console.Cli;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace KonciergeUi.Client.Extensions
+﻿namespace KonciergeUi.Client.Extensions
 {
     public static class StringExtensions
     {
