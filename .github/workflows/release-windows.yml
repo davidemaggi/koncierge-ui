@@ -10,12 +10,16 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  build-ui:
     runs-on: windows-latest
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       GITVERSION_BRANCH: main
+    outputs:
+      semver: ${{ steps.gitversion.outputs.semver }}
+      nugetversion: ${{ steps.gitversion.outputs.nugetversion }}
+      majorminorpatch: ${{ steps.gitversion.outputs.majorminorpatch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -114,13 +118,67 @@ jobs:
           -p:PublishTrimmed=false
           -p:ApplicationDisplayVersion=${{ steps.gitversion.outputs.majorminorpatch }}
 
+      - name: Upload UI publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-publish-${{ steps.gitversion.outputs.semver }}
+          path: KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish
+          retention-days: 7
+
+  codesign-and-package-ui:
+    runs-on: [self-hosted, codesign]
+    needs: build-ui
+    env:
+      CODESIGN_CERT_SUBJECT: ${{ vars.CODESIGN_CERT_SUBJECT }}
+      CODESIGN_TIMESTAMP_URL: ${{ vars.CODESIGN_TIMESTAMP_URL }}
+    outputs:
+      setup_sha256: ${{ steps.setup_hash.outputs.sha256 }}
+      zip_sha256: ${{ steps.zip_hash.outputs.sha256 }}
+      setup_filename: ${{ steps.inno.outputs.setup_filename }}
+      zip_filename: ${{ steps.package.outputs.zip_filename }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download UI publish artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ui-publish-${{ needs.build-ui.outputs.semver }}
+          path: KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish
+
+      - name: Validate codesign settings
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:CODESIGN_CERT_SUBJECT)) {
+            throw "CODESIGN_CERT_SUBJECT is not set"
+          }
+          if ([string]::IsNullOrWhiteSpace($env:CODESIGN_TIMESTAMP_URL)) {
+            throw "CODESIGN_TIMESTAMP_URL is not set"
+          }
+
+      - name: Sign UI binaries
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish'
+          $targets = Get-ChildItem -Path $publishDir -Recurse -Include Koncierge*.exe,Koncierge*.dll
+          if (-not $targets) {
+            throw "No UI binaries found to sign in $publishDir"
+          }
+          foreach ($file in $targets) {
+            & signtool.exe sign /n "$env:CODESIGN_CERT_SUBJECT" /fd sha256 /tr "$env:CODESIGN_TIMESTAMP_URL" /td sha256 /a $file.FullName
+          }
+
       - name: Convert SVG icon to ICO
         shell: pwsh
         run: |
           # Install ImageMagick for icon conversion
           choco install imagemagick -y --no-progress
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          
+
           # Use the project image from Resources/Images as the source SVG
           $svgPath = "KonciergeUi.Client/Resources/Images/koncierge_logo.svg"
           $icoPath = "KonciergeUi.Client/Resources/AppIcon/appicon.ico"
@@ -130,7 +188,7 @@ jobs:
           if (!(Test-Path $destDir)) {
             New-Item -ItemType Directory -Force -Path $destDir | Out-Null
           }
-          
+
           # Convert SVG to ICO with multiple sizes
           magick convert -background none -density 256 $svgPath -define icon:auto-resize=256,128,64,48,32,16 $icoPath
           Write-Host "✓ Icon converted to ICO format" -ForegroundColor Green
@@ -147,29 +205,29 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $publishDir = Join-Path $env:GITHUB_WORKSPACE 'KonciergeUi.Client/bin/Release/net9.0-windows10.0.19041.0/win10-x64/publish'
-          $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
-          
+          $version = "${{ needs.build-ui.outputs.majorminorpatch }}"
+          $artifacts = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+          New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
+
           # Run Inno Setup compiler
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           & $iscc /DMyAppVersion=$version /DMyAppSourceDir=$publishDir "installer/konciergeui.iss"
-          
+
           $setupPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/KonciergeUI-setup-$version.exe"
           if (-not (Test-Path $setupPath)) {
             throw "Installer not found: $setupPath"
           }
-          
+
           "setup_path=$setupPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "setup_filename=KonciergeUI-setup-$version.exe" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           Write-Host "✓ Inno Setup installer created: $setupPath" -ForegroundColor Green
 
-      - name: Calculate installer hash
-        id: setup_hash
+      - name: Sign installer
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $setupPath = "${{ steps.inno.outputs.setup_path }}"
-          $hash = (Get-FileHash -Path $setupPath -Algorithm SHA256).Hash
-          "sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          Write-Host "Setup SHA256: $hash" -ForegroundColor Cyan
-
+          & signtool.exe sign /n "$env:CODESIGN_CERT_SUBJECT" /fd sha256 /tr "$env:CODESIGN_TIMESTAMP_URL" /td sha256 /a $setupPath
 
       - name: Package artifacts
         id: package
@@ -182,15 +240,26 @@ jobs:
           }
           $artifacts = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
           New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
-          $zipPath = Join-Path $artifacts "KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip"
+          $zipName = "KonciergeUi-win-${{ needs.build-ui.outputs.semver }}.zip"
+          $zipPath = Join-Path $artifacts $zipName
           if (Test-Path $zipPath) { Remove-Item $zipPath }
           $itemsToZip = Get-ChildItem -Path $publishDir -Force
           Compress-Archive -Path $itemsToZip -DestinationPath $zipPath
 
           "zip_path=$zipPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "zip_filename=$zipName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Calculate installer hash
+        id: setup_hash
+        shell: pwsh
+        run: |
+          $setupPath = "${{ steps.inno.outputs.setup_path }}"
+          $hash = (Get-FileHash -Path $setupPath -Algorithm SHA256).Hash
+          "sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Setup SHA256: $hash" -ForegroundColor Cyan
 
       - name: Calculate ZIP hash
-        id: hash
+        id: zip_hash
         shell: pwsh
         run: |
           $zipPath = "${{ steps.package.outputs.zip_path }}"
@@ -198,85 +267,127 @@ jobs:
           "sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           Write-Host "SHA256: $hash" -ForegroundColor Cyan
 
+      - name: Upload signed UI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-release-${{ needs.build-ui.outputs.semver }}
+          path: |
+            ${{ steps.inno.outputs.setup_path }}
+            ${{ steps.package.outputs.zip_path }}
+          retention-days: 30
+
+  release-ui:
+    runs-on: windows-latest
+    needs:
+      - build-ui
+      - codesign-and-package-ui
+    env:
+      SETUP_FILENAME: ${{ needs.codesign-and-package-ui.outputs.setup_filename }}
+      ZIP_FILENAME: ${{ needs.codesign-and-package-ui.outputs.zip_filename }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download signed UI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ui-release-${{ needs.build-ui.outputs.semver }}
+          path: artifacts
+
+      - name: Resolve signed artifact paths
+        id: paths
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $artifactDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/ui-release-${{ needs.build-ui.outputs.semver }}"
+          $setupPath = Join-Path $artifactDir $env:SETUP_FILENAME
+          $zipPath = Join-Path $artifactDir $env:ZIP_FILENAME
+          if (-not (Test-Path $setupPath)) { throw "Installer not found: $setupPath" }
+          if (-not (Test-Path $zipPath)) { throw "ZIP not found: $zipPath" }
+          "setup_path=$setupPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "zip_path=$zipPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.gitversion.outputs.majorminorpatch }}
-          name: Koncierge ${{ steps.gitversion.outputs.semver }}
+          tag_name: v${{ needs.build-ui.outputs.majorminorpatch }}
+          name: Koncierge ${{ needs.build-ui.outputs.semver }}
           body: |
-            ## Koncierge ${{ steps.gitversion.outputs.semver }}
-            
+            ## Koncierge ${{ needs.build-ui.outputs.semver }}
+
             Automated Windows build via GitHub Actions.
-            
+
             ---
-            
-            ## 🖥️ Koncierge UI (Desktop App)
-            
+
+            ## Koncierge UI (Desktop App)
+
             A modern, cross-platform Kubernetes port-forwarding manager with a beautiful UI.
-            
+
             ### Installation
-            
+
             #### Via WinGet (recommended)
             ```powershell
             winget install DavideMaggi.KonciergeUi
             ```
-            
+
             #### Via Chocolatey
             ```powershell
             choco install konciergeui
             ```
-            
+
             #### Installer (with desktop shortcut)
-            1. Download `KonciergeUI-setup-${{ steps.gitversion.outputs.majorminorpatch }}.exe`
+            1. Download `KonciergeUI-setup-${{ needs.build-ui.outputs.majorminorpatch }}.exe`
             2. Run the installer
             3. A desktop shortcut will be created
-            
+
             #### Manual Installation (portable)
-            1. Download `KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip`
+            1. Download `KonciergeUi-win-${{ needs.build-ui.outputs.semver }}.zip`
             2. Extract to a folder of your choice
             3. Run `KonciergeUI.exe`
-            
+
             ---
-            
-            ## ⌨️ Koncierge CLI (Command Line)
-            
+
+            ## Koncierge CLI (Command Line)
+
             A powerful CLI tool for managing Kubernetes port-forwards.
-            
+
             ### Installation
-            
+
             #### Via WinGet (recommended)
             ```powershell
             winget install DavideMaggi.Koncierge
             ```
-            
+
             #### Via Chocolatey
             ```powershell
             choco install koncierge
             ```
-            
+
             #### Installer (with PATH registration)
-            1. Download `Koncierge-cli-setup-${{ steps.gitversion.outputs.majorminorpatch }}.exe`
+            1. Download `Koncierge-cli-setup-${{ needs.build-ui.outputs.majorminorpatch }}.exe`
             2. Run the installer
             3. The `koncierge` command will be added to your PATH
-            
+
             #### Manual Installation (portable)
-            1. Download `Koncierge-cli-win-${{ steps.gitversion.outputs.semver }}.zip`
+            1. Download `Koncierge-cli-win-${{ needs.build-ui.outputs.semver }}.zip`
             2. Extract to a folder of your choice
             3. Add the folder to your PATH or run `Koncierge.exe` directly
-            
+
             ---
-            
+
             ## SHA256 Checksums
-            
+
             ### UI
-            - Installer: `${{ steps.setup_hash.outputs.sha256 }}`
-            - ZIP: `${{ steps.hash.outputs.sha256 }}`
-            
+            - Installer: `${{ needs.codesign-and-package-ui.outputs.setup_sha256 }}`
+            - ZIP: `${{ needs.codesign-and-package-ui.outputs.zip_sha256 }}`
+
             ### CLI
             _(See CLI workflow output for checksums)_
           files: |
-            ${{ steps.inno.outputs.setup_path }}
-            ${{ steps.package.outputs.zip_path }}
+            ${{ steps.paths.outputs.setup_path }}
+            ${{ steps.paths.outputs.zip_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -287,10 +398,10 @@ jobs:
           $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/microsoft/winget-create/releases/latest"
           $asset = $releases.assets | Where-Object { $_.name -eq "wingetcreate.exe" }
           $downloadUrl = $asset.browser_download_url
-          
+
           $toolsDir = Join-Path $env:GITHUB_WORKSPACE "tools"
           New-Item -ItemType Directory -Force -Path $toolsDir | Out-Null
-          
+
           Invoke-WebRequest -Uri $downloadUrl -OutFile (Join-Path $toolsDir "wingetcreate.exe")
           Write-Host "✓ WinGetCreate downloaded to $toolsDir" -ForegroundColor Green
 
@@ -301,25 +412,25 @@ jobs:
           $ErrorActionPreference = 'Continue'
           $logPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/wingetcreate-manifest.log"
           Start-Transcript -Path $logPath -Force | Out-Null
-          
-          $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
+
+          $version = "${{ needs.build-ui.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.majorminorpatch }}/KonciergeUI-setup-$version.exe"
-          
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ needs.build-ui.outputs.majorminorpatch }}/KonciergeUI-setup-$version.exe"
+
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
           $manifestDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/winget-manifest"
           New-Item -ItemType Directory -Force -Path $manifestDir | Out-Null
-          
+
           Write-Host "Creating manifest for version $version" -ForegroundColor Cyan
           Write-Host "Installer URL: $installerUrl" -ForegroundColor Cyan
-          
+
           # Try to create new manifest first (for first-time submission)
           # wingetcreate new requires interactive mode or existing package, so we create manually
           $packageId = "DavideMaggi.KonciergeUi"
           $manifestVersionDir = Join-Path $manifestDir "$packageId/$version"
           New-Item -ItemType Directory -Force -Path $manifestVersionDir | Out-Null
-          
+
           # Create version manifest
           @"
           PackageIdentifier: $packageId
@@ -328,9 +439,9 @@ jobs:
           ManifestType: version
           ManifestVersion: 1.6.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.yaml") -Encoding utf8NoBOM
-          
+
           # Create installer manifest (using Inno Setup installer)
-          $sha256 = "${{ steps.setup_hash.outputs.sha256 }}"
+          $sha256 = "${{ needs.codesign-and-package-ui.outputs.setup_sha256 }}"
           @"
           PackageIdentifier: $packageId
           PackageVersion: $version
@@ -351,7 +462,7 @@ jobs:
           ManifestType: installer
           ManifestVersion: 1.6.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.installer.yaml") -Encoding utf8NoBOM
-          
+
           # Create locale manifest
           @"
           PackageIdentifier: $packageId
@@ -376,13 +487,13 @@ jobs:
           ManifestType: defaultLocale
           ManifestVersion: 1.6.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.locale.en-US.yaml") -Encoding utf8NoBOM
-          
+
           Write-Host "✓ WinGet manifest generated in $manifestVersionDir" -ForegroundColor Green
           Get-ChildItem -Path $manifestVersionDir | ForEach-Object { Write-Host "  - $($_.Name)" }
-          
+
           "manifest_dir=$manifestDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "manifest_version_dir=$manifestVersionDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          
+
           Stop-Transcript | Out-Null
         | Tee-Object -FilePath $logPath
 
@@ -390,7 +501,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.WINGET_AUTO_SUBMIT == 'true' && hashFiles('artifacts/wingetcreate-manifest.log') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: wingetcreate-manifest-log-${{ steps.gitversion.outputs.semver }}
+          name: wingetcreate-manifest-log-${{ needs.build-ui.outputs.semver }}
           path: artifacts/wingetcreate-manifest.log
           retention-days: 14
 
@@ -401,7 +512,7 @@ jobs:
           WINGET_GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
         run: |
           $ErrorActionPreference = 'Continue'
-          
+
           if ([string]::IsNullOrEmpty($env:WINGET_GITHUB_TOKEN)) {
             Write-Host "WINGET_GITHUB_TOKEN not configured - skipping automatic submission" -ForegroundColor Yellow
             Write-Host "To enable automatic submission:" -ForegroundColor Yellow
@@ -410,18 +521,18 @@ jobs:
             Write-Host "  3. Create a repository variable 'WINGET_AUTO_SUBMIT' with value 'true'" -ForegroundColor Gray
             exit 0
           }
-          
-          $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
+
+          $version = "${{ needs.build-ui.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.majorminorpatch }}/KonciergeUI-setup-$version.exe"
-          
+          $installerUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ needs.build-ui.outputs.majorminorpatch }}/KonciergeUI-setup-$version.exe"
+
           $wingetcreate = Join-Path $env:GITHUB_WORKSPACE "tools/wingetcreate.exe"
           $manifestVersionDir = "${{ steps.winget.outputs.manifest_version_dir }}"
           $logPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/wingetcreate-update.log"
-          
+
           Write-Host "Submitting manifest to winget-pkgs repository..." -ForegroundColor Cyan
-          
+
           # For existing packages in winget-pkgs, use update --submit
           # For new packages, we need to submit the manifest files manually via PR
           # Try update first (will work if package already exists in winget-pkgs)
@@ -430,10 +541,10 @@ jobs:
             --version $version `
             --submit `
             --token $env:WINGET_GITHUB_TOKEN 2>&1 | Tee-Object -FilePath $logPath
-          
+
           $updateExitCode = $LASTEXITCODE
           Write-Host $output
-          
+
           if ($updateExitCode -eq 0) {
             Write-Host "✓ Successfully submitted PR to microsoft/winget-pkgs" -ForegroundColor Green
           } else {
@@ -443,7 +554,7 @@ jobs:
             $headers.Accept = "application/vnd.github+json"
             $headers.Authorization = "token $env:WINGET_GITHUB_TOKEN"
             $packageExists = $false
-            
+
             try {
               $resp = Invoke-WebRequest -Uri $apiUrl -Headers $headers -Method Get -ErrorAction Stop
               if ($resp.StatusCode -eq 200) {
@@ -468,7 +579,7 @@ jobs:
             Write-Host "  This is expected for the first release!" -ForegroundColor White
             Write-Host ""
             Write-Host "  To submit your package for the first time:" -ForegroundColor Cyan
-            Write-Host "  1. Download the 'winget-manifest-${{ steps.gitversion.outputs.semver }}' artifact" -ForegroundColor Gray
+            Write-Host "  1. Download the 'winget-manifest-${{ needs.build-ui.outputs.semver }}' artifact" -ForegroundColor Gray
             Write-Host "  2. Fork https://github.com/microsoft/winget-pkgs" -ForegroundColor Gray
             Write-Host "  3. Copy manifest files to: manifests/d/DavideMaggi/KonciergeUI/$version/" -ForegroundColor Gray
             Write-Host "  4. Submit a Pull Request to microsoft/winget-pkgs" -ForegroundColor Gray
@@ -484,14 +595,14 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.WINGET_AUTO_SUBMIT == 'true' && hashFiles('artifacts/wingetcreate-update.log') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: wingetcreate-update-log-${{ steps.gitversion.outputs.semver }}
+          name: wingetcreate-update-log-${{ needs.build-ui.outputs.semver }}
           path: artifacts/wingetcreate-update.log
           retention-days: 14
 
       - name: Upload WinGet manifest as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: winget-manifest-${{ steps.gitversion.outputs.semver }}
+          name: winget-manifest-${{ needs.build-ui.outputs.semver }}
           path: ${{ steps.winget.outputs.manifest_dir }}
           retention-days: 90
 
@@ -500,43 +611,43 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          
-          $version = "${{ steps.gitversion.outputs.majorminorpatch }}"
+
+          $version = "${{ needs.build-ui.outputs.majorminorpatch }}"
           $repoOwner = "${{ github.repository_owner }}"
           $repoName = "${{ github.event.repository.name }}"
-          $zipUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ steps.gitversion.outputs.majorminorpatch }}/KonciergeUi-win-${{ steps.gitversion.outputs.semver }}.zip"
-          $checksum = "${{ steps.hash.outputs.sha256 }}"
-          
+          $zipUrl = "https://github.com/$repoOwner/$repoName/releases/download/v${{ needs.build-ui.outputs.majorminorpatch }}/KonciergeUi-win-${{ needs.build-ui.outputs.semver }}.zip"
+          $checksum = "${{ needs.codesign-and-package-ui.outputs.zip_sha256 }}"
+
           $chocoDir = Join-Path $env:GITHUB_WORKSPACE "chocolatey/konciergeui"
           $toolsDir = Join-Path $chocoDir "tools"
-          
+
           # Update install script with URL and checksum
           $installScript = Join-Path $toolsDir "chocolateyinstall.ps1"
           $content = Get-Content $installScript -Raw
           $content = $content -replace '\$url64\$', $zipUrl
           $content = $content -replace '\$checksum64\$', $checksum
           Set-Content -Path $installScript -Value $content -NoNewline
-          
+
           # Update nuspec with version
           $nuspecPath = Join-Path $chocoDir "konciergeui.nuspec"
           $content = Get-Content $nuspecPath -Raw
           $content = $content -replace '\$version\$', $version
           Set-Content -Path $nuspecPath -Value $content -NoNewline
-          
+
           # Build the package
           Push-Location $chocoDir
           choco pack
           Pop-Location
-          
+
           $nupkgPath = Join-Path $chocoDir "konciergeui.$version.nupkg"
           if (-not (Test-Path $nupkgPath)) {
             throw "Chocolatey package not found: $nupkgPath"
           }
-          
+
           # Move to artifacts
           $artifactsDir = Join-Path $env:GITHUB_WORKSPACE "artifacts"
           Move-Item $nupkgPath $artifactsDir
-          
+
           $finalPath = Join-Path $artifactsDir "konciergeui.$version.nupkg"
           "nupkg_path=$finalPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           Write-Host "✓ Chocolatey package created: $finalPath" -ForegroundColor Green
@@ -548,7 +659,7 @@ jobs:
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
         run: |
           $ErrorActionPreference = 'Continue'
-          
+
           if ([string]::IsNullOrEmpty($env:CHOCOLATEY_API_KEY)) {
             Write-Host "CHOCOLATEY_API_KEY not configured - skipping Chocolatey publish" -ForegroundColor Yellow
             Write-Host "To enable automatic publishing:" -ForegroundColor Yellow
@@ -557,12 +668,12 @@ jobs:
             Write-Host "  3. Create a repository variable 'CHOCOLATEY_AUTO_PUBLISH' with value 'true'" -ForegroundColor Gray
             exit 0
           }
-          
+
           $nupkgPath = "${{ steps.choco.outputs.nupkg_path }}"
-          
+
           Write-Host "Publishing to Chocolatey Community Repository..." -ForegroundColor Cyan
           choco push $nupkgPath --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
-          
+
           if ($LASTEXITCODE -eq 0) {
             Write-Host "✓ Successfully published to Chocolatey!" -ForegroundColor Green
           } else {
@@ -573,7 +684,7 @@ jobs:
       - name: Upload Chocolatey package as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chocolatey-konciergeui-${{ steps.gitversion.outputs.semver }}
+          name: chocolatey-konciergeui-${{ needs.build-ui.outputs.semver }}
           path: ${{ steps.choco.outputs.nupkg_path }}
           retention-days: 90
 
