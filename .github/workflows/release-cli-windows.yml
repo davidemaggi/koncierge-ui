@@ -168,8 +168,9 @@ jobs:
       - name: Convert SVG icon to ICO
         shell: pwsh
         run: |
-          # Install ImageMagick for icon conversion
+          # Install ImageMagick + librsvg for SVG conversion
           choco install imagemagick -y --no-progress
+          choco install librsvg -y --no-progress
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
           # Use the project image from Resources/Images as the source SVG
@@ -183,7 +184,7 @@ jobs:
           }
 
           # Convert SVG to ICO with multiple sizes
-          magick convert -background none -density 256 $svgPath -define icon:auto-resize=256,128,64,48,32,16 $icoPath
+          magick -background none -density 256 $svgPath -define icon:auto-resize=256,128,64,48,32,16 $icoPath
           Write-Host "✓ Icon converted to ICO format" -ForegroundColor Green
 
       - name: Install Inno Setup
