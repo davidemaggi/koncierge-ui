@@ -298,13 +298,17 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $artifactDir = Join-Path $env:GITHUB_WORKSPACE "artifacts/ui-release-${{ needs.build-ui.outputs.semver }}"
-          $setupPath = Join-Path $artifactDir $env:SETUP_FILENAME
-          $zipPath = Join-Path $artifactDir $env:ZIP_FILENAME
-          if (-not (Test-Path $setupPath)) { throw "Installer not found: $setupPath" }
-          if (-not (Test-Path $zipPath)) { throw "ZIP not found: $zipPath" }
-          "setup_path=$setupPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          "zip_path=$zipPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          $artifactRoot = Join-Path $env:GITHUB_WORKSPACE "artifacts"
+          $setupFile = Get-ChildItem -Path $artifactRoot -Recurse -Filter $env:SETUP_FILENAME | Select-Object -First 1
+          $zipFile = Get-ChildItem -Path $artifactRoot -Recurse -Filter $env:ZIP_FILENAME | Select-Object -First 1
+          if (-not $setupFile) {
+            throw "Installer not found under artifacts: $env:SETUP_FILENAME"
+          }
+          if (-not $zipFile) {
+            throw "ZIP not found under artifacts: $env:ZIP_FILENAME"
+          }
+          "setup_path=$($setupFile.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "zip_path=$($zipFile.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
