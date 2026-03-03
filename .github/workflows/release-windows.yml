@@ -180,9 +180,13 @@ jobs:
           choco install librsvg -y --no-progress
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
-          # Use the project image from Resources/Images as the source SVG
-          $svgPath = "KonciergeUi.Client/Resources/Images/koncierge_logo.svg"
-          $icoPath = "KonciergeUi.Client/Resources/AppIcon/appicon.ico"
+          # Use the app icon SVG as the source
+          $svgPath = Join-Path $env:GITHUB_WORKSPACE "KonciergeUi.Client/Resources/AppIcon/appicon.svg"
+          $icoPath = Join-Path $env:GITHUB_WORKSPACE "KonciergeUi.Client/Resources/AppIcon/appicon.ico"
+
+          if (-not (Test-Path $svgPath)) {
+            throw "SVG source not found: $svgPath"
+          }
 
           # Ensure destination directory exists
           $destDir = Split-Path -Path $icoPath
