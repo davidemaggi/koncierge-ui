@@ -152,6 +152,15 @@ jobs:
             throw "CODESIGN_TIMESTAMP_URL is not set"
           }
 
+      - name: Validate app icon presence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $icoPath = Join-Path $env:GITHUB_WORKSPACE "KonciergeUi.Client/Resources/AppIcon/appicon.ico"
+          if (-not (Test-Path $icoPath)) {
+            throw "App icon not found: $icoPath"
+          }
+
       - name: Sign CLI binaries
         shell: pwsh
         run: |
@@ -165,31 +174,6 @@ jobs:
             & signtool.exe sign /n "$env:CODESIGN_CERT_SUBJECT" /fd sha256 /tr "$env:CODESIGN_TIMESTAMP_URL" /td sha256 /a $file.FullName
           }
 
-      - name: Convert SVG icon to ICO
-        shell: pwsh
-        run: |
-          # Install ImageMagick + librsvg for SVG conversion
-          choco install imagemagick -y --no-progress
-          choco install librsvg -y --no-progress
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-
-          # Use the app icon SVG as the source
-          $svgPath = Join-Path $env:GITHUB_WORKSPACE "KonciergeUi.Client/Resources/AppIcon/appicon.svg"
-          $icoPath = Join-Path $env:GITHUB_WORKSPACE "KonciergeUi.Client/Resources/AppIcon/appicon.ico"
-
-          if (-not (Test-Path $svgPath)) {
-            throw "SVG source not found: $svgPath"
-          }
-
-          # Ensure destination directory exists
-          $destDir = Split-Path -Path $icoPath
-          if (!(Test-Path $destDir)) {
-            New-Item -ItemType Directory -Force -Path $destDir | Out-Null
-          }
-
-          # Convert SVG to ICO with multiple sizes
-          magick -background none -density 256 $svgPath -define icon:auto-resize=256,128,64,48,32,16 $icoPath
-          Write-Host "✓ Icon converted to ICO format" -ForegroundColor Green
 
       - name: Install Inno Setup
         shell: pwsh
