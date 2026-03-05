@@ -1,0 +1,126 @@
+@using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Translations.Services
+@using KonciergeUI.Core.Helpers
+@inject ILocalizationService L
+@inject IAppVersionProvider VersionProvider
+@inject ISnackbar Snackbar
+
+<MudDialog ContentClass="border-none pa-0">
+    
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L.Templates["kubectl_title"]</MudText>
+    </TitleContent>
+    
+    <DialogContent>
+        <MudStack AlignItems="AlignItems.Center" StretchItems="StretchItems.Middle" >
+            <MudContainer >
+                <MudStack AlignItems="AlignItems.Start">
+                    <MudText Typo="Typo.body1">@L.Templates["kubectl_os_select"]</MudText>
+                    <MudStack Row="true" Spacing="1">
+                        <MudButton StartIcon="@KonciergeIcons.Color.Windows"
+                                   OnClick="@(() => SetOs(Enums.KubectlOs.Windows))"
+                                   Color="Color.Primary"
+                                   Variant="_currentKubectlOs == Enums.KubectlOs.Windows ? Variant.Filled : Variant.Outlined">
+                            Windows
+                        </MudButton>
+                        <MudButton StartIcon="@KonciergeIcons.Color.MacOS"
+                                   OnClick="@(() => SetOs(Enums.KubectlOs.MacOS))"
+                                   Color="Color.Primary"
+                                   Variant="_currentKubectlOs == Enums.KubectlOs.MacOS ? Variant.Filled : Variant.Outlined">
+                            MacOS
+                        </MudButton>
+                        <MudButton StartIcon="@KonciergeIcons.Color.Linux"
+                                   OnClick="@(() => SetOs(Enums.KubectlOs.Linux))"
+                                   Color="Color.Primary"
+                                   Variant="_currentKubectlOs == Enums.KubectlOs.Linux ? Variant.Filled : Variant.Outlined">
+                            Linux
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudContainer>
+            <MudStack AlignItems="AlignItems.Center" Style="width: 90%">
+                <MudTextField T="string"
+                              Label="Kubectl"
+                              Variant="Variant.Text"
+                              MaxLines="30"
+                              Lines="12"
+                              Underline="false"
+                              ReadOnly="true"
+                              Value="KubectlCommandsText"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                              OnAdornmentClick="OnCopyClicked"
+                              FullWidth="true"
+                              Style="width: 100%;"
+                              Class="kubectl-field"
+                              InputClass="kubectl-no-wrap"
+                              />
+
+            </MudStack>
+            <MudAlert Severity="Severity.Info">@L.Templates["kubectl_note"]</MudAlert>
+
+        </MudStack>
+    </DialogContent>
+    @*
+    <DialogActions>
+        <MudButton OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+    *@
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public ForwardTemplate Template { get; set; } = null!;
+
+    private Enums.KubectlOs _currentKubectlOs= Enums.KubectlOs.Windows;
+    private List<string> _kubectlCommands = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        _kubectlCommands = KubectlCommandBuilder.BuildKubectlCommands(Template, _currentKubectlOs);
+        return Task.CompletedTask;
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        _kubectlCommands = KubectlCommandBuilder.BuildKubectlCommands(Template, _currentKubectlOs);
+        return Task.CompletedTask;
+    }
+
+    private void SetOs(Enums.KubectlOs os)
+    {
+        _currentKubectlOs = os;
+        _kubectlCommands = KubectlCommandBuilder.BuildKubectlCommands(Template, _currentKubectlOs);
+    }
+
+    private string KubectlCommandsText => _kubectlCommands.Count == 0
+        ? string.Empty
+        : string.Join(Environment.NewLine, _kubectlCommands);
+
+    private async Task OnCopyClicked()
+    {
+        try
+        {
+            await Clipboard.Default.SetTextAsync(KubectlCommandsText);
+            Snackbar.Add(L.Forwards["message_added_clipboard"], Severity.Info);
+        }
+        catch
+        {
+            Snackbar.Add(L.Forwards["message_fail_clipboard"], Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
+
+<style>
+    .kubectl-field textarea,
+    .kubectl-no-wrap {
+        white-space: pre;
+        overflow-x: auto;
+        overflow-y: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+</style>

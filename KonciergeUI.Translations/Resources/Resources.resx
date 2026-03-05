@@ -151,4 +151,7 @@
     <data name="contexts" xml:space="preserve">
         <value>Contexts</value>
     </data>
+    <data name="save_template" xml:space="preserve">
+        <value>Save Template</value>
+    </data>
 </root>

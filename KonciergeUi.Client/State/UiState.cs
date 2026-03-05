@@ -26,6 +26,8 @@ public class UiState : INotifyPropertyChanged
     private IEnumerable<string> _selectedStatuses = new HashSet<string>();
     private string? _searchString = null;
     private ForwardTemplate? _templateDraft;
+    private bool _isEditingTemplate;
+    private bool _hasUnsavedTemplateChanges;
 
     public UiState(IPreferencesStorage preferencesStorage, ILocalizationService localizationService, IClusterDiscoveryService clusterDiscoveryService)
     {
@@ -207,15 +209,78 @@ public class UiState : INotifyPropertyChanged
         }
     }
 
+    public bool IsEditingTemplate
+    {
+        get => _isEditingTemplate;
+        set
+        {
+            if (_isEditingTemplate == value)
+            {
+                return;
+            }
+
+            _isEditingTemplate = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool HasUnsavedTemplateChanges
+    {
+        get => _hasUnsavedTemplateChanges;
+        set
+        {
+            if (_hasUnsavedTemplateChanges == value)
+            {
+                return;
+            }
+
+            _hasUnsavedTemplateChanges = value;
+            OnPropertyChanged();
+        }
+    }
+
     public void SetTemplateDraft(ForwardTemplate template)
     {
         TemplateDraft = CloneTemplate(template);
+        IsEditingTemplate = true;
+        HasUnsavedTemplateChanges = false;
+    }
+
+    public ForwardTemplate GetOrCreateTemplateDraft()
+    {
+        if (TemplateDraft is null)
+        {
+            TemplateDraft = CreateDefaultDraft();
+            IsEditingTemplate = false;
+            HasUnsavedTemplateChanges = false;
+        }
+        else if (string.IsNullOrWhiteSpace(TemplateDraft.Name))
+        {
+            TemplateDraft = TemplateDraft with { Name = "Draft" };
+        }
+
+        return TemplateDraft;
+    }
+
+    public void UpdateTemplateDraft(ForwardTemplate template)
+    {
+        TemplateDraft = CloneTemplate(template);
+        HasUnsavedTemplateChanges = true;
+    }
+
+    public void ClearTemplateDraft()
+    {
+        TemplateDraft = CreateDefaultDraft();
+        IsEditingTemplate = false;
+        HasUnsavedTemplateChanges = false;
     }
 
     public ForwardTemplate? ConsumeTemplateDraft()
     {
         var draft = TemplateDraft;
         TemplateDraft = null;
+        IsEditingTemplate = false;
+        HasUnsavedTemplateChanges = false;
         return draft;
     }
 
@@ -232,6 +297,11 @@ public class UiState : INotifyPropertyChanged
             _templateDraft = value;
             OnPropertyChanged();
         }
+    }
+
+    private static ForwardTemplate CreateDefaultDraft()
+    {
+        return new ForwardTemplate { Name = "Draft" };
     }
 
     private static ForwardTemplate CloneTemplate(ForwardTemplate template)

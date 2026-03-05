@@ -393,16 +393,18 @@ jobs:
 
           # Create version manifest
           @"
+          # yaml-language-server: `$schema=https://aka.ms/winget-manifest.version.1.10.0.schema.json
           PackageIdentifier: $packageId
           PackageVersion: $version
           DefaultLocale: en-US
           ManifestType: version
-          ManifestVersion: 1.6.0
+          ManifestVersion: 1.10.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.yaml") -Encoding utf8NoBOM
 
           # Create installer manifest (using Inno Setup installer)
           $sha256 = "${{ needs.codesign-and-package-cli.outputs.setup_sha256 }}"
           @"
+          # yaml-language-server: `$schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
           PackageIdentifier: $packageId
           PackageVersion: $version
           MinimumOSVersion: 10.0.17763.0
@@ -420,11 +422,12 @@ jobs:
               InstallerUrl: $installerUrl
               InstallerSha256: $sha256
           ManifestType: installer
-          ManifestVersion: 1.6.0
+          ManifestVersion: 1.10.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.installer.yaml") -Encoding utf8NoBOM
 
           # Create locale manifest
           @"
+          # yaml-language-server: `$schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
           PackageIdentifier: $packageId
           PackageVersion: $version
           PackageLocale: en-US
@@ -447,7 +450,7 @@ jobs:
             - cli
             - terminal
           ManifestType: defaultLocale
-          ManifestVersion: 1.6.0
+          ManifestVersion: 1.10.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.locale.en-US.yaml") -Encoding utf8NoBOM
 
           Write-Host "✓ WinGet CLI manifest generated in $manifestVersionDir" -ForegroundColor Green

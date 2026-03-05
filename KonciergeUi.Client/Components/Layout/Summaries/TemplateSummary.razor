@@ -49,6 +49,8 @@
                 {
                     <MudButton OnClick="StartTemplate" Color="Color.Success" StartIcon="@Icons.Material.Outlined.PlayArrow">@L.Templates["cmd_start"]</MudButton>
                 }
+                <MudIconButton Icon="@Icons.Material.Outlined.Terminal" Color="Color.Primary"  Size="Size.Small" OnClick="OpenKubectlModal" />
+                
                     <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"  Size="Size.Small" OnClick="EditTemplate" />
                     <MudIconButton OnClick="DeleteTemplate" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete" />
             </MudStack>
@@ -159,6 +161,19 @@
     private Task EditTemplate(MouseEventArgs _)
     {
         return OnEditTemplate.HasDelegate ? OnEditTemplate.InvokeAsync(Template) : Task.CompletedTask;
+    }
+
+    private async Task OpenKubectlModal(MouseEventArgs arg)
+    {
+        var parameters = new DialogParameters<KubectlCommandDialog>
+        {
+            { x => x.Template, Template }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<KubectlCommandDialog>(null, parameters, options);
+        await dialog.Result;
     }
 
 }

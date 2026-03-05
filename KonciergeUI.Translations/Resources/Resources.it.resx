@@ -15,7 +15,7 @@
         <value>Aggiungi Kubeconfig</value>
     </data>
     <data name="create_template" xml:space="preserve">
-        <value>Salva come modello</value>
+        <value>Crea modello</value>
     </data>
     <data name="start_forward" xml:space="preserve">
         <value>Apri senza salvare</value>
@@ -142,5 +142,8 @@
     </data>
     <data name="contexts" xml:space="preserve">
         <value>Contesti</value>
+    </data>
+    <data name="save_template" xml:space="preserve">
+        <value>Salva il Modello</value>
     </data>
 </root>

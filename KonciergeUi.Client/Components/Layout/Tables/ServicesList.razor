@@ -229,22 +229,13 @@
             _namespaces.Clear();
             _hasLoaded = false;
             _previousCluster = null;
-            ClearFilters();
         }
         else if (_previousCluster?.Id != Cluster.Id)
         {
-            // Cluster changed, trigger reload and clear filters
+            // Cluster changed, trigger reload while keeping shared filters
             _hasLoaded = false;
             _previousCluster = Cluster;
-            ClearFilters();
         }
-    }
-
-    private void ClearFilters()
-    {
-        _ui.SelectedNamespaces = new HashSet<string>();
-        _ui.SelectedTypes = new HashSet<string>();
-        _ui.SearchString = null;
     }
 
     private void OnNamespacesChanged(IEnumerable<string> values)

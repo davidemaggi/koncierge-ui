@@ -330,7 +330,7 @@ jobs:
 
             #### Via WinGet (recommended)
             ```powershell
-            winget install DavideMaggi.KonciergeUi
+            winget install DavideMaggi.KonciergeUI
             ```
 
             #### Via Chocolatey
@@ -428,22 +428,24 @@ jobs:
 
           # Try to create new manifest first (for first-time submission)
           # wingetcreate new requires interactive mode or existing package, so we create manually
-          $packageId = "DavideMaggi.KonciergeUi"
+          $packageId = "DavideMaggi.KonciergeUI"
           $manifestVersionDir = Join-Path $manifestDir "$packageId/$version"
           New-Item -ItemType Directory -Force -Path $manifestVersionDir | Out-Null
 
           # Create version manifest
           @"
+          # yaml-language-server: `$schema=https://aka.ms/winget-manifest.version.1.10.0.schema.json
           PackageIdentifier: $packageId
           PackageVersion: $version
           DefaultLocale: en-US
           ManifestType: version
-          ManifestVersion: 1.6.0
+          ManifestVersion: 1.10.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.yaml") -Encoding utf8NoBOM
 
           # Create installer manifest (using Inno Setup installer)
           $sha256 = "${{ needs.codesign-and-package-ui.outputs.setup_sha256 }}"
           @"
+          # yaml-language-server: `$schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
           PackageIdentifier: $packageId
           PackageVersion: $version
           MinimumOSVersion: 10.0.17763.0
@@ -461,11 +463,12 @@ jobs:
               InstallerUrl: $installerUrl
               InstallerSha256: $sha256
           ManifestType: installer
-          ManifestVersion: 1.6.0
+          ManifestVersion: 1.10.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.installer.yaml") -Encoding utf8NoBOM
 
           # Create locale manifest
           @"
+          # yaml-language-server: `$schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
           PackageIdentifier: $packageId
           PackageVersion: $version
           PackageLocale: en-US
@@ -486,7 +489,7 @@ jobs:
             - cloud
             - containers
           ManifestType: defaultLocale
-          ManifestVersion: 1.6.0
+          ManifestVersion: 1.10.0
           "@ | Out-File -FilePath (Join-Path $manifestVersionDir "$packageId.locale.en-US.yaml") -Encoding utf8NoBOM
 
           Write-Host "✓ WinGet manifest generated in $manifestVersionDir" -ForegroundColor Green
@@ -536,7 +539,7 @@ jobs:
           # For existing packages in winget-pkgs, use update --submit
           # For new packages, we need to submit the manifest files manually via PR
           # Try update first (will work if package already exists in winget-pkgs)
-          $output = & $wingetcreate update "DavideMaggi.KonciergeUi" `
+          $output = & $wingetcreate update "DavideMaggi.KonciergeUI" `
             --urls $installerUrl `
             --version $version `
             --submit `
@@ -575,7 +578,7 @@ jobs:
             Write-Host "  FIRST-TIME WINGET SUBMISSION REQUIRED" -ForegroundColor Yellow
             Write-Host "═══════════════════════════════════════════════════════════════════" -ForegroundColor Yellow
             Write-Host ""
-            Write-Host "  The package 'DavideMaggi.KonciergeUi' doesn't exist yet in winget-pkgs." -ForegroundColor White
+            Write-Host "  The package 'DavideMaggi.KonciergeUI' doesn't exist yet in winget-pkgs." -ForegroundColor White
             Write-Host "  This is expected for the first release!" -ForegroundColor White
             Write-Host ""
             Write-Host "  To submit your package for the first time:" -ForegroundColor Cyan

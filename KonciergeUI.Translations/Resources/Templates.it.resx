@@ -32,4 +32,13 @@
     <data name="start_template_title" xml:space="preserve">
         <value>Avvia Modello</value>
     </data>
+    <data name="kubectl_title" xml:space="preserve">
+        <value>Comando Kubectl</value>
+    </data>
+    <data name="kubectl_os_select" xml:space="preserve">
+        <value>Scegli il sistema operativo</value>
+    </data>
+    <data name="kubectl_note" xml:space="preserve">
+        <value>Nota: Questo comando da per scontato che tu abbia accesso al cluster ed il context sia configurato. Assicurati di aver selezionato il contesto giusto.</value>
+    </data>
 </root>

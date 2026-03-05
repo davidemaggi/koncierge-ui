@@ -62,7 +62,7 @@
         <MudSpacer/>
         
         <MudIconButton OnClick="(() => OnCopyLogClicked(_logs))"  Icon="@Icons.Material.Filled.ContentCopy"/>
-        <MudIconButton OnClick="ShowLog" Icon="@Icons.Material.Filled.Terminal"/>
+        <MudIconButton OnClick="ShowLog" Icon="@Icons.Material.Filled.FormatAlignLeft"/>
         @if (Instance.Status != Enums.ForwardStatus.Stopped)
         {
             <MudButton StartIcon="@Icons.Material.Outlined.StopCircle" Color="Color.Error" OnClick="StopForward">@L.Forwards["cmd_stop"]</MudButton>

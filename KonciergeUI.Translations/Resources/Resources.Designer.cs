@@ -308,5 +308,11 @@ namespace KonciergeUI.Translations.Resources {
                 return ResourceManager.GetString("contexts", resourceCulture);
             }
         }
+        
+        public static string save_template {
+            get {
+                return ResourceManager.GetString("save_template", resourceCulture);
+            }
+        }
     }
 }

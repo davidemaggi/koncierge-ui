@@ -44,5 +44,12 @@
             Stopping,
             Failed
         }
+        
+        public enum KubectlOs
+        {
+            Windows,
+            Linux,
+            MacOS
+        }
     }
 }

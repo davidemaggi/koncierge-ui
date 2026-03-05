@@ -86,5 +86,23 @@ namespace KonciergeUI.Translations.Resources {
                 return ResourceManager.GetString("start_template_title", resourceCulture);
             }
         }
+        
+        public static string kubectl_title {
+            get {
+                return ResourceManager.GetString("kubectl_title", resourceCulture);
+            }
+        }
+        
+        public static string kubectl_os_select {
+            get {
+                return ResourceManager.GetString("kubectl_os_select", resourceCulture);
+            }
+        }
+        
+        public static string kubectl_note {
+            get {
+                return ResourceManager.GetString("kubectl_note", resourceCulture);
+            }
+        }
     }
 }

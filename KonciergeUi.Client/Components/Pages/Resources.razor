@@ -39,7 +39,15 @@
         <MudCard>
             <MudCardContent>
                 <MudStack>
-                    <MudText Typo="Typo.h5" Class="mt-4 mb-2">@_currentTemplate.Name @($"({_currentTemplate.Forwards.Count})")</MudText>
+                    <MudText Typo="Typo.h5" Class="mt-4 mb-2">
+                        @_currentTemplate.Name @($"({_currentTemplate.Forwards.Count})")
+                        @if (_ui.HasUnsavedTemplateChanges)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined" Class="ml-2">
+                                Unsaved
+                            </MudChip>
+                        }
+                    </MudText>
                     
                     <MudGrid>
                         @foreach (var fwd in _currentTemplate.Forwards)
@@ -58,7 +66,9 @@
             </MudCardContent>
             <MudCardActions>
                 <MudButton OnClick="StartForward"  StartIcon="@Icons.Material.Filled.PlayArrow" Color="Color.Success">@L.Resources["start_forward"]</MudButton>
-                <MudButton OnClick="OnSaveClick" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">@L.Resources["create_template"]</MudButton>
+                <MudButton OnClick="OnSaveClick" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">
+                    @(_ui.IsEditingTemplate ? L.Resources["save_template"] : L.Resources["create_template"])
+                </MudButton>
 
             </MudCardActions>
         </MudCard>
@@ -94,12 +104,7 @@
 
     protected override Task OnInitializedAsync()
     {
-        var draft = _ui.ConsumeTemplateDraft();
-        if (draft is not null)
-        {
-            _currentTemplate = draft;
-        }
-
+        _currentTemplate = _ui.GetOrCreateTemplateDraft();
         return Task.CompletedTask;
     }
 
@@ -146,7 +151,7 @@
         {
         Snackbar.Add("Forward Created", Severity.Success);
         _currentTemplate.Forwards.Add(req);
-            
+        _ui.UpdateTemplateDraft(_currentTemplate);
         }
 
 
@@ -162,6 +167,7 @@
 
         _currentTemplate.ModifiedAt = DateTimeOffset.UtcNow;
         _currentTemplate = _currentTemplate with { Forwards = _currentTemplate.Forwards.ToList() };
+        _ui.UpdateTemplateDraft(_currentTemplate);
         StateHasChanged();
     }
 
@@ -176,6 +182,7 @@
         _currentTemplate.Forwards[index] = updatedForward;
         _currentTemplate.ModifiedAt = DateTimeOffset.UtcNow;
         _currentTemplate = _currentTemplate with { Forwards = _currentTemplate.Forwards.ToList() };
+        _ui.UpdateTemplateDraft(_currentTemplate);
         StateHasChanged();
     }
 
@@ -257,7 +264,8 @@
 
         if (!result!.Canceled)
         {
-            _currentTemplate = new();
+            _ui.ClearTemplateDraft();
+            _currentTemplate = _ui.GetOrCreateTemplateDraft();
         }
 
     }
