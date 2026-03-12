@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="save_template" xml:space="preserve">
+        <value>Guardar plantilla</value>
+    </data>
+    <data name="template_name" xml:space="preserve">
+        <value>Nombre</value>
+    </data>
+    <data name="template_description" xml:space="preserve">
+        <value>Descripción</value>
+    </data>
+    <data name="template_tags" xml:space="preserve">
+        <value>Etiquetas</value>
+    </data>
+    <data name="template_tags_placeholder" xml:space="preserve">
+        <value>Escribe una etiqueta y pulsa Enter</value>
+    </data>
+    <data name="search_label" xml:space="preserve">
+        <value>Buscar</value>
+    </data>
+    <data name="search_placeholder" xml:space="preserve">
+        <value>Nombre, descripción o etiqueta</value>
+    </data>
+    <data name="filter_match_all_tags" xml:space="preserve">
+        <value>Coincidir con todas las etiquetas seleccionadas</value>
+    </data>
+    <data name="filter_no_results" xml:space="preserve">
+        <value>Ninguna plantilla coincide con los filtros actuales.</value>
+    </data>
+    <data name="cmd_start" xml:space="preserve">
+        <value>Iniciar plantilla</value>
+    </data>
+    <data name="cmd_stop" xml:space="preserve">
+        <value>Detener plantilla</value>
+    </data>
+    <data name="port_already_used" xml:space="preserve">
+        <value>Puerto(s) ya en uso</value>
+    </data>
+    <data name="start_template_title" xml:space="preserve">
+        <value>Iniciar plantilla</value>
+    </data>
+    <data name="kubectl_title" xml:space="preserve">
+        <value>Comando Kubectl</value>
+    </data>
+    <data name="kubectl_os_select" xml:space="preserve">
+        <value>Seleccionar sistema operativo</value>
+    </data>
+    <data name="kubectl_note" xml:space="preserve">
+        <value>Nota: estos comandos suponen que kubectl está configurado y que tienes acceso al clúster. Asegúrate de seleccionar el contexto correcto antes de ejecutarlos.</value>
+    </data>
+</root>
+

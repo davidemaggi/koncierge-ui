@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="add_kubeconfig" xml:space="preserve">
+        <value>Azonzi kubeconfig</value>
+    </data>
+    <data name="start_forward" xml:space="preserve">
+        <value>Avvia forward</value>
+    </data>
+    <data name="create_template" xml:space="preserve">
+        <value>Crea modello</value>
+    </data>
+    <data name="tab_pods" xml:space="preserve">
+        <value>Pods</value>
+    </data>
+    <data name="tab_services" xml:space="preserve">
+        <value>Serviçi</value>
+    </data>
+    <data name="empty_title" xml:space="preserve">
+        <value>Nisciun cluster seçionou</value>
+    </data>
+    <data name="empty_subtitle" xml:space="preserve">
+        <value>Çerni un cluster pe vedde pods e serviçi.</value>
+    </data>
+    <data name="loading_cluster" xml:space="preserve">
+        <value>Caregamento di cluster...</value>
+    </data>
+    <data name="no_clusters_found" xml:space="preserve">
+        <value>Nisciun cluster trovou...</value>
+    </data>
+    <data name="select_cluster" xml:space="preserve">
+        <value>Çerni un cluster...</value>
+    </data>
+    <data name="default_namespace" xml:space="preserve">
+        <value>Namespace predefinio</value>
+    </data>
+    <data name="pod_search" xml:space="preserve">
+        <value>Cercha pods...</value>
+    </data>
+    <data name="service_search" xml:space="preserve">
+        <value>Cercha serviçi...</value>
+    </data>
+    <data name="pod_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="pod_status" xml:space="preserve">
+        <value>Stato</value>
+    </data>
+    <data name="pod_name" xml:space="preserve">
+        <value>Nomme</value>
+    </data>
+    <data name="pod_ports" xml:space="preserve">
+        <value>Pòrte</value>
+    </data>
+    <data name="pod_actions" xml:space="preserve">
+        <value>Açioin</value>
+    </data>
+    <data name="pod_loading" xml:space="preserve">
+        <value>Caregamento pods...</value>
+    </data>
+    <data name="pod_notfound_search" xml:space="preserve">
+        <value>Nisciun pod o corisponde ai filtri corenti.</value>
+    </data>
+    <data name="pod_notfound" xml:space="preserve">
+        <value>Nisciun pod trovou in sto cluster.</value>
+    </data>
+    <data name="service_actions" xml:space="preserve">
+        <value>Açioin</value>
+    </data>
+    <data name="service_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="service_name" xml:space="preserve">
+        <value>Nomme</value>
+    </data>
+    <data name="service_type" xml:space="preserve">
+        <value>Tipo</value>
+    </data>
+    <data name="pod_refresh" xml:space="preserve">
+        <value>Agiorna</value>
+    </data>
+    <data name="service_refresh" xml:space="preserve">
+        <value>Agiorna</value>
+    </data>
+    <data name="service_loading" xml:space="preserve">
+        <value>Caregamento serviçi...</value>
+    </data>
+    <data name="service_notfound_search" xml:space="preserve">
+        <value>Nisciun serviçio o corisponde ai filtri corenti.</value>
+    </data>
+    <data name="service_notfound" xml:space="preserve">
+        <value>Nisciun serviçio trovou in sto cluster.</value>
+    </data>
+    <data name="pod_all_namespaces" xml:space="preserve">
+        <value>Tutti i namespace</value>
+    </data>
+    <data name="service_all_namespaces" xml:space="preserve">
+        <value>Tutti i namespace</value>
+    </data>
+    <data name="service_all_types" xml:space="preserve">
+        <value>Tutti i tipi</value>
+    </data>
+    <data name="pod_all_statuses" xml:space="preserve">
+        <value>Tutti i stati</value>
+    </data>
+    <data name="pod_namespaces" xml:space="preserve">
+        <value>Namespaces</value>
+    </data>
+    <data name="service_namespaces" xml:space="preserve">
+        <value>Namespaces</value>
+    </data>
+   
+    <data name="pod_statuses" xml:space="preserve">
+        <value>Stati</value>
+    </data>
+    <data name="service_types" xml:space="preserve">
+        <value>Tipi</value>
+    </data>
+    <data name="page_all" xml:space="preserve">
+        <value>Tutti</value>
+    </data>
+    <data name="page_pod_per" xml:space="preserve">
+        <value>Pods pe pagina</value>
+    </data>
+    <data name="page_service_per" xml:space="preserve">
+        <value>Serviçi pe pagina</value>
+    </data>
+    <data name="resource" xml:space="preserve">
+        <value>Risorsa</value>
+    </data>
+    <data name="select_cluster_sub" xml:space="preserve">
+        <value>Çerni un file kubeconfig e un contesto pe conetite a-o teu cluster</value>
+    </data>
+    <data name="contexts" xml:space="preserve">
+        <value>Contesti</value>
+    </data>
+    <data name="save_template" xml:space="preserve">
+        <value>Salva modello</value>
+    </data>
+</root>
+

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="confirm_dialog_title" xml:space="preserve">
+        <value>Bestaetigen?</value>
+    </data>
+    <data name="confirm_dialog_message" xml:space="preserve">
+        <value>Bist du sicher?</value>
+    </data>
+    <data name="confirm_dialog_ok_label" xml:space="preserve">
+        <value>Ja, fortfahren!</value>
+    </data>
+    <data name="confirm_dialog_cancel_label" xml:space="preserve">
+        <value>Abbrechen</value>
+    </data>
+    <data name="k8s_configmaps" xml:space="preserve">
+        <value>Config Maps</value>
+    </data>
+    <data name="k8s_secrets" xml:space="preserve">
+        <value>Secrets</value>
+    </data>
+    <data name="crud_cancel" xml:space="preserve">
+        <value>Abbrechen</value>
+    </data>
+    <data name="crud_create" xml:space="preserve">
+        <value>Erstellen</value>
+    </data>
+    <data name="info_description" xml:space="preserve">
+        <value>Ein moderner, plattformuebergreifender Kubernetes-Port-Forwarding-Manager</value>
+    </data>
+    <data name="info_version" xml:space="preserve">
+        <value>Version</value>
+    </data>
+    <data name="info_build" xml:space="preserve">
+        <value>Build</value>
+    </data>
+    <data name="info_channel" xml:space="preserve">
+        <value>Kanal</value>
+    </data>
+    <data name="crud_save" xml:space="preserve">
+        <value>Speichern</value>
+    </data>
+    <data name="crud_edit" xml:space="preserve">
+        <value>Bearbeiten</value>
+    </data>
+    <data name="crud_remove" xml:space="preserve">
+        <value>Entfernen</value>
+    </data>
+    <data name="random" xml:space="preserve">
+        <value>Zufaellig</value>
+    </data>
+    <data name="k8s_context" xml:space="preserve">
+        <value>Kontext</value>
+    </data>
+    <data name="modified" xml:space="preserve">
+        <value>Geaendert</value>
+    </data>
+    <data name="crud_select" xml:space="preserve">
+        <value>Auswaehlen</value>
+    </data>
+    <data name="crud_add" xml:space="preserve">
+        <value>Hinzufuegen</value>
+    </data>
+</root>
+

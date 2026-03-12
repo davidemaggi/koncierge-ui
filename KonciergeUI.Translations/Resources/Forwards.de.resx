@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="create_forward_title" xml:space="preserve">
+        <value>Weiterleitung erstellen</value>
+    </data>
+    <data name="local_port" xml:space="preserve">
+        <value>Lokaler Port</value>
+    </data>
+    <data name="remote_port" xml:space="preserve">
+        <value>Remote-Port</value>
+    </data>
+    <data name="protocol" xml:space="preserve">
+        <value>Protokoll</value>
+    </data>
+    <data name="linked_secrets" xml:space="preserve">
+        <value>Verknuepfte Secrets</value>
+    </data>
+    <data name="link_a_secret" xml:space="preserve">
+        <value>Hinzufuegen</value>
+    </data>
+    <data name="select_item_link" xml:space="preserve">
+        <value>Elemente zum Verknuepfen auswaehlen</value>
+    </data>
+    <data name="start_forward_title" xml:space="preserve">
+        <value>Weiterleitung starten</value>
+    </data>
+    <data name="start_forward" xml:space="preserve">
+        <value>Starten</value>
+    </data>
+    <data name="message_failed_start" xml:space="preserve">
+        <value>Vorlage konnte nicht gestartet werden</value>
+    </data>
+    <data name="edit_forward_title" xml:space="preserve">
+        <value>Weiterleitung bearbeiten</value>
+    </data>
+    <data name="source" xml:space="preserve">
+        <value>Quelle</value>
+    </data>
+    <data name="destination" xml:space="preserve">
+        <value>Ziel</value>
+    </data>
+    <data name="cmd_start" xml:space="preserve">
+        <value>Weiterleitung starten</value>
+    </data>
+    <data name="cmd_stop" xml:space="preserve">
+        <value>Weiterleitung stoppen</value>
+    </data>
+    <data name="message_added_clipboard" xml:space="preserve">
+        <value>In die Zwischenablage kopiert</value>
+    </data>
+    <data name="message_fail_clipboard" xml:space="preserve">
+        <value>Kopieren in die Zwischenablage fehlgeschlagen</value>
+    </data>
+    <data name="service_type" xml:space="preserve">
+        <value>Typ</value>
+    </data>
+    <data name="service_name" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="service_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="cmd_stop_all" xml:space="preserve">
+        <value>Alle stoppen</value>
+    </data>
+    <data name="search_label" xml:space="preserve">
+        <value>Suche</value>
+    </data>
+    <data name="search_placeholder" xml:space="preserve">
+        <value>Vorlage, Cluster oder Tag</value>
+    </data>
+    <data name="filter_match_all_tags" xml:space="preserve">
+        <value>Alle ausgewaehlten Tags muessen passen</value>
+    </data>
+    <data name="filter_cluster_label" xml:space="preserve">
+        <value>Cluster</value>
+    </data>
+    <data name="filter_cluster_all" xml:space="preserve">
+        <value>Alle Cluster</value>
+    </data>
+    <data name="filter_no_results" xml:space="preserve">
+        <value>Keine aktiven Weiterleitungen entsprechen den aktuellen Filtern.</value>
+    </data>
+</root>
+

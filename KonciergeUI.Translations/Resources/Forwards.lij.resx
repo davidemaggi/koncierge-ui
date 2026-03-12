@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="create_forward_title" xml:space="preserve">
+        <value>Crea un forward</value>
+    </data>
+    <data name="local_port" xml:space="preserve">
+        <value>Pòrta locale</value>
+    </data>
+    <data name="remote_port" xml:space="preserve">
+        <value>Pòrta remöta</value>
+    </data>
+    <data name="protocol" xml:space="preserve">
+        <value>Protocollo</value>
+    </data>
+    <data name="linked_secrets" xml:space="preserve">
+        <value>Segreti colegæ</value>
+    </data>
+    <data name="link_a_secret" xml:space="preserve">
+        <value>Azonzi</value>
+    </data>
+    <data name="select_item_link" xml:space="preserve">
+        <value>Çerni i elementi da colegâ</value>
+    </data>
+    <data name="start_forward_title" xml:space="preserve">
+        <value>Avvia o forward</value>
+    </data>
+    <data name="start_forward" xml:space="preserve">
+        <value>Avvia</value>
+    </data>
+    <data name="message_failed_start" xml:space="preserve">
+        <value>Falimento inta partensa do modello</value>
+    </data>
+    <data name="edit_forward_title" xml:space="preserve">
+        <value>Modifica o forward</value>
+    </data>
+    <data name="source" xml:space="preserve">
+        <value>Orìgine</value>
+    </data>
+    <data name="destination" xml:space="preserve">
+        <value>Destinaçion</value>
+    </data>
+    <data name="cmd_start" xml:space="preserve">
+        <value>Avvia o forward</value>
+    </data>
+    <data name="cmd_stop" xml:space="preserve">
+        <value>Ferma o forward</value>
+    </data>
+    <data name="message_added_clipboard" xml:space="preserve">
+        <value>Azonto a-i aponti</value>
+    </data>
+    <data name="message_fail_clipboard" xml:space="preserve">
+        <value>Erô inte l'azonçion a-i aponti</value>
+    </data>
+    <data name="service_type" xml:space="preserve">
+        <value>Tipo</value>
+    </data>
+    <data name="service_name" xml:space="preserve">
+        <value>Nomme</value>
+    </data>
+    <data name="service_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="cmd_stop_all" xml:space="preserve">
+        <value>Ferma tutto</value>
+    </data>
+    <data name="search_label" xml:space="preserve">
+        <value>Cercha</value>
+    </data>
+    <data name="search_placeholder" xml:space="preserve">
+        <value>Modello, cluster ò tag</value>
+    </data>
+    <data name="filter_match_all_tags" xml:space="preserve">
+        <value>Conbina tutti i tag seçionæ</value>
+    </data>
+    <data name="filter_cluster_label" xml:space="preserve">
+        <value>Cluster</value>
+    </data>
+    <data name="filter_cluster_all" xml:space="preserve">
+        <value>Tutti i cluster</value>
+    </data>
+    <data name="filter_no_results" xml:space="preserve">
+        <value>Nisciun forward ativo o corisponde ai filtri corenti.</value>
+    </data>
+</root>
+

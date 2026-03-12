@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="save_template" xml:space="preserve">
+        <value>Vorlage speichern</value>
+    </data>
+    <data name="template_name" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="template_description" xml:space="preserve">
+        <value>Beschreibung</value>
+    </data>
+    <data name="template_tags" xml:space="preserve">
+        <value>Tags</value>
+    </data>
+    <data name="template_tags_placeholder" xml:space="preserve">
+        <value>Tag eingeben und Enter druecken</value>
+    </data>
+    <data name="search_label" xml:space="preserve">
+        <value>Suche</value>
+    </data>
+    <data name="search_placeholder" xml:space="preserve">
+        <value>Name, Beschreibung oder Tag</value>
+    </data>
+    <data name="filter_match_all_tags" xml:space="preserve">
+        <value>Alle ausgewaehlten Tags muessen passen</value>
+    </data>
+    <data name="filter_no_results" xml:space="preserve">
+        <value>Keine Vorlagen entsprechen den aktuellen Filtern.</value>
+    </data>
+    <data name="cmd_start" xml:space="preserve">
+        <value>Vorlage starten</value>
+    </data>
+    <data name="cmd_stop" xml:space="preserve">
+        <value>Vorlage stoppen</value>
+    </data>
+    <data name="port_already_used" xml:space="preserve">
+        <value>Port(s) bereits belegt</value>
+    </data>
+    <data name="start_template_title" xml:space="preserve">
+        <value>Vorlage starten</value>
+    </data>
+    <data name="kubectl_title" xml:space="preserve">
+        <value>Kubectl-Befehl</value>
+    </data>
+    <data name="kubectl_os_select" xml:space="preserve">
+        <value>Betriebssystem auswaehlen</value>
+    </data>
+    <data name="kubectl_note" xml:space="preserve">
+        <value>Hinweis: Diese Befehle setzen voraus, dass kubectl konfiguriert ist und Zugriff auf den Cluster besteht. Stelle sicher, dass der richtige Kontext ausgewaehlt ist.</value>
+    </data>
+</root>
+

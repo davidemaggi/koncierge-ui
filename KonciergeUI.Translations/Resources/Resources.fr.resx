@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="add_kubeconfig" xml:space="preserve">
+        <value>Ajouter un kubeconfig</value>
+    </data>
+    <data name="start_forward" xml:space="preserve">
+        <value>Démarrer le transfert</value>
+    </data>
+    <data name="create_template" xml:space="preserve">
+        <value>Créer un modèle</value>
+    </data>
+    <data name="tab_pods" xml:space="preserve">
+        <value>Pods</value>
+    </data>
+    <data name="tab_services" xml:space="preserve">
+        <value>Services</value>
+    </data>
+    <data name="empty_title" xml:space="preserve">
+        <value>Aucun cluster sélectionné</value>
+    </data>
+    <data name="empty_subtitle" xml:space="preserve">
+        <value>Sélectionnez un cluster pour afficher les pods et les services.</value>
+    </data>
+    <data name="loading_cluster" xml:space="preserve">
+        <value>Chargement des clusters...</value>
+    </data>
+    <data name="no_clusters_found" xml:space="preserve">
+        <value>Aucun cluster trouvé...</value>
+    </data>
+    <data name="select_cluster" xml:space="preserve">
+        <value>Sélectionnez un cluster...</value>
+    </data>
+    <data name="default_namespace" xml:space="preserve">
+        <value>Namespace par défaut</value>
+    </data>
+    <data name="pod_search" xml:space="preserve">
+        <value>Rechercher des pods...</value>
+    </data>
+    <data name="service_search" xml:space="preserve">
+        <value>Rechercher des services...</value>
+    </data>
+    <data name="pod_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="pod_status" xml:space="preserve">
+        <value>Statut</value>
+    </data>
+    <data name="pod_name" xml:space="preserve">
+        <value>Nom</value>
+    </data>
+    <data name="pod_ports" xml:space="preserve">
+        <value>Ports</value>
+    </data>
+    <data name="pod_actions" xml:space="preserve">
+        <value>Actions</value>
+    </data>
+    <data name="pod_loading" xml:space="preserve">
+        <value>Chargement des pods...</value>
+    </data>
+    <data name="pod_notfound_search" xml:space="preserve">
+        <value>Aucun pod ne correspond aux filtres actuels.</value>
+    </data>
+    <data name="pod_notfound" xml:space="preserve">
+        <value>Aucun pod trouvé dans ce cluster.</value>
+    </data>
+    <data name="service_actions" xml:space="preserve">
+        <value>Actions</value>
+    </data>
+    <data name="service_namespace" xml:space="preserve">
+        <value>Namespace</value>
+    </data>
+    <data name="service_name" xml:space="preserve">
+        <value>Nom</value>
+    </data>
+    <data name="service_type" xml:space="preserve">
+        <value>Type</value>
+    </data>
+    <data name="pod_refresh" xml:space="preserve">
+        <value>Actualiser</value>
+    </data>
+    <data name="service_refresh" xml:space="preserve">
+        <value>Actualiser</value>
+    </data>
+    <data name="service_loading" xml:space="preserve">
+        <value>Chargement des services...</value>
+    </data>
+    <data name="service_notfound_search" xml:space="preserve">
+        <value>Aucun service ne correspond aux filtres actuels.</value>
+    </data>
+    <data name="service_notfound" xml:space="preserve">
+        <value>Aucun service trouvé dans ce cluster.</value>
+    </data>
+    <data name="pod_all_namespaces" xml:space="preserve">
+        <value>Tous les namespaces</value>
+    </data>
+    <data name="service_all_namespaces" xml:space="preserve">
+        <value>Tous les namespaces</value>
+    </data>
+    <data name="service_all_types" xml:space="preserve">
+        <value>Tous les types</value>
+    </data>
+    <data name="pod_all_statuses" xml:space="preserve">
+        <value>Tous les statuts</value>
+    </data>
+    <data name="pod_namespaces" xml:space="preserve">
+        <value>Namespaces</value>
+    </data>
+    <data name="service_namespaces" xml:space="preserve">
+        <value>Namespaces</value>
+    </data>
+   
+    <data name="pod_statuses" xml:space="preserve">
+        <value>Statuts</value>
+    </data>
+    <data name="service_types" xml:space="preserve">
+        <value>Types</value>
+    </data>
+    <data name="page_all" xml:space="preserve">
+        <value>Tous</value>
+    </data>
+    <data name="page_pod_per" xml:space="preserve">
+        <value>Pods par page</value>
+    </data>
+    <data name="page_service_per" xml:space="preserve">
+        <value>Services par page</value>
+    </data>
+    <data name="resource" xml:space="preserve">
+        <value>Ressource</value>
+    </data>
+    <data name="select_cluster_sub" xml:space="preserve">
+        <value>Choisissez un fichier kubeconfig et un contexte pour vous connecter à votre cluster</value>
+    </data>
+    <data name="contexts" xml:space="preserve">
+        <value>Contextes</value>
+    </data>
+    <data name="save_template" xml:space="preserve">
+        <value>Enregistrer le modèle</value>
+    </data>
+</root>
+
