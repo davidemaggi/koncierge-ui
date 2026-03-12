@@ -20,6 +20,12 @@
     <data name="template_description" xml:space="preserve">
         <value>Descrizione</value>
     </data>
+    <data name="template_tags" xml:space="preserve">
+        <value>Tag</value>
+    </data>
+    <data name="template_tags_placeholder" xml:space="preserve">
+        <value>Scrivi un tag e premi Invio</value>
+    </data>
     <data name="cmd_start" xml:space="preserve">
         <value>Avvia Modello</value>
     </data>

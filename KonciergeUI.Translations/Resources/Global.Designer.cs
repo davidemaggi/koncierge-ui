@@ -158,5 +158,11 @@ namespace KonciergeUI.Translations.Resources {
                 return ResourceManager.GetString("crud_select", resourceCulture);
             }
         }
+        
+        public static string crud_add {
+            get {
+                return ResourceManager.GetString("crud_add", resourceCulture);
+            }
+        }
     }
 }

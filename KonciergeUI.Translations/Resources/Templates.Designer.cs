@@ -63,6 +63,18 @@ namespace KonciergeUI.Translations.Resources {
             }
         }
         
+        public static string template_tags {
+            get {
+                return ResourceManager.GetString("template_tags", resourceCulture);
+            }
+        }
+        
+        public static string template_tags_placeholder {
+            get {
+                return ResourceManager.GetString("template_tags_placeholder", resourceCulture);
+            }
+        }
+        
         public static string cmd_start {
             get {
                 return ResourceManager.GetString("cmd_start", resourceCulture);

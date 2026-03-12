@@ -26,6 +26,17 @@
                             <MudText Typo="Typo.body1">@Template.Name</MudText>
                      
                         <MudText Typo="Typo.body2">@Template.Description</MudText>
+                        @if (Template.Tags is { Count: > 0 })
+                        {
+                            <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mt-1">
+                                @foreach (var tag in Template.Tags)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                                        @tag
+                                    </MudChip>
+                                }
+                            </MudStack>
+                        }
                         <MudStack Row>
                             <MudText Typo="Typo.body2">@Template.Forwards.Count Forward(s)</MudText>
                             <MudText Typo="Typo.body2"> - </MudText>

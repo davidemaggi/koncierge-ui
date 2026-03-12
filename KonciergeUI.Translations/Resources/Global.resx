@@ -75,4 +75,7 @@
     <data name="crud_select" xml:space="preserve">
         <value>Select</value>
     </data>
+    <data name="crud_add" xml:space="preserve">
+        <value>Add</value>
+    </data>
 </root>

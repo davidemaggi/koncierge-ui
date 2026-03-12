@@ -48,6 +48,17 @@
                             </MudChip>
                         }
                     </MudText>
+                    @if (_currentTemplate.Tags is { Count: > 0 })
+                    {
+                        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-2">
+                            @foreach (var tag in _currentTemplate.Tags)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" OnClick="OpenTemplateTagsEditor">
+                                    @tag
+                                </MudChip>
+                            }
+                        </MudStack>
+                    }
                     
                     <MudGrid>
                         @foreach (var fwd in _currentTemplate.Forwards)
@@ -268,6 +279,11 @@
             _currentTemplate = _ui.GetOrCreateTemplateDraft();
         }
 
+    }
+
+    private async Task OpenTemplateTagsEditor(MouseEventArgs _)
+    {
+        await OnSaveClick();
     }
 
     

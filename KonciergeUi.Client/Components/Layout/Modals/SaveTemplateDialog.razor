@@ -16,7 +16,45 @@
             <MudStack>
                 <MudTextField T="string" @bind-Value="@Template.Name" Label="@L.Templates["template_name"]"  />
                 <MudTextField T="string" @bind-Value="@Template.Description" Lines="5" Label="@L.Templates["template_description"]"  />
-                           </MudStack>
+                <MudStack Spacing="1">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudTextField T="string"
+                                      Value="@_tagInput"
+                                      ValueChanged="OnTagInputChanged"
+                                      Label="@L.Templates["template_tags"]"
+                                      Placeholder="@L.Templates["template_tags_placeholder"]"
+                                      Immediate="true"
+                                      OnKeyDown="OnTagInputKeyDown" />
+                        <MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="AddTagFromInput">
+                            @L.Global["crud_add"]
+                        </MudButton>
+                    </MudStack>
+
+                    @if (FilteredSuggestions.Any())
+                    {
+                        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1">
+                            @foreach (var suggestion in FilteredSuggestions)
+                            {
+                                <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" OnClick="@(() => AddTag(suggestion.Tag))">
+                                    @($"{suggestion.DisplayTag} ({suggestion.UsageCount})")
+                                </MudChip>
+                            }
+                        </MudStack>
+                    }
+
+                    @if (_tags.Any())
+                    {
+                        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1">
+                            @foreach (var tag in _tags)
+                            {
+                                <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" OnClose="@(() => RemoveTag(tag))">
+                                    @tag
+                                </MudChip>
+                            }
+                        </MudStack>
+                    }
+                </MudStack>
+            </MudStack>
         </MudForm>
 
     </DialogContent>
@@ -37,9 +75,60 @@
 
     bool _success;
     string[] _errors = { };
+    string _tagInput = string.Empty;
+    List<string> _tags = new();
+    Dictionary<string, int> _tagUsage = new(StringComparer.OrdinalIgnoreCase);
+    Dictionary<string, string> _tagDisplay = new(StringComparer.OrdinalIgnoreCase);
+
+    private sealed record TagSuggestion(string Tag, string DisplayTag, int UsageCount);
+
+    private IEnumerable<TagSuggestion> FilteredSuggestions
+    {
+        get
+        {
+            var input = NormalizeTag(_tagInput);
+
+            IEnumerable<string> available = _tagUsage.Keys
+                .Where(tag => !_tags.Contains(tag, StringComparer.OrdinalIgnoreCase));
+
+            if (input is not null)
+            {
+                available = available.Where(tag => tag.Contains(input, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return available
+                .OrderByDescending(tag => _tagUsage.TryGetValue(tag, out var count) ? count : 0)
+                .ThenBy(tag => tag, StringComparer.OrdinalIgnoreCase)
+                .Select(tag => new TagSuggestion(
+                    tag,
+                    _tagDisplay.TryGetValue(tag, out var displayTag) ? displayTag : tag,
+                    _tagUsage.TryGetValue(tag, out var usageCount) ? usageCount : 0));
+        }
+    }
 
 
     private void Cancel() => MudDialog.Cancel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tags = NormalizeTags(Template.Tags).ToList();
+
+        var templates = await Storage.GetForwardTemplatesAsync();
+        foreach (var tag in templates.SelectMany(t => NormalizeTags(t.Tags)))
+        {
+            if (!_tagUsage.TryAdd(tag, 1))
+            {
+                _tagUsage[tag]++;
+            }
+
+            _tagDisplay.TryAdd(tag, tag);
+        }
+
+        foreach (var tag in _tags)
+        {
+            _tagDisplay.TryAdd(tag, tag);
+        }
+    }
 
 
 
@@ -50,18 +139,93 @@
 
     protected async Task OnSaveAsync()
     {
-        
-        
         var templates = await Storage.GetForwardTemplatesAsync();
-        var last = templates
-            .OrderByDescending(t => t.Sorting)
-            .FirstOrDefault();
-        
-        Template.Sorting= (last?.Sorting ?? 0) + 1;
+        var isExisting = templates.Any(t => t.Id == Template.Id);
+
+        if (!isExisting)
+        {
+            var last = templates
+                .OrderByDescending(t => t.Sorting)
+                .FirstOrDefault();
+
+            Template.Sorting = (last?.Sorting ?? 0) + 1;
+        }
+
+        var normalizedTags = NormalizeTags(_tags).ToList();
+        Template.Tags = normalizedTags.Count == 0 ? null : normalizedTags;
         
         await Storage.AddForwardTemplateAsync(Template);
         
         MudDialog.Close();
+    }
+
+    private void OnTagInputChanged(string value)
+    {
+        _tagInput = value;
+    }
+
+    private async Task OnTagInputKeyDown(KeyboardEventArgs args)
+    {
+        if (!string.Equals(args.Key, "Enter", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        await AddTagFromInput();
+    }
+
+    private Task AddTagFromInput()
+    {
+        AddTag(_tagInput);
+        return Task.CompletedTask;
+    }
+
+    private void AddTag(string? rawTag)
+    {
+        var normalized = NormalizeTag(rawTag);
+        if (normalized is null)
+        {
+            return;
+        }
+
+        if (_tags.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+        {
+            _tagInput = string.Empty;
+            return;
+        }
+
+        _tags.Add(normalized);
+        _tagDisplay.TryAdd(normalized, normalized);
+        _tagInput = string.Empty;
+    }
+
+    private void RemoveTag(string tag)
+    {
+        _tags.RemoveAll(t => string.Equals(t, tag, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<string> NormalizeTags(IEnumerable<string>? tags)
+    {
+        if (tags is null)
+        {
+            return Enumerable.Empty<string>();
+        }
+
+        return tags
+            .Select(NormalizeTag)
+            .Where(tag => tag is not null)
+            .Select(tag => tag!)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string? NormalizeTag(string? tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            return null;
+        }
+
+        return tag.Trim();
     }
 
    

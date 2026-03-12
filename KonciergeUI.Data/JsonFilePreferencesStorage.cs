@@ -162,11 +162,14 @@ namespace KonciergeUI.Data
         // Forward templates methods
         public async Task<List<ForwardTemplate>> GetForwardTemplatesAsync()
         {
-            return new List<ForwardTemplate>(_data.ForwardTemplates);
+            return _data.ForwardTemplates
+                .Select(t => t with { Tags = NormalizeTags(t.Tags) })
+                .ToList();
         }
 
         public async Task AddForwardTemplateAsync(ForwardTemplate template)
         {
+            template.Tags = NormalizeTags(template.Tags);
             var existingIndex = _data.ForwardTemplates.FindIndex(t => t.Id == template.Id);
 
             if (existingIndex == -1)
@@ -184,6 +187,7 @@ namespace KonciergeUI.Data
 
         public async Task UpdateForwardTemplateAsync(ForwardTemplate updatedTemplate)
         {
+            updatedTemplate.Tags = NormalizeTags(updatedTemplate.Tags);
             var existingIndex = _data.ForwardTemplates.FindIndex(t => t.Id == updatedTemplate.Id);
 
             if (existingIndex != -1)
@@ -206,6 +210,22 @@ namespace KonciergeUI.Data
         {
             _data = new PreferencesData();
             await SaveToFileAsync();
+        }
+
+        private static List<string>? NormalizeTags(List<string>? tags)
+        {
+            if (tags is null)
+            {
+                return null;
+            }
+
+            var normalized = tags
+                .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Select(tag => tag.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return normalized.Count == 0 ? null : normalized;
         }
 
         private static string ResolveAppDataDirectory()

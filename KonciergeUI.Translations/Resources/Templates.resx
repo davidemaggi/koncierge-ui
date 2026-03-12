@@ -27,6 +27,12 @@
     <data name="template_description" xml:space="preserve">
         <value>Description</value>
     </data>
+    <data name="template_tags" xml:space="preserve">
+        <value>Tags</value>
+    </data>
+    <data name="template_tags_placeholder" xml:space="preserve">
+        <value>Type a tag and press Enter</value>
+    </data>
     <data name="cmd_start" xml:space="preserve">
         <value>Start Template</value>
     </data>
