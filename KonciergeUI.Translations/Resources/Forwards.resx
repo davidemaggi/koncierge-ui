@@ -81,4 +81,22 @@
     <data name="cmd_stop_all" xml:space="preserve">
         <value>Stop All</value>
     </data>
+    <data name="search_label" xml:space="preserve">
+        <value>Search</value>
+    </data>
+    <data name="search_placeholder" xml:space="preserve">
+        <value>Template, cluster or tag</value>
+    </data>
+    <data name="filter_match_all_tags" xml:space="preserve">
+        <value>Match all selected tags</value>
+    </data>
+    <data name="filter_cluster_label" xml:space="preserve">
+        <value>Cluster</value>
+    </data>
+    <data name="filter_cluster_all" xml:space="preserve">
+        <value>All clusters</value>
+    </data>
+    <data name="filter_no_results" xml:space="preserve">
+        <value>No active forwards match the current filters.</value>
+    </data>
 </root>

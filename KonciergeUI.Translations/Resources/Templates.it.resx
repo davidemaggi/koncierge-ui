@@ -26,6 +26,18 @@
     <data name="template_tags_placeholder" xml:space="preserve">
         <value>Scrivi un tag e premi Invio</value>
     </data>
+    <data name="search_label" xml:space="preserve">
+        <value>Cerca</value>
+    </data>
+    <data name="search_placeholder" xml:space="preserve">
+        <value>Nome, descrizione o tag</value>
+    </data>
+    <data name="filter_match_all_tags" xml:space="preserve">
+        <value>Abbina tutti i tag selezionati</value>
+    </data>
+    <data name="filter_no_results" xml:space="preserve">
+        <value>Nessun template corrisponde ai filtri correnti.</value>
+    </data>
     <data name="cmd_start" xml:space="preserve">
         <value>Avvia Modello</value>
     </data>

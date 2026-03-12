@@ -2,6 +2,24 @@
 {
     public static class StringExtensions
     {
+        public static string ToTagChipLabel(this string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return input;
+            }
+
+            var words = input
+                .Trim()
+                .ToLowerInvariant()
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            return string.Join(" ", words.Select(word =>
+                word.Length == 1
+                    ? char.ToUpperInvariant(word[0]).ToString()
+                    : char.ToUpperInvariant(word[0]) + word[1..]));
+        }
+
         public static string ToFileNameIfPath(this string input)
         {
             if (string.IsNullOrWhiteSpace(input))

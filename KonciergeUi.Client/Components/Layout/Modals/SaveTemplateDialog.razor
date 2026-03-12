@@ -1,6 +1,7 @@
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Translations.Services
+@using KonciergeUi.Client.Extensions
 @inject IPreferencesStorage Storage
 @inject ILocalizationService L
 
@@ -36,7 +37,7 @@
                             @foreach (var suggestion in FilteredSuggestions)
                             {
                                 <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" OnClick="@(() => AddTag(suggestion.Tag))">
-                                    @($"{suggestion.DisplayTag} ({suggestion.UsageCount})")
+                                    @($"{suggestion.DisplayTag.ToTagChipLabel()} ({suggestion.UsageCount})")
                                 </MudChip>
                             }
                         </MudStack>
@@ -48,7 +49,7 @@
                             @foreach (var tag in _tags)
                             {
                                 <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" OnClose="@(() => RemoveTag(tag))">
-                                    @tag
+                                    @tag.ToTagChipLabel()
                                 </MudChip>
                             }
                         </MudStack>

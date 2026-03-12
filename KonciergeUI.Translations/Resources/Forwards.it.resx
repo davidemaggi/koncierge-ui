@@ -74,4 +74,22 @@
     <data name="service_type" xml:space="preserve">
         <value>Tipo</value>
     </data>
+    <data name="search_label" xml:space="preserve">
+        <value>Cerca</value>
+    </data>
+    <data name="search_placeholder" xml:space="preserve">
+        <value>Template, cluster o tag</value>
+    </data>
+    <data name="filter_match_all_tags" xml:space="preserve">
+        <value>Abbina tutti i tag selezionati</value>
+    </data>
+    <data name="filter_cluster_label" xml:space="preserve">
+        <value>Cluster</value>
+    </data>
+    <data name="filter_cluster_all" xml:space="preserve">
+        <value>Tutti i cluster</value>
+    </data>
+    <data name="filter_no_results" xml:space="preserve">
+        <value>Nessun forward attivo corrisponde ai filtri correnti.</value>
+    </data>
 </root>

@@ -33,6 +33,18 @@
     <data name="template_tags_placeholder" xml:space="preserve">
         <value>Type a tag and press Enter</value>
     </data>
+    <data name="search_label" xml:space="preserve">
+        <value>Search</value>
+    </data>
+    <data name="search_placeholder" xml:space="preserve">
+        <value>Name, description or tag</value>
+    </data>
+    <data name="filter_match_all_tags" xml:space="preserve">
+        <value>Match all selected tags</value>
+    </data>
+    <data name="filter_no_results" xml:space="preserve">
+        <value>No templates match the current filters.</value>
+    </data>
     <data name="cmd_start" xml:space="preserve">
         <value>Start Template</value>
     </data>

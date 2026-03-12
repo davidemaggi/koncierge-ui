@@ -1,28 +1,90 @@
 @page "/activeforwards"
 @using KonciergeUi.Client.Components.Layout.Summaries
 @using KonciergeUi.Client.Components.Layout.Views
+@using KonciergeUi.Client.State
 @using KonciergeUI.Core.Abstractions
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Translations.Services
 @using KonciergeUi.Client.Extensions
 @inject IPortForwardingService ForwardService;
+@inject UiState _ui
 @inject ILocalizationService L
 @inject IDialogService DialogService
 
 <MudStack Class="ma-4">
+    <MudCard Class="mb-3">
+        <MudCardContent>
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudTextField T="string"
+                                  Label="@L.Forwards["search_label"]"
+                                  Placeholder="@L.Forwards["search_placeholder"]"
+                                  Value="@_searchText"
+                                  ValueChanged="OnSearchTextChanged"
+                                  Immediate="true"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Clearable="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string"
+                               Label="@L.Templates["template_tags"]"
+                               MultiSelection="true"
+                               Clearable="true"
+                               SelectedValues="_selectedTags"
+                               SelectedValuesChanged="OnSelectedTagsChanged">
+                        @foreach (var tag in _availableTags)
+                        {
+                            <MudSelectItem T="string" Value="@tag">@tag</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string"
+                               Label="@L.Forwards["filter_cluster_label"]"
+                               Placeholder="@L.Forwards["filter_cluster_all"]"
+                               MultiSelection="true"
+                               ToStringFunc="GetClusterNameById"
+                               SelectedValues="_selectedClusterIds"
+                               SelectedValuesChanged="OnSelectedClustersChanged"
+                               Clearable="true">
+                        @foreach (var cluster in _availableClusters)
+                        {
+                            <MudSelectItem T="string" Value="@cluster.Id">@cluster.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSwitch T="bool"
+                               Value="@_matchAllTags"
+                               ValueChanged="OnMatchAllTagsChanged"
+                               Color="Color.Primary"
+                               Label="@L.Forwards["filter_match_all_tags"]" />
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
     @if (Templates.Any())
     {
         <MudCard>
             <MudCardContent>
                 <MudStack>
-                    <MudGrid>
-                        @foreach (var template in Templates)
-                        {
-                            <MudItem xs="12">
-                                <RunningTemplateSummary Template="template" OnTemplateStopped="HandleTemplateStopped" />
-                            </MudItem>
-                        }
-                    </MudGrid>
+                    @if (FilteredTemplates.Any())
+                    {
+                        <MudGrid>
+                            @foreach (var template in FilteredTemplates)
+                            {
+                                <MudItem xs="12">
+                                    <RunningTemplateSummary Template="template" OnTemplateStopped="HandleTemplateStopped" />
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">@L.Forwards["filter_no_results"]</MudAlert>
+                    }
                     <MudButton OnClick="StopAll" Color="Color.Error" Variant="Variant.Filled" >@L.Forwards["cmd_stop_all"]</MudButton>
                 </MudStack>
             </MudCardContent>
@@ -45,14 +107,31 @@
 @code {
 
     private List<RunningTemplate> Templates { get; set; } = new();
+    private string _searchText { get; set; } = string.Empty;
+    private HashSet<string> _selectedTags { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    private List<string> _availableTags { get; set; } = new();
+    private HashSet<string> _selectedClusterIds { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    private List<ClusterFilterItem> _availableClusters { get; set; } = new();
+    private bool _matchAllTags { get; set; }
+
+    private sealed record ClusterFilterItem(string Id, string Name);
+
+    private IEnumerable<RunningTemplate> FilteredTemplates => Templates.Where(MatchesTemplateFilters);
 
     protected override Task OnInitializedAsync()
     {
         try
         {
+            _searchText = _ui.ActiveForwardsFilterText;
+            _selectedTags = _ui.ActiveForwardsFilterTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            _matchAllTags = _ui.ActiveForwardsMatchAllTags;
+            _selectedClusterIds = _ui.ActiveForwardsFilterClusterIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
             Templates =  ForwardService.GetAllRunningTemplates()
                 .OrderBy(x => x.Sorting)
                 .ToList();
+
+            RefreshAvailableFilters();
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -64,6 +143,7 @@
     private void HandleTemplateStopped(Guid templateId)
     {
         Templates.RemoveAll(t => t.TemplateId == templateId);
+        RefreshAvailableFilters();
         StateHasChanged();
     }
 
@@ -83,9 +163,145 @@
             }
 
             Templates.Clear();
+            RefreshAvailableFilters();
             
             await InvokeAsync(StateHasChanged);
         });
+    }
+
+    private Task OnSearchTextChanged(string value)
+    {
+        _searchText = value;
+        _ui.ActiveForwardsFilterText = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnSelectedTagsChanged(IEnumerable<string?>? values)
+    {
+        _selectedTags = (values ?? Enumerable.Empty<string?>())
+            .Select(NormalizeTag)
+            .Where(tag => tag is not null)
+            .Select(tag => tag!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _ui.ActiveForwardsFilterTags = _selectedTags;
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnSelectedClustersChanged(IEnumerable<string?>? values)
+    {
+        _selectedClusterIds = (values ?? Enumerable.Empty<string?>())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _ui.ActiveForwardsFilterClusterIds = _selectedClusterIds;
+        return Task.CompletedTask;
+    }
+
+    private Task OnMatchAllTagsChanged(bool value)
+    {
+        _matchAllTags = value;
+        _ui.ActiveForwardsMatchAllTags = value;
+        return Task.CompletedTask;
+    }
+
+    private bool MatchesTemplateFilters(RunningTemplate template)
+    {
+        var normalizedSearch = NormalizeTag(_searchText);
+        var normalizedTags = (template.Definition.Tags ?? new List<string>())
+            .Select(NormalizeTag)
+            .Where(tag => tag is not null)
+            .Select(tag => tag!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var clusterMatch = _selectedClusterIds.Count == 0 || _selectedClusterIds.Contains(template.ClusterInfo.Id);
+
+        var tagMatch = _selectedTags.Count == 0 || (_matchAllTags
+            ? _selectedTags.All(selectedTag => normalizedTags.Contains(selectedTag))
+            : normalizedTags.Any(tag => _selectedTags.Contains(tag)));
+
+        if (normalizedSearch is null)
+        {
+            return tagMatch && clusterMatch;
+        }
+
+        var textMatch =
+            template.Definition.Name.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(template.Definition.Description) && template.Definition.Description.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase)) ||
+            template.ClusterInfo.Name.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase) ||
+            normalizedTags.Any(tag => tag.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase));
+
+        return textMatch && tagMatch && clusterMatch;
+    }
+
+    private void RefreshAvailableFilters()
+    {
+        RefreshAvailableTags();
+        RefreshAvailableClusters();
+
+        if (_selectedClusterIds.Count == 0)
+        {
+            return;
+        }
+
+        var availableIds = _availableClusters
+            .Select(cluster => cluster.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var filteredSelection = _selectedClusterIds
+            .Where(id => availableIds.Contains(id))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (!_selectedClusterIds.SetEquals(filteredSelection))
+        {
+            _selectedClusterIds = filteredSelection;
+            _ui.ActiveForwardsFilterClusterIds = _selectedClusterIds;
+        }
+    }
+
+    private void RefreshAvailableTags()
+    {
+        _availableTags = Templates
+            .SelectMany(t => t.Definition.Tags ?? new List<string>())
+            .Select(NormalizeTag)
+            .Where(tag => tag is not null)
+            .Select(tag => tag!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private void RefreshAvailableClusters()
+    {
+        _availableClusters = Templates
+            .Select(template => new ClusterFilterItem(template.ClusterInfo.Id, template.ClusterInfo.Name))
+            .DistinctBy(cluster => cluster.Id, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(cluster => cluster.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static string? NormalizeTag(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim();
+    }
+
+    private string GetClusterNameById(string? clusterId)
+    {
+        if (string.IsNullOrWhiteSpace(clusterId))
+        {
+            return string.Empty;
+        }
+
+        var cluster = _availableClusters.FirstOrDefault(c =>
+            string.Equals(c.Id, clusterId, StringComparison.OrdinalIgnoreCase));
+
+        return cluster?.Name ?? clusterId;
     }
 
 }

@@ -28,6 +28,13 @@ public class UiState : INotifyPropertyChanged
     private ForwardTemplate? _templateDraft;
     private bool _isEditingTemplate;
     private bool _hasUnsavedTemplateChanges;
+    private string _templatesFilterText = string.Empty;
+    private IEnumerable<string> _templatesFilterTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private bool _templatesMatchAllTags;
+    private string _activeForwardsFilterText = string.Empty;
+    private IEnumerable<string> _activeForwardsFilterTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private bool _activeForwardsMatchAllTags;
+    private IEnumerable<string> _activeForwardsFilterClusterIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     public UiState(IPreferencesStorage preferencesStorage, ILocalizationService localizationService, IClusterDiscoveryService clusterDiscoveryService)
     {
@@ -239,6 +246,116 @@ public class UiState : INotifyPropertyChanged
         }
     }
 
+    public string TemplatesFilterText
+    {
+        get => _templatesFilterText;
+        set
+        {
+            var normalized = value.Trim();
+            if (_templatesFilterText == normalized)
+            {
+                return;
+            }
+
+            _templatesFilterText = normalized;
+            OnPropertyChanged();
+        }
+    }
+
+    public IEnumerable<string> TemplatesFilterTags
+    {
+        get => _templatesFilterTags;
+        set
+        {
+            var normalized = NormalizeFilterValues(value);
+            if (SetEqualsCaseInsensitive(_templatesFilterTags, normalized))
+            {
+                return;
+            }
+
+            _templatesFilterTags = normalized;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool TemplatesMatchAllTags
+    {
+        get => _templatesMatchAllTags;
+        set
+        {
+            if (_templatesMatchAllTags == value)
+            {
+                return;
+            }
+
+            _templatesMatchAllTags = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string ActiveForwardsFilterText
+    {
+        get => _activeForwardsFilterText;
+        set
+        {
+            var normalized = value.Trim();
+            if (_activeForwardsFilterText == normalized)
+            {
+                return;
+            }
+
+            _activeForwardsFilterText = normalized;
+            OnPropertyChanged();
+        }
+    }
+
+    public IEnumerable<string> ActiveForwardsFilterTags
+    {
+        get => _activeForwardsFilterTags;
+        set
+        {
+            var normalized = NormalizeFilterValues(value);
+            if (SetEqualsCaseInsensitive(_activeForwardsFilterTags, normalized))
+            {
+                return;
+            }
+
+            _activeForwardsFilterTags = normalized;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool ActiveForwardsMatchAllTags
+    {
+        get => _activeForwardsMatchAllTags;
+        set
+        {
+            if (_activeForwardsMatchAllTags == value)
+            {
+                return;
+            }
+
+            _activeForwardsMatchAllTags = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public IEnumerable<string> ActiveForwardsFilterClusterIds
+    {
+        get => _activeForwardsFilterClusterIds;
+        set
+        {
+            var normalized = NormalizeFilterValues(value);
+            if (SetEqualsCaseInsensitive(_activeForwardsFilterClusterIds, normalized))
+            {
+                return;
+            }
+
+            _activeForwardsFilterClusterIds = normalized;
+            OnPropertyChanged();
+        }
+    }
+
     public void SetTemplateDraft(ForwardTemplate template)
     {
         TemplateDraft = CloneTemplate(template);
@@ -318,6 +435,22 @@ public class UiState : INotifyPropertyChanged
                 })
                 .ToList()
         };
+    }
+
+    private static List<string> NormalizeFilterValues(IEnumerable<string>? values)
+    {
+        return (values ?? Enumerable.Empty<string>())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static bool SetEqualsCaseInsensitive(IEnumerable<string> left, IEnumerable<string> right)
+    {
+        var leftSet = new HashSet<string>(left, StringComparer.OrdinalIgnoreCase);
+        var rightSet = new HashSet<string>(right, StringComparer.OrdinalIgnoreCase);
+        return leftSet.SetEquals(rightSet);
     }
 
 }

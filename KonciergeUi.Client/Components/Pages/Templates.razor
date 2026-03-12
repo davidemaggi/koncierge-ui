@@ -5,41 +5,88 @@
 @using KonciergeUi.Client.State
 @using KonciergeUI.Data
 @using KonciergeUI.Models.Forwarding
+@using KonciergeUI.Translations.Services
 @inject UiState _ui
 @inject IPreferencesStorage _storage;
 @inject NavigationManager Navigation;
+@inject ILocalizationService L
 
 <MudStack Class="ma-4">
+    <MudCard Class="mb-3">
+        <MudCardContent>
+            <MudGrid>
+                <MudItem xs="12" md="7">
+                    <MudTextField T="string"
+                                  Label="@L.Templates["search_label"]"
+                                  Placeholder="@L.Templates["search_placeholder"]"
+                                  Value="@_searchText"
+                                  ValueChanged="OnSearchTextChanged"
+                                  Immediate="true"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Clearable="true" />
+                </MudItem>
+                <MudItem xs="12" md="5">
+                    <MudSelect T="string"
+                               Label="@L.Templates["template_tags"]"
+                               MultiSelection="true"
+                               Clearable="true"
+                               SelectedValues="_selectedTags"
+                               SelectedValuesChanged="OnSelectedTagsChanged">
+                        @foreach (var tag in _availableTags)
+                        {
+                            <MudSelectItem T="string" Value="@tag">@tag</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSwitch T="bool"
+                               Value="@_matchAllTags"
+                               ValueChanged="OnMatchAllTagsChanged"
+                               Color="Color.Primary"
+                               Label="@L.Templates["filter_match_all_tags"]" />
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
     @if (_templates.Any())
     {
         <MudCard>
             <MudCardContent>
                 <MudStack Class="d-flex flex-column gap-3">
-                    @foreach (var template in _templates)
+                    @if (FilteredTemplates.Any())
                     {
-                        var index = _templates.IndexOf(template);
-                        <MudPaper Class="pa-2 my-1 d-flex align-center flex-grow-1" Elevation="1" Style="width: 100%;">
-                            <MudStack AlignItems="AlignItems.Center" Spacing="1">
-                                <MudIconButton
-                                    Class="py-1"
-                                    Size="Size.Small"
-                                    Icon="@Icons.Material.Filled.ArrowUpward"
-                                    Disabled="@(index == 0)"
-                                    Color="Color.Default"
-                                    OnClick="@(() => MoveTemplateAsync(template, -1))" />
-                                <MudIconButton
-                                    Class="py-1"
-                                    Size="Size.Small"
-                                    Icon="@Icons.Material.Filled.ArrowDownward"
-                                    Disabled="@(index == _templates.Count - 1)"
-                                    Color="Color.Default"
-                                    OnClick="@(() => MoveTemplateAsync(template, 1))" />
-                            </MudStack>
-                            <MudIconButton Ripple="false" Size="Size.Small" Color="Color.Primary" Icon="@(template.Favorite ? Icons.Material.Filled.Star : Icons.Material.Filled.StarBorder)" OnClick="@(() => ToggleFavoriteAsync(template))"/>
-                            <div class="flex-grow-1">
-                                <TemplateSummary Template="template" OnEditTemplate="EditTemplateAsync"/>
-                            </div>
-                        </MudPaper>
+                        @foreach (var template in FilteredTemplates)
+                        {
+                            var index = _templates.IndexOf(template);
+                            <MudPaper Class="pa-2 my-1 d-flex align-center flex-grow-1" Elevation="1" Style="width: 100%;">
+                                <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                                    <MudIconButton
+                                        Class="py-1"
+                                        Size="Size.Small"
+                                        Icon="@Icons.Material.Filled.ArrowUpward"
+                                        Disabled="@(index == 0)"
+                                        Color="Color.Default"
+                                        OnClick="@(() => MoveTemplateAsync(template, -1))" />
+                                    <MudIconButton
+                                        Class="py-1"
+                                        Size="Size.Small"
+                                        Icon="@Icons.Material.Filled.ArrowDownward"
+                                        Disabled="@(index == _templates.Count - 1)"
+                                        Color="Color.Default"
+                                        OnClick="@(() => MoveTemplateAsync(template, 1))" />
+                                </MudStack>
+                                <MudIconButton Ripple="false" Size="Size.Small" Color="Color.Primary" Icon="@(template.Favorite ? Icons.Material.Filled.Star : Icons.Material.Filled.StarBorder)" OnClick="@(() => ToggleFavoriteAsync(template))"/>
+                                <div class="flex-grow-1">
+                                    <TemplateSummary Template="template" OnEditTemplate="EditTemplateAsync"/>
+                                </div>
+                            </MudPaper>
+                        }
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">@L.Templates["filter_no_results"]</MudAlert>
                     }
                 </MudStack>
             </MudCardContent>
@@ -55,12 +102,99 @@
 @code {
 
     private List<ForwardTemplate> _templates { get; set; } = new();
+    private string _searchText { get; set; } = string.Empty;
+    private HashSet<string> _selectedTags { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    private List<string> _availableTags { get; set; } = new();
+    private bool _matchAllTags { get; set; }
+
+    private IEnumerable<ForwardTemplate> FilteredTemplates => _templates.Where(MatchesTemplateFilters);
 
     protected override async Task OnInitializedAsync()
     {
+        _searchText = _ui.TemplatesFilterText;
+        _selectedTags = _ui.TemplatesFilterTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        _matchAllTags = _ui.TemplatesMatchAllTags;
+
         _templates = (await _storage.GetForwardTemplatesAsync())
             .OrderBy(x => x.Sorting)
             .ToList();
+
+        RefreshAvailableTags();
+    }
+
+    private Task OnSearchTextChanged(string value)
+    {
+        _searchText = value;
+        _ui.TemplatesFilterText = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnSelectedTagsChanged(IEnumerable<string?>? values)
+    {
+        _selectedTags = (values ?? Enumerable.Empty<string?>())
+            .Select(NormalizeTag)
+            .Where(tag => tag is not null)
+            .Select(tag => tag!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _ui.TemplatesFilterTags = _selectedTags;
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnMatchAllTagsChanged(bool value)
+    {
+        _matchAllTags = value;
+        _ui.TemplatesMatchAllTags = value;
+        return Task.CompletedTask;
+    }
+
+    private bool MatchesTemplateFilters(ForwardTemplate template)
+    {
+        var normalizedSearch = NormalizeTag(_searchText);
+        var normalizedTags = (template.Tags ?? new List<string>())
+            .Select(NormalizeTag)
+            .Where(tag => tag is not null)
+            .Select(tag => tag!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var tagMatch = _selectedTags.Count == 0 || (_matchAllTags
+            ? _selectedTags.All(selectedTag => normalizedTags.Contains(selectedTag))
+            : normalizedTags.Any(tag => _selectedTags.Contains(tag)));
+
+        if (normalizedSearch is null)
+        {
+            return tagMatch;
+        }
+
+        var textMatch =
+            template.Name.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(template.Description) && template.Description.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase)) ||
+            normalizedTags.Any(tag => tag.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase));
+
+        return textMatch && tagMatch;
+    }
+
+    private void RefreshAvailableTags()
+    {
+        _availableTags = _templates
+            .SelectMany(t => t.Tags ?? new List<string>())
+            .Select(NormalizeTag)
+            .Where(tag => tag is not null)
+            .Select(tag => tag!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static string? NormalizeTag(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim();
     }
 
     private async Task MoveTemplateAsync(ForwardTemplate template, int direction)

@@ -32,7 +32,7 @@
                                 @foreach (var tag in Template.Tags)
                                 {
                                     <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
-                                        @tag
+                                        @tag.ToTagChipLabel()
                                     </MudChip>
                                 }
                             </MudStack>

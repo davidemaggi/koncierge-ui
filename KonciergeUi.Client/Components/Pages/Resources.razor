@@ -11,6 +11,7 @@
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUI.Translations.Services
 @using KonciergeUI.Data
+@using KonciergeUi.Client.Extensions
 @using System.IO
 @inject UiState _ui
 @inject IPortForwardingService _fwd;
@@ -54,7 +55,7 @@
                             @foreach (var tag in _currentTemplate.Tags)
                             {
                                 <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" OnClick="OpenTemplateTagsEditor">
-                                    @tag
+                                    @tag.ToTagChipLabel()
                                 </MudChip>
                             }
                         </MudStack>
