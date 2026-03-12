@@ -6,6 +6,7 @@ using KonciergeUI.Kube;
 using KonciergeUI.Kube.Repositories;
 using KonciergeUI.Translations.Services;
 using MudBlazor.Services;
+using MudExtensions.Services;
 
 namespace KonciergeUi.Client.Extensions;
 
@@ -21,6 +22,8 @@ public static class ServiceCollectionExtensions
        
         // MudBlazor
         services.AddMudServices();
+        services.AddMudExtensions();
+
 
         // Localization
         services.AddLocalization();

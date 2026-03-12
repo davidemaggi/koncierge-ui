@@ -25,9 +25,10 @@
             <MudSpacer />
             
             <!-- Namespace filter -->
-            <MudSelect T="string"
+            <MudSelectExtended T="string"
                        MultiSelection="true"
                        Clearable="true"
+                       SearchBox="true"
                        SelectedValues="@_ui.SelectedNamespaces"
                        SelectedValuesChanged="@(values => OnNamespacesChanged(values))"
                        Label="@L.Resources["service_namespace"]" 
@@ -35,12 +36,13 @@
                        Dense="true"
                        Class="mr-2"
                        Style="min-width: 200px;"
+                       ItemCollection="_namespaces"
+                       SearchBoxAutoFocus="true"
+                       SearchBoxClearable="true"
+
                        MultiSelectionTextFunc="@(new Func<List<string>, string>(GetNamespaceSelectionText))">
-                @foreach (var ns in _namespaces)
-                {
-                    <MudSelectItem T="string" Value="@ns">@ns</MudSelectItem>
-                }
-            </MudSelect>
+              
+            </MudSelectExtended>
 
             <!-- Type filter -->
             <MudSelect T="string"

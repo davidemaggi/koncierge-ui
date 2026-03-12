@@ -4,6 +4,7 @@
 @using KonciergeUI.Models.Forwarding
 @using KonciergeUi.Client.State
 @using KonciergeUI.Translations.Services
+@using MudExtensions
 @using static KonciergeUI.Models.Forwarding.Enums
 
 @inject IKubeRepository KubeRepo
@@ -28,22 +29,24 @@
             <MudSpacer />
             
             <!-- Namespace filter -->
-            <MudSelect T="string"
+            <MudSelectExtended T="string"
                        MultiSelection="true"
                        Clearable="true"
+                       SearchBox="true"
                        SelectedValues="@Ui.SelectedNamespaces"
                        SelectedValuesChanged="@(values => OnNamespacesChanged(values!))"
                        Label="@L.Resources["pod_namespace"]" 
                        Variant="Variant.Outlined" 
                        Dense="true"
                        Class="mr-2"
+                       ItemCollection="_namespaces"
+                       SearchBoxAutoFocus="true"
+                       SearchBoxClearable="true"
+
                        Style="min-width: 200px;"
                        MultiSelectionTextFunc="@(new Func<List<string>, string>(GetNamespaceSelectionText))">
-                @foreach (var ns in _namespaces)
-                {
-                    <MudSelectItem T="string" Value="@ns">@ns</MudSelectItem>
-                }
-            </MudSelect>
+                
+            </MudSelectExtended>
 
             <!-- Status filter -->
             <MudSelect T="string"
