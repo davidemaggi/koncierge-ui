@@ -57,7 +57,7 @@ public class LocalizationService:ILocalizationService
 
     private static CultureInfo ResolveCulture(string requestedCultureName)
     {
-        var normalized = requestedCultureName.Trim();
+        var normalized = NormalizeRequestedCulture(requestedCultureName.Trim());
         if (string.IsNullOrWhiteSpace(normalized))
         {
             normalized = "en";
@@ -82,16 +82,22 @@ public class LocalizationService:ILocalizationService
     {
         yield return normalizedCulture;
 
-        // Some Windows environments don't resolve neutral "lij", while "lij-IT" is available.
-        if (string.Equals(normalizedCulture, "lij", StringComparison.OrdinalIgnoreCase))
-        {
-            yield return "lij-IT";
-        }
-
         if (!string.Equals(normalizedCulture, "en", StringComparison.OrdinalIgnoreCase))
         {
             yield return "en";
         }
+    }
+
+    private static string NormalizeRequestedCulture(string culture)
+    {
+        // Migrate legacy Genoese code to ru, where we now host custom translations.
+        if (string.Equals(culture, "lij", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(culture, "lij-IT", StringComparison.OrdinalIgnoreCase))
+        {
+            return "ru";
+        }
+
+        return culture;
     }
 
 
