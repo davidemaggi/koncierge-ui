@@ -28,7 +28,19 @@
             <MudText Style="font-family: monospace;" Typo="Typo.body2">@GetPortDisplay()</MudText>
             @if (Definition.LinkedSecrets.Any()) 
             {
-                <MudText Style="font-family: monospace;" Typo="Typo.body2">@($"{Definition.LinkedSecrets.Count} {L.Forwards["linked_secrets"]}")</MudText>
+                <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" AlignItems="AlignItems.Center">
+                    <MudText Style="font-family: monospace;" Typo="Typo.body2">@L.Forwards["linked_secrets"]:</MudText>
+
+                    
+                    @foreach (var linked in Definition.LinkedSecrets)
+                    {
+                        <MudTooltip Text="@GetLinkedSecretTooltip(linked)">
+                            <MudIcon Icon="@GetLinkedSecretIcon(linked.SourceType)"
+                                     Size="Size.Small"
+                                     Color="Color.Info"/>
+                        </MudTooltip>
+                    }
+                </MudStack>
             }
         </MudStack>
         @if (ShowRemove || ShowEdit)
@@ -84,6 +96,21 @@
         return $"localhost:{localPort} -> {Definition.TargetPort}({Definition.Protocol.ToString()})";
     }
 
+    private static string GetLinkedSecretTooltip(KonciergeUI.Models.Security.SecretReference linked)
+    {
+        return string.IsNullOrWhiteSpace(linked.Key) ? linked.ResourceName : $"{linked.ResourceName}.{linked.Key}";
+    }
+
+    private static string GetLinkedSecretIcon(KonciergeUI.Models.Security.SecretSourceType sourceType)
+    {
+        return sourceType switch
+        {
+            KonciergeUI.Models.Security.SecretSourceType.Secret => Icons.Material.Outlined.Key,
+            KonciergeUI.Models.Security.SecretSourceType.ConfigMap => Icons.Material.Outlined.Settings,
+            _ => Icons.Material.Outlined.Link
+        };
+    }
+
     private async Task RemoveClicked()
     {
 
@@ -91,7 +118,6 @@
         
        
     }
-    private MudTheme Theme = new MudTheme();
 
     private async Task EditClicked()
     {

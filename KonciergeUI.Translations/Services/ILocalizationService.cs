@@ -15,6 +15,6 @@ public interface ILocalizationService
     IStringLocalizer Global { get; }
     IStringLocalizer Errors { get; }
     CultureInfo CurrentCulture { get; }
-    void SetCulture(string cultureName);
+    string SetCulture(string cultureName);
     event EventHandler<CultureInfo>? CultureChanged;
 }

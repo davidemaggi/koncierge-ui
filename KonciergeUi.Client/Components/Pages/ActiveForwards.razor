@@ -10,6 +10,7 @@
 @inject UiState _ui
 @inject ILocalizationService L
 @inject IDialogService DialogService
+@implements IAsyncDisposable
 
 <MudStack Class="ma-4">
     <MudCard Class="mb-3">
@@ -113,6 +114,9 @@
     private HashSet<string> _selectedClusterIds { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     private List<ClusterFilterItem> _availableClusters { get; set; } = new();
     private bool _matchAllTags { get; set; }
+    private CancellationTokenSource? _refreshCts;
+    private Task? _refreshLoopTask;
+    private string _templatesStamp = string.Empty;
 
     private sealed record ClusterFilterItem(string Id, string Name);
 
@@ -127,11 +131,9 @@
             _matchAllTags = _ui.ActiveForwardsMatchAllTags;
             _selectedClusterIds = _ui.ActiveForwardsFilterClusterIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            Templates =  ForwardService.GetAllRunningTemplates()
-                .OrderBy(x => x.Sorting)
-                .ToList();
-
-            RefreshAvailableFilters();
+            RefreshTemplatesFromService();
+            _refreshCts = new CancellationTokenSource();
+            _refreshLoopTask = RunRefreshLoopAsync(_refreshCts.Token);
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -143,6 +145,7 @@
     private void HandleTemplateStopped(Guid templateId)
     {
         Templates.RemoveAll(t => t.TemplateId == templateId);
+        _templatesStamp = BuildTemplatesStamp(Templates);
         RefreshAvailableFilters();
         StateHasChanged();
     }
@@ -163,10 +166,81 @@
             }
 
             Templates.Clear();
+            _templatesStamp = BuildTemplatesStamp(Templates);
             RefreshAvailableFilters();
             
             await InvokeAsync(StateHasChanged);
         });
+    }
+
+    private async Task RunRefreshLoopAsync(CancellationToken token)
+    {
+        var startedAt = DateTimeOffset.UtcNow;
+
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                var elapsed = DateTimeOffset.UtcNow - startedAt;
+                var delay = elapsed <= _ui.ActiveForwardsFastRefreshWindow
+                    ? _ui.ActiveForwardsFastRefreshInterval
+                    : _ui.ActiveForwardsSlowRefreshInterval;
+                await Task.Delay(delay, token);
+
+                if (RefreshTemplatesFromService())
+                {
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // expected when leaving the page
+        }
+    }
+
+    private bool RefreshTemplatesFromService()
+    {
+        var latestTemplates = ForwardService.GetAllRunningTemplates()
+            .OrderBy(x => x.Sorting)
+            .ToList();
+
+        var latestStamp = BuildTemplatesStamp(latestTemplates);
+        if (string.Equals(_templatesStamp, latestStamp, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        Templates = latestTemplates;
+        _templatesStamp = latestStamp;
+        RefreshAvailableFilters();
+        return true;
+    }
+
+    private static string BuildTemplatesStamp(IEnumerable<RunningTemplate> templates)
+    {
+        return string.Join(";", templates
+            .OrderBy(t => t.TemplateId)
+            .Select(t => $"{t.TemplateId}:{t.Forwards.Count}"));
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _refreshCts?.Cancel();
+
+        if (_refreshLoopTask is not null)
+        {
+            try
+            {
+                await _refreshLoopTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // expected
+            }
+        }
+
+        _refreshCts?.Dispose();
     }
 
     private Task OnSearchTextChanged(string value)

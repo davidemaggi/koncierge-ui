@@ -1,13 +1,11 @@
 using System.Globalization;
 using KonciergeUI.Translations.Resources;
 using Microsoft.Extensions.Localization;
-using Microsoft.VisualBasic;
 
 namespace KonciergeUI.Translations.Services;
 
 public class LocalizationService:ILocalizationService
 {
-    private readonly IStringLocalizer<Strings> _localizer;
     private CultureInfo _currentCulture;
     
     
@@ -43,9 +41,9 @@ public class LocalizationService:ILocalizationService
 
     public CultureInfo CurrentCulture => _currentCulture;
 
-    public void SetCulture(string cultureName)
+    public string SetCulture(string cultureName)
     {
-        var culture = new CultureInfo(cultureName);
+        var culture = ResolveCulture(cultureName);
         _currentCulture = culture;
 
         CultureInfo.CurrentCulture = culture;
@@ -54,6 +52,46 @@ public class LocalizationService:ILocalizationService
         CultureInfo.DefaultThreadCurrentUICulture = culture;
 
         CultureChanged?.Invoke(this, culture);
+        return culture.Name;
+    }
+
+    private static CultureInfo ResolveCulture(string requestedCultureName)
+    {
+        var normalized = requestedCultureName.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            normalized = "en";
+        }
+
+        foreach (var candidate in GetCultureCandidates(normalized))
+        {
+            try
+            {
+                return new CultureInfo(candidate);
+            }
+            catch (CultureNotFoundException)
+            {
+                // Try next candidate.
+            }
+        }
+
+        return new CultureInfo("en");
+    }
+
+    private static IEnumerable<string> GetCultureCandidates(string normalizedCulture)
+    {
+        yield return normalizedCulture;
+
+        // Some Windows environments don't resolve neutral "lij", while "lij-IT" is available.
+        if (string.Equals(normalizedCulture, "lij", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return "lij-IT";
+        }
+
+        if (!string.Equals(normalizedCulture, "en", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return "en";
+        }
     }
 
 

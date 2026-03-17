@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using KonciergeUi.Client.State;
+﻿using KonciergeUi.Client.State;
 
 namespace KonciergeUi.Client;
 
@@ -20,11 +19,5 @@ public partial class App : Application
         using var scope = MauiProgram.ServiceProvider.CreateScope();
         var uiState = scope.ServiceProvider.GetRequiredService<UiState>();
         await uiState.LoadPreferencesAsync();
-        
-        var ci = new CultureInfo(uiState.CurrentLanguage);
-        CultureInfo.DefaultThreadCurrentCulture = ci;
-        CultureInfo.DefaultThreadCurrentUICulture = ci;
-        Thread.CurrentThread.CurrentCulture = ci;
-        Thread.CurrentThread.CurrentUICulture = ci;
     }
 }

@@ -35,6 +35,9 @@ public class UiState : INotifyPropertyChanged
     private IEnumerable<string> _activeForwardsFilterTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private bool _activeForwardsMatchAllTags;
     private IEnumerable<string> _activeForwardsFilterClusterIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private TimeSpan _activeForwardsFastRefreshInterval = TimeSpan.FromMilliseconds(500);
+    private TimeSpan _activeForwardsSlowRefreshInterval = TimeSpan.FromSeconds(1);
+    private TimeSpan _activeForwardsFastRefreshWindow = TimeSpan.FromSeconds(5);
 
     public UiState(IPreferencesStorage preferencesStorage, ILocalizationService localizationService, IClusterDiscoveryService clusterDiscoveryService)
     {
@@ -100,14 +103,20 @@ public class UiState : INotifyPropertyChanged
         get => _currentLanguage;
         set
         {
-            if (_currentLanguage != value)
+            if (string.Equals(_currentLanguage, value, StringComparison.OrdinalIgnoreCase))
             {
-                _currentLanguage = value;
-                _localizationService.SetCulture(value);
-                OnPropertyChanged();
-                LanguageChanged?.Invoke(this, value);
+                return;
+            }
 
-                _config.CurrentLanguage = value;
+            var appliedCulture = _localizationService.SetCulture(value);
+
+            if (_currentLanguage != appliedCulture)
+            {
+                _currentLanguage = appliedCulture;
+                OnPropertyChanged();
+                LanguageChanged?.Invoke(this, appliedCulture);
+
+                _config.CurrentLanguage = appliedCulture;
                 _ = _preferencesStorage.UpdateConfigAsync(_config);
             }
         }
@@ -137,7 +146,7 @@ public class UiState : INotifyPropertyChanged
             _currentLanguage = _config.CurrentLanguage;
         }
 
-        _localizationService.SetCulture(_currentLanguage);
+        _currentLanguage = _localizationService.SetCulture(_currentLanguage);
 
         if (!string.IsNullOrWhiteSpace(_config.LastSelectedClusterId))
         {
@@ -352,6 +361,54 @@ public class UiState : INotifyPropertyChanged
             }
 
             _activeForwardsFilterClusterIds = normalized;
+            OnPropertyChanged();
+        }
+    }
+
+    public TimeSpan ActiveForwardsFastRefreshInterval
+    {
+        get => _activeForwardsFastRefreshInterval;
+        set
+        {
+            var normalized = value <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(500) : value;
+            if (_activeForwardsFastRefreshInterval == normalized)
+            {
+                return;
+            }
+
+            _activeForwardsFastRefreshInterval = normalized;
+            OnPropertyChanged();
+        }
+    }
+
+    public TimeSpan ActiveForwardsSlowRefreshInterval
+    {
+        get => _activeForwardsSlowRefreshInterval;
+        set
+        {
+            var normalized = value <= TimeSpan.Zero ? TimeSpan.FromSeconds(1) : value;
+            if (_activeForwardsSlowRefreshInterval == normalized)
+            {
+                return;
+            }
+
+            _activeForwardsSlowRefreshInterval = normalized;
+            OnPropertyChanged();
+        }
+    }
+
+    public TimeSpan ActiveForwardsFastRefreshWindow
+    {
+        get => _activeForwardsFastRefreshWindow;
+        set
+        {
+            var normalized = value < TimeSpan.Zero ? TimeSpan.Zero : value;
+            if (_activeForwardsFastRefreshWindow == normalized)
+            {
+                return;
+            }
+
+            _activeForwardsFastRefreshWindow = normalized;
             OnPropertyChanged();
         }
     }

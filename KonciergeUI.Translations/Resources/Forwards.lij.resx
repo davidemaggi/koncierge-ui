@@ -19,7 +19,7 @@
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
     <data name="create_forward_title" xml:space="preserve">
-        <value>Crea un forward</value>
+        <value>Crea un sponciâ</value>
     </data>
     <data name="local_port" xml:space="preserve">
         <value>Pòrta locale</value>
@@ -40,7 +40,7 @@
         <value>Çerni i elementi da colegâ</value>
     </data>
     <data name="start_forward_title" xml:space="preserve">
-        <value>Avvia o forward</value>
+        <value>Avvia o sponciâ</value>
     </data>
     <data name="start_forward" xml:space="preserve">
         <value>Avvia</value>
@@ -49,7 +49,7 @@
         <value>Falimento inta partensa do modello</value>
     </data>
     <data name="edit_forward_title" xml:space="preserve">
-        <value>Modifica o forward</value>
+        <value>Modifica o sponciâ</value>
     </data>
     <data name="source" xml:space="preserve">
         <value>Orìgine</value>
@@ -58,10 +58,10 @@
         <value>Destinaçion</value>
     </data>
     <data name="cmd_start" xml:space="preserve">
-        <value>Avvia o forward</value>
+        <value>Avvia o sponciâ</value>
     </data>
     <data name="cmd_stop" xml:space="preserve">
-        <value>Ferma o forward</value>
+        <value>Ferma o sponciâ</value>
     </data>
     <data name="message_added_clipboard" xml:space="preserve">
         <value>Azonto a-i aponti</value>
@@ -97,7 +97,7 @@
         <value>Tutti i cluster</value>
     </data>
     <data name="filter_no_results" xml:space="preserve">
-        <value>Nisciun forward ativo o corisponde ai filtri corenti.</value>
+        <value>Nisciun sponciâ ativo o corisponde ai filtri corenti.</value>
     </data>
 </root>
 

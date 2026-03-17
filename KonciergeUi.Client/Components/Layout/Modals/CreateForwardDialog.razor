@@ -42,6 +42,22 @@
                 <MudSpacer/>
                 <MudChip T="string" OnClick="ShowAddLinked">@L.Forwards["link_a_secret"]</MudChip>
             </MudStack>
+            @if (SelectedLinks.Count > 0)
+            {
+                <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1">
+                    @foreach (var link in GetOrderedSelectedLinks())
+                    {
+                        <MudChip T="string"
+                                 Variant="Variant.Outlined"
+                                 Color="Color.Info"
+                                 Icon="@GetSecretSourceIcon(link.SourceType)"
+                                 OnClose="@(() => RemoveSelectedLink(link))"
+                                 CloseIcon="@Icons.Material.Filled.Close">
+                            @BuildSecretChipLabel(link)
+                        </MudChip>
+                    }
+                </MudStack>
+            }
             @if (ConfigMapsSel.Count != 0 || SecretsSel.Count != 0){
             <MudCard Outlined="true">
                     <MudList T="SecretReference" @bind-SelectedValues="SelectedLinks" SelectionMode="SelectionMode.MultiSelection" ReadOnly="false" CheckBoxColor="Color.Tertiary">
@@ -142,7 +158,7 @@
 
     private Dictionary<string,List<SecretReference>> ConfigMapsSel { get; set; } = new ();
     private Dictionary<string,List<SecretReference>> SecretsSel { get; set; } = new();
-    public IReadOnlyCollection<SecretReference> SelectedLinks = new List<SecretReference>();
+    public IReadOnlyCollection<SecretReference> SelectedLinks { get; set; } = new List<SecretReference>();
 
 
 
@@ -153,6 +169,7 @@
         {
             _newForwardRequest = CloneForward(ExistingForward);
             SelectedLinks = _newForwardRequest.LinkedSecrets.ToList();
+            await LoadLinkableSecretsAsync();
             await base.OnInitializedAsync();
             return;
         }
@@ -173,6 +190,11 @@
     }
 
     private async Task ShowAddLinked()
+    {
+        await LoadLinkableSecretsAsync();
+    }
+
+    private async Task LoadLinkableSecretsAsync()
     {
         ConfigMaps = await KubeRepo.ListConfigMapsAsync(Cluster, Namespace);
         Secrets = await KubeRepo.ListSecretsAsync(Cluster, Namespace);
@@ -211,6 +233,30 @@
 
         }
 
+                RebindSelectedLinksToAvailableItems();
+
+            }
+
+            private void RebindSelectedLinksToAvailableItems()
+            {
+                if (SelectedLinks.Count == 0)
+                {
+                    return;
+                }
+
+                var selectedKeys = SelectedLinks
+                    .Select(BuildSecretReferenceKey)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                var availableItems = ConfigMapsSel.Values
+                    .SelectMany(x => x)
+                    .Concat(SecretsSel.Values.SelectMany(x => x));
+
+                SelectedLinks = availableItems
+                    .Where(x => selectedKeys.Contains(BuildSecretReferenceKey(x)))
+                    .Distinct(SecretReferenceKeyComparer.Instance)
+                    .ToList();
+
     }
 
 
@@ -219,7 +265,9 @@
     {
         try
         {
-            _newForwardRequest.LinkedSecrets = SelectedLinks.ToList();
+            _newForwardRequest.LinkedSecrets = SelectedLinks
+                .Distinct(SecretReferenceKeyComparer.Instance)
+                .ToList();
             MudDialog.Close(DialogResult.Ok(_newForwardRequest));
             return Task.CompletedTask;
         }
@@ -235,6 +283,72 @@
         {
             LinkedSecrets = new List<SecretReference>(forward.LinkedSecrets)
         };
+    }
+
+    private static string BuildSecretReferenceKey(SecretReference reference)
+    {
+        return string.Join("|",
+            reference.SourceType,
+            reference.Namespace?.Trim() ?? string.Empty,
+            reference.ResourceName.Trim(),
+            reference.Key.Trim());
+    }
+
+    private IEnumerable<SecretReference> GetOrderedSelectedLinks()
+    {
+        return SelectedLinks
+            .Distinct(SecretReferenceKeyComparer.Instance)
+            .OrderBy(x => x.SourceType)
+            .ThenBy(x => x.ResourceName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.Key, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private void RemoveSelectedLink(SecretReference link)
+    {
+        var toRemoveKey = BuildSecretReferenceKey(link);
+        SelectedLinks = SelectedLinks
+            .Where(x => !string.Equals(BuildSecretReferenceKey(x), toRemoveKey, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    private static string BuildSecretChipLabel(SecretReference reference)
+    {
+        return $"{reference.ResourceName}.{reference.Key}";
+    }
+
+    private static string GetSecretSourceIcon(SecretSourceType sourceType)
+    {
+        return sourceType switch
+        {
+            SecretSourceType.ConfigMap => Icons.Material.Filled.Description,
+            SecretSourceType.Secret => Icons.Material.Filled.Key,
+            _ => Icons.Material.Filled.Link
+        };
+    }
+
+    private sealed class SecretReferenceKeyComparer : IEqualityComparer<SecretReference>
+    {
+        public static SecretReferenceKeyComparer Instance { get; } = new();
+
+        public bool Equals(SecretReference? x, SecretReference? y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+
+            if (x is null || y is null)
+            {
+                return false;
+            }
+
+            return string.Equals(BuildSecretReferenceKey(x), BuildSecretReferenceKey(y), StringComparison.OrdinalIgnoreCase);
+        }
+
+        public int GetHashCode(SecretReference obj)
+        {
+            return StringComparer.OrdinalIgnoreCase.GetHashCode(BuildSecretReferenceKey(obj));
+        }
     }
 
 }
